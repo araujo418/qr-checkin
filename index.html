@@ -11,6 +11,13 @@
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center p-4">
+
+  <!-- TABS NAVIGATION -->
+  <div class="flex space-x-4 mb-4">
+    <button onclick="showTab('clienteTab')" class="px-4 py-2 bg-indigo-600 text-white rounded">Cliente</button>
+    <button onclick="requestAdminAccess()" class="px-4 py-2 bg-gray-300 text-black rounded">Admin</button>
+  </div>
+
   <!-- LOGIN -->
   <section id="login" class="w-full max-w-sm bg-white rounded-xl shadow p-6 space-y-3">
     <h2 class="text-xl font-bold text-center">Login</h2>
@@ -20,8 +27,8 @@
     <div id="loginError" class="text-red-600 text-center text-sm"></div>
   </section>
 
-  <!-- CLIENTE -->
-  <section id="cliente" class="hidden w-full max-w-md bg-white rounded-xl shadow p-4 space-y-4">
+  <!-- CLIENTE ABA -->
+  <section id="clienteTab" class="hidden w-full max-w-md bg-white rounded-xl shadow p-4 space-y-4">
     <h2 class="text-lg font-semibold text-center">Validação de Convidados</h2>
     <div class="flex gap-2">
       <input id="codeInput" class="flex-1 border rounded p-2" placeholder="Código ou QR" />
@@ -33,12 +40,11 @@
     <div class="w-full h-3 bg-gray-200 rounded"><div id="progressBar" class="h-full bg-indigo-600"></div></div>
 
     <ul id="guestList" class="mt-4 max-h-60 overflow-y-auto divide-y"></ul>
-
     <div id="qrDiv" class="hidden w-full max-w-xs mx-auto"></div>
   </section>
 
-  <!-- ADMIN -->
-  <section id="admin" class="hidden w-full max-w-md bg-white rounded-xl shadow p-4 space-y-4">
+  <!-- ADMIN ABA -->
+  <section id="adminTab" class="hidden w-full max-w-md bg-white rounded-xl shadow p-4 space-y-4">
     <h2 class="text-lg font-semibold text-center">Painel Admin</h2>
     <form id="createForm" class="space-y-2">
       <input id="newUser"     class="w-full border rounded p-2" placeholder="Novo utilizador" />
@@ -56,108 +62,22 @@
   <footer class="mt-8 text-xs text-gray-500">Adkira Media © 2025</footer>
 
   <script>
-    /* =================== INIT DEFAULT ADMIN =================== */
-    (function(){
-      if(!localStorage.getItem('users')){
-        const users = {
-          "araujocataca116": {
-            password: "Ki@ra1116.",
-            event: "painel-admin",
-            admin: true
-          }
-        };
-        const events = {
-          "painel-admin": { limit: 0, used: 0, guests: {} }
-        };
-        localStorage.setItem('users', JSON.stringify(users));
-        localStorage.setItem('events', JSON.stringify(events));
-      }
-    })();
-    /* ========================================================= */
+    const ADMIN_CODE = "2025@!!Kiara1993";
 
-    let currentUser = null;
-    let currentEventId = null;
-    let guests = {}, totalGuests = 0, usedGuests = 0;
+    function showTab(tabId) {
+      document.getElementById('clienteTab').classList.add('hidden');
+      document.getElementById('adminTab').classList.add('hidden');
+      document.getElementById(tabId).classList.remove('hidden');
+    }
 
-    function customLogin() {
-      const u = document.getElementById('username').value.trim();
-      const p = document.getElementById('password').value.trim();
-      if (!u || !p) return document.getElementById('loginError').textContent = 'Preencha ambos os campos';
-      const users = JSON.parse(localStorage.getItem('users') || '{}');
-      if (!users[u] || users[u].password !== p)
-        return document.getElementById('loginError').textContent = 'Utilizador ou senha incorreta';
-
-      currentUser = u;
-      currentEventId = users[u].event;
-
-      if (users[u].admin) {
-        document.getElementById('login').classList.add('hidden');
-        document.getElementById('admin').classList.remove('hidden');
+    function requestAdminAccess() {
+      const input = prompt("Digite o código de administrador:");
+      if (input === ADMIN_CODE) {
+        showTab('adminTab');
       } else {
-        document.getElementById('login').classList.add('hidden');
-        document.getElementById('cliente').classList.remove('hidden');
-        carregarEvento();
+        alert("Código incorreto.");
       }
     }
-
-    function createUserAndEvent() {
-      const u = document.getElementById('newUser').value.trim();
-      const p = document.getElementById('newPass').value.trim();
-      const e = document.getElementById('newEvent').value.trim();
-      const l = parseInt(document.getElementById('newLimit').value.trim());
-      if (!u || !p || !e || isNaN(l)) return alert('Preencha todos os campos');
-      const users = JSON.parse(localStorage.getItem('users') || '{}');
-      const events = JSON.parse(localStorage.getItem('events') || '{}');
-
-      if(users[u]) return alert('Utilizador já existe');
-
-      users[u] = { password: p, event: e, admin: false };
-      events[e] = { limit: l, used: 0, guests: {} };
-
-      localStorage.setItem('users', JSON.stringify(users));
-      localStorage.setItem('events', JSON.stringify(events));
-      alert('Utilizador e evento criados');
-      document.getElementById('createForm').reset();
-    }
-
-    function uploadTxt(e) {
-      const file = e.target.files[0];
-      if (!file || !currentUser) return;
-      const events = JSON.parse(localStorage.getItem('events') || '{}');
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        const lines = evt.target.result.split(/\r?\n/).filter(Boolean);
-        let count = 0;
-        lines.forEach(line => {
-          const [code, name] = line.split(/[,:;\t]+/);
-          if (code) { events[currentEventId].guests[code.trim()] = { name: (name || 'Convidado').trim(), used: false }; count++; }
-        });
-        events[currentEventId].limit += count;
-        localStorage.setItem('events', JSON.stringify(events));
-        carregarEvento();
-      };
-      reader.readAsText(file);
-    }
-
-    function carregarEvento() {
-      const events = JSON.parse(localStorage.getItem('events') || '{}');
-      const ev = events[currentEventId];
-      if (!ev) return;
-      totalGuests = ev.limit;
-      usedGuests = ev.used;
-      document.getElementById('usedTxt').textContent = usedGuests;
-      document.getElementById('limitTxt').textContent = totalGuests;
-      document.getElementById('progressBar').style.width = totalGuests? Math.round((usedGuests / totalGuests) * 100) + '%' : '0%';
-      document.getElementById('guestList').innerHTML = '';
-      for (const [code, data] of Object.entries(ev.guests)) {
-        const li = document.createElement('li');
-        li.className = 'flex gap-2 p-2 border-b';
-        li.innerHTML = `<span class="h-5 w-5 rounded-full border-2 ${data.used ? 'bg-green-500 border-green-500' : ''}"></span><span class="flex-1 truncate">${data.name}</span><span class="text-xs text-gray-500">${code}</span>`;
-        document.getElementById('guestList').appendChild(li);
-      }
-    }
-
-    function verifyCode() {
-      const code = document.getElementById('codeInput').value.trim();
-      if (!code) return;
-      const events = JSON.parse
+  </script>
+</body>
+</html>
