@@ -65,19 +65,11 @@
 
 <script>
 /***** CONFIG *****/
-const ADMIN_UNLOCK_CODE = "2025@!!Kiara1993";
+const ADMIN_UNLOCK_CODE = "2025Invites";
 
 /***** DATA MODEL *****/
 function loadUsers(){ return JSON.parse(localStorage.getItem('users')||'{}'); }
 function saveUsers(u){ localStorage.setItem('users',JSON.stringify(u)); }
-
-(function ensureDefaults(){
-  const users = loadUsers();
-  if(!users['araujocataca116']){
-    users['araujocataca116'] = {password:'Ki@ra1116.',limit:0,used:0,guests:{}};
-    saveUsers(users);
-  }
-})();
 
 /***** NAV TABS *****/
 function showTab(id){
@@ -151,7 +143,7 @@ function refreshUserSelect(){
   const sel=document.getElementById('userSelect');
   sel.innerHTML='<option value="" disabled selected>Escolha utilizador</option>';
   const users=loadUsers();
-  Object.keys(users).forEach(u=>{ if(u!=="araujocataca116") sel.innerHTML+=`<option>${u}</option>`; });
+  Object.keys(users).forEach(u=>{ sel.innerHTML+=`<option>${u}</option>`; });
 }
 function createUser(){
   const u=document.getElementById('newUser').value.trim();
