@@ -3,13 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Invites Digitais</title>
+  <title>Invites Digitais – Validação</title>
+  <script src="https://unpkg.com/html5-qrcode@latest"></script>
   <script type="module">
-    // Firebase SDKs
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, collection, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    // Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyDah3W_j437Ute0WvLaAo1MdoM8XSZrkPU",
       authDomain: "invites-digitais.firebaseapp.com",
@@ -22,32 +21,50 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    window.login = async () => {
-      const username = document.getElementById("username").value.trim();
-      const senha = document.getElementById("senha").value.trim();
-      if (!username || !senha) return alert("Preencha ambos os campos.");
+    let guests = {}, totalGuests = 0, usedGuests = 0, currentCode = "", scanner = null;
 
-      const userRef = doc(db, "usuarios", username);
+    window.login = async () => {
+  const deviceId = localStorage.getItem("device_id") || crypto.randomUUID();
+  localStorage.setItem("device_id", deviceId);
+      const code = document.getElementById("accessCode").value.trim();
+      if (!code) return alert("Insira o código de acesso.");
+
+      const userRef = doc(db, "usuarios", code);
       const userSnap = await getDoc(userRef);
 
-      if (!userSnap.exists()) return alert("Utilizador não encontrado.");
+      if (!userSnap.exists()) return alert("Código inválido ou não registado.");
       const userData = userSnap.data();
-
-      if (userData.senha !== senha) return alert("Palavra-passe inválida.");
 
       const eventDate = new Date(userData.dataEvento);
       const now = new Date();
       if (eventDate < now) return alert("Acesso expirado. Contacte o organizador.");
 
-      document.getElementById("inicio").style.display = "none";
-      document.getElementById("app").style.display = "block";
+      const sessionsRef = collection(db, "sessoes", code, "dispositivos");
+  const sessionsSnap = await getDocs(sessionsRef);
+  const currentSessions = sessionsSnap.docs.map(doc => doc.id);
+  const limite = userData.limiteDispositivos || 2;
+
+  if (!currentSessions.includes(deviceId) && currentSessions.length >= limite) {
+    return alert("Limite de dispositivos excedido. Contacte o organizador.");
+  }
+
+  if (!currentSessions.includes(deviceId)) {
+    const newSessionRef = doc(db, "sessoes", code, "dispositivos", deviceId);
+    await updateDoc(newSessionRef, { ativo: true }).catch(async () => {
+      await setDoc(newSessionRef, { ativo: true });
+    });
+  }
+
+  currentCode = code;
+      document.getElementById("loginScreen").style.display = "none";
+      document.getElementById("appScreen").style.display = "block";
 
       startCountdown(eventDate);
-      loadGuestList(username);
+      await loadGuestListFromFirebase();
     };
 
     function startCountdown(targetDate) {
-      const el = document.getElementById("contador");
+      const el = document.getElementById("contadorTexto");
       function updateCountdown() {
         const now = new Date();
         const diff = targetDate - now;
@@ -65,55 +82,149 @@
       updateCountdown();
     }
 
-    async function loadGuestList(username) {
-      const listRef = collection(db, "convidados", username, "lista");
+    async function loadGuestListFromFirebase() {
+      const listRef = collection(db, "convidados", currentCode, "lista");
       const snapshot = await getDocs(listRef);
       const ul = document.getElementById("guestList");
       ul.innerHTML = "";
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        const li = document.createElement("li");
-        li.textContent = `${data.nome} (${data.codigo}) ${data.usado ? '✔️' : ''}`;
-        ul.appendChild(li);
+      guests = {}; totalGuests = 0; usedGuests = 0;
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        addToList(docSnap.id, data.codigo, data.nome, data.usado);
+      });
+      updateProgress();
+    }
+
+    function addToList(docId, code, nome, usado = false) {
+      if (document.querySelector(`[data-code="${code}"]`)) return;
+      const li = document.createElement("li");
+      li.dataset.code = code;
+      li.innerHTML = `<span class="check ${usado ? 'checked' : ''}"></span><span>${nome}</span>`;
+      document.getElementById("guestList").appendChild(li);
+      guests[code] = { nome, usado, docId };
+      totalGuests++;
+      if (usado) usedGuests++;
+    }
+
+    function updateProgress() {
+      const el = document.getElementById("progresso");
+      el.textContent = `${usedGuests} de ${totalGuests} convidados validados`;
+    }
+
+    window.recarregarLista = () => {
+      if (!currentCode) return alert("Código de cliente não identificado.");
+      loadGuestListFromFirebase();
+    }
+
+    window.verifyCode = async (code) => {
+      if (!code || !guests[code]) return alert("Código inválido ou não encontrado.");
+      if (guests[code].usado) return alert("Este código já foi utilizado.");
+
+      guests[code].usado = true;
+      document.querySelector(`[data-code="${code}"] .check`).classList.add('checked');
+      usedGuests++;
+      updateProgress();
+
+      // Atualiza no Firestore
+      const docRef = doc(db, "convidados", currentCode, "lista", guests[code].docId);
+      await updateDoc(docRef, { usado: true });
+
+      alert(`✔️ ${guests[code].nome} confirmado!`);
+    }
+
+    window.startScanner = () => {
+      const qrRegion = document.getElementById("qr-reader");
+      scanner = new Html5Qrcode("qr-reader");
+      scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        code => {
+          scanner.stop();
+          verifyCode(code.trim());
+        },
+        error => {}
+      );
+    };
+  </script>
+  </script>
+
+<!-- Painel Admin -->
+<script>
+  const isAdmin = location.hash === '#admin';
+  if (isAdmin) {
+    document.body.innerHTML = `
+      <h2>Painel Administrativo</h2>
+      <input id="clienteId" placeholder="Código do cliente" />
+      <input id="dataEvento" type="datetime-local" />
+      <input id="limite" type="number" placeholder="Limite de dispositivos" />
+      <button onclick="criarCliente()">Criar Cliente</button>
+
+      <h3>Adicionar Convidados</h3>
+      <textarea id="convidadosLista" rows="10" placeholder="nome,codigo"></textarea>
+      <button onclick="adicionarConvidados()">Adicionar à lista</button>
+    `;
+  }
+
+  async function criarCliente() {
+    const id = document.getElementById("clienteId").value.trim();
+    const data = document.getElementById("dataEvento").value;
+    const limite = parseInt(document.getElementById("limite").value) || 2;
+    if (!id || !data) return alert("Preencha todos os campos");
+
+    await setDoc(doc(db, "usuarios", id), {
+      dataEvento: new Date(data).toISOString(),
+      limiteDispositivos: limite
+    });
+    alert("Cliente criado com sucesso");
+  }
+
+  async function adicionarConvidados() {
+    const id = document.getElementById("clienteId").value.trim();
+    const lista = document.getElementById("convidadosLista").value.trim();
+    if (!id || !lista) return alert("Preencha o código do cliente e os convidados");
+
+    const linhas = lista.split("
+");
+    for (let linha of linhas) {
+      const [nome, codigo] = linha.split(",").map(s => s.trim());
+      if (!nome || !codigo) continue;
+      await setDoc(doc(collection(db, "convidados", id, "lista")), {
+        nome,
+        codigo,
+        usado: false
       });
     }
-  </script>
-  <style>
-    body { font-family: sans-serif; margin: 0; padding: 0; background: #f9f9f9; }
-    header, section, main { padding: 20px; }
-    header { background: #6a5acd; color: white; text-align: center; }
-    nav button { margin: 5px; padding: 10px; cursor: pointer; }
-    #loginForm input { display: block; margin: 10px 0; padding: 10px; width: 100%; }
-    #app { display: none; background: white; padding: 20px; }
-  </style>
-</head>
-<body>
-  <div id="inicio">
-    <header>
-      <h1>Invites Digitais</h1>
-      <nav>
-        <button onclick="document.getElementById('info').textContent='Somos uma empresa pioneira na criação de convites digitais, estamos activos desde 2022 e somos uma das melhores empresas em Angola.'">Quem somos</button>
-        <button onclick="document.getElementById('info').innerHTML='WhatsApp: 959 823 409<br>Localização: Viana; Luanda Sul'">Contactos</button>
-        <button onclick="document.getElementById('loginBox').style.display='block'">Entrar</button>
-      </nav>
-    </header>
-    <section id="info" style="min-height: 60px;"></section>
-    <section id="loginBox" style="display:none">
-      <h2>Login</h2>
-      <div id="loginForm">
-        <input id="username" placeholder="Nome de utilizador" />
-        <input id="senha" type="password" placeholder="Palavra-passe" />
-        <button onclick="login()">Entrar</button>
-      </div>
-    </section>
-  </div>
+    alert("Convidados adicionados com sucesso");
+  }
+// Exportar CSV
+function exportarCSV(somenteValidados = false) {
+  const linhas = [["Nome", "Código", "Usado"]];
+  Object.entries(guests).forEach(([codigo, dados]) => {
+    if (somenteValidados && !dados.usado) return;
+    linhas.push([dados.nome, codigo, dados.usado ? "Sim" : "Não"]);
+  });
 
-  <main id="app">
-    <h2>Área do Cliente</h2>
-    <p>Contagem regressiva até ao evento: <strong id="contador"></strong></p>
-    <h3>Lista de Convidados</h3>
-    <ul id="guestList"></ul>
-    <!-- Aqui virão os botões de scan e verificar, posteriormente -->
-  </main>
-</body>
-</html>
+  const csv = linhas.map(e => e.join(",")).join("
+");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = somenteValidados ? "validados.csv" : "convidados.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Botões para exportar
+if (!isAdmin) {
+  const exportDiv = document.createElement("div");
+  exportDiv.innerHTML = `
+    <button onclick="exportarCSV(false)">⬇️ Exportar Todos (CSV)</button>
+    <button onclick="exportarCSV(true)">⬇️ Exportar Validados (CSV)</button>
+  `;
+  document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("appScreen")?.prepend(exportDiv);
+  });
+}
+</script>
+</html>ódigo HTML permanece igual -->
