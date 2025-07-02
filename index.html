@@ -3,57 +3,72 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin - Invites Digitais</title>
+  <title>Invites Digitais - Check-in</title>
+  <script src="https://unpkg.com/html5-qrcode@latest"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      padding: 20px;
-      color: #333;
-    }
-    .container {
-      max-width: 700px;
-      margin: auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    h2 {
+      background: #f9f9f9;
+      margin: 0;
+      padding: 0;
       text-align: center;
-      color: #4CAF50;
     }
-    input, textarea, button {
-      width: 100%;
+    #loginScreen, #appScreen {
+      display: none;
+      padding: 20px;
+    }
+    .input {
       padding: 10px;
-      margin-top: 10px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
       font-size: 1rem;
+      margin-bottom: 10px;
+      width: 80%;
+      max-width: 300px;
     }
-    button {
+    .button {
+      padding: 10px 20px;
       background-color: #4CAF50;
       color: white;
       border: none;
       cursor: pointer;
-      margin-top: 15px;
-    }
-    button:hover {
-      background-color: #45a049;
-    }
-    .status {
-      margin-top: 10px;
-      font-weight: bold;
-    }
-    .qrcodes img {
-      width: 100px;
       margin: 5px;
     }
+    .checked {
+      color: green;
+      font-weight: bold;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      padding: 8px;
+      border-bottom: 1px solid #ccc;
+    }
   </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+</head>
+<body>
+  <div id="loginScreen">
+    <h2>🔐 Acesso ao Evento</h2>
+    <input id="accessCode" class="input" placeholder="Insira o seu código de acesso" />
+    <br />
+    <button class="button" onclick="login()">Entrar</button>
+  </div>
+
+  <div id="appScreen">
+    <h2>🎉 Check-in de Convidados</h2>
+    <p>Contagem até ao evento: <span id="contadorTexto"></span></p>
+    <button class="button" onclick="recarregarLista()">🔄 Atualizar Lista</button>
+    <button class="button" onclick="startScanner()">📷 Escanear QR Code</button>
+    <br />
+    <input id="manualCode" class="input" placeholder="Código manual" onkeydown="if(event.key==='Enter')verifyCode(this.value)" />
+    <p id="progresso"></p>
+    <ul id="guestList"></ul>
+    <div id="qr-reader" style="width:300px;margin:auto;"></div>
+  </div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, collection, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDah3W_j437Ute0WvLaAo1MdoM8XSZrkPU",
@@ -67,94 +82,98 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    window.criarCliente = async () => {
-      const id = document.getElementById("clienteId").value.trim();
-      const data = document.getElementById("dataEvento").value;
-      const limite = parseInt(document.getElementById("limite").value);
+    let guests = {}, total = 0, validados = 0, codigoCliente = "", scanner = null;
 
-      if (!id || !data || isNaN(limite)) {
-        document.getElementById("status").textContent = "⚠️ Preencha todos os campos corretamente.";
-        return;
-      }
+    window.login = async () => {
+      const code = document.getElementById("accessCode").value.trim();
+      if (!code) return alert("Insira o código de acesso");
 
-      try {
-        await setDoc(doc(db, "usuarios", id), {
-          dataEvento: new Date(data).toISOString(),
-          limiteDispositivos: limite
-        });
+      const userRef = doc(db, "usuarios", code);
+      const userSnap = await getDoc(userRef);
+      if (!userSnap.exists()) return alert("Código inválido ou não registado");
 
-        document.getElementById("status").textContent = `✅ Cliente "${id}" criado com sucesso!`;
-      } catch (e) {
-        document.getElementById("status").textContent = `❌ Erro ao criar cliente: ${e.message}`;
-      }
+      const userData = userSnap.data();
+      const eventDate = new Date(userData.dataEvento);
+      if (new Date() > eventDate) return alert("Evento expirado");
+
+      codigoCliente = code;
+      document.getElementById("loginScreen").style.display = "none";
+      document.getElementById("appScreen").style.display = "block";
+      iniciarContagem(eventDate);
+      await carregarConvidados();
     };
 
-    window.adicionarConvidados = async () => {
-      const id = document.getElementById("clienteId").value.trim();
-      const lista = document.getElementById("convidadosLista").value.trim();
-      const qrDiv = document.getElementById("qrcodes");
-      qrDiv.innerHTML = "";
+    async function carregarConvidados() {
+      const listRef = collection(db, "convidados", codigoCliente, "lista");
+      const snap = await getDocs(listRef);
+      const ul = document.getElementById("guestList");
+      ul.innerHTML = "";
+      guests = {}; total = 0; validados = 0;
+      snap.forEach(docSnap => {
+        const data = docSnap.data();
+        const li = document.createElement("li");
+        li.dataset.codigo = data.codigo;
+        li.innerHTML = `<span class="${data.usado ? 'checked' : ''}">${data.nome}</span>`;
+        ul.appendChild(li);
+        guests[data.codigo] = { nome: data.nome, usado: data.usado, id: docSnap.id };
+        total++;
+        if (data.usado) validados++;
+      });
+      atualizarProgresso();
+    }
 
-      if (!id || !lista) {
-        document.getElementById("status").textContent = "⚠️ Preencha o código do cliente e os convidados.";
-        return;
-      }
+    function atualizarProgresso() {
+      document.getElementById("progresso").textContent = `${validados} de ${total} convidados validados`;
+    }
 
-      const linhas = lista.split("\n");
-      let adicionados = 0;
+    window.recarregarLista = carregarConvidados;
 
-      try {
-        for (let linha of linhas) {
-          const [nome, codigo] = linha.split(",").map(s => s.trim());
-          if (!nome || !codigo) continue;
+    window.verifyCode = async (code) => {
+      if (!guests[code]) return alert("Código não encontrado na lista");
+      if (guests[code].usado) return alert("Este código já foi utilizado");
 
-          await setDoc(doc(collection(db, "convidados", id, "lista")), {
-            nome,
-            codigo,
-            usado: false
-          });
+      guests[code].usado = true;
+      document.querySelector(`[data-codigo="${code}"] span`).classList.add("checked");
+      validados++;
+      atualizarProgresso();
 
-          const qr = new QRious({
-            value: codigo,
-            size: 100
-          });
-          const img = document.createElement("img");
-          img.src = qr.toDataURL();
-          img.title = nome;
-          qrDiv.appendChild(img);
+      const ref = doc(db, "convidados", codigoCliente, "lista", guests[code].id);
+      await updateDoc(ref, { usado: true });
+      alert(`✔️ ${guests[code].nome} validado!`);
+    };
 
-          adicionados++;
+    window.startScanner = () => {
+      const qrRegion = document.getElementById("qr-reader");
+      scanner = new Html5Qrcode("qr-reader");
+      scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        code => {
+          scanner.stop();
+          verifyCode(code.trim());
+        },
+        error => {}
+      );
+    };
+
+    function iniciarContagem(data) {
+      const el = document.getElementById("contadorTexto");
+      function atualizar() {
+        const agora = new Date();
+        const diff = data - agora;
+        if (diff <= 0) {
+          el.textContent = "Evento iniciado";
+          return;
         }
-
-        document.getElementById("status").textContent = `✅ ${adicionados} convidados adicionados com sucesso!`;
-      } catch (e) {
-        document.getElementById("status").textContent = `❌ Erro ao adicionar convidados: ${e.message}`;
+        const dias = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const horas = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const min = Math.floor((diff / (1000 * 60)) % 60);
+        const seg = Math.floor((diff / 1000) % 60);
+        el.textContent = `${dias}d ${horas}h ${min}m ${seg}s`;
+        requestAnimationFrame(atualizar);
       }
-    };
+      atualizar();
+    }
   </script>
-</head>
-<body>
-  <div class="container">
-    <h2>Admin - Invites Digitais</h2>
-
-    <label for="clienteId">Código do Cliente:</label>
-    <input id="clienteId" placeholder="Ex: casamento2025" />
-
-    <label for="dataEvento">Data do Evento:</label>
-    <input id="dataEvento" type="datetime-local" />
-
-    <label for="limite">Limite de Dispositivos:</label>
-    <input id="limite" type="number" placeholder="Ex: 2" />
-
-    <button onclick="criarCliente()">Criar Cliente</button>
-
-    <label for="convidadosLista">Convidados (nome,codigo por linha):</label>
-    <textarea id="convidadosLista" rows="10" placeholder="Maria Silva,ABC123\nJoão Pinto,XYZ456"></textarea>
-
-    <button onclick="adicionarConvidados()">Adicionar Convidados</button>
-
-    <div class="status" id="status"></div>
-    <div id="qrcodes" class="qrcodes"></div>
-  </div>
 </body>
 </html>
