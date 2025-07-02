@@ -1,371 +1,177 @@
-
 <!DOCTYPE html>
 <html lang="pt">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Adkira Media – Validação</title>
+  <title>Adkira – Validação de Eventos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/html5-qrcode"></script>
   <style>
-    :root {
-      --primary: #6a5acd;
-      --success: #38a169;
-      --error: #e53e3e;
-      --bg: #f8f9fa;
-      --text: #2d3748;
-      --light: #edf2f7;
-    }
-    body, html {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      font-family: 'Segoe UI', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-    }
-    .splash-screen {
-      position: fixed;
-      inset: 0;
-      background: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 99999;
-      animation: fadeOut 1s ease forwards;
-      animation-delay: 2.5s;
-    }
-    .loader {
-      border: 6px solid #f3f3f3;
-      border-top: 6px solid var(--primary);
-      border-radius: 50%;
-      width: 60px;
-      height: 60px;
-      animation: spin 1s linear infinite;
-      margin-bottom: 20px;
-    }
-    .welcome-text {
-      font-size: 1.6em;
-      font-weight: bold;
-      opacity: 0;
-      transform: translateY(20px);
-      animation: slideIn 1s ease forwards;
-      animation-delay: 1.2s;
-    }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    @keyframes slideIn { to { opacity: 1; transform: translateY(0); } }
-    @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
-    main {
-      margin: 32px auto;
-      max-width: 500px;
-      background: #fff;
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-      overflow: hidden;
-    }
-    .tabs { display: flex; }
-    .tab {
-      flex: 1;
-      padding: 14px;
-      text-align: center;
-      background: var(--light);
-      cursor: pointer;
-      font-weight: 600;
-      transition: background 0.3s;
-    }
-    .tab.active {
-      background: var(--primary);
-      color: white;
-    }
-    .tabcontent {
-      display: none;
-      padding: 24px;
-    }
-    .tabcontent.active {
-      display: block;
-    }
-    input[type=text] {
-      width: 100%;
-      padding: 12px;
-      font-size: 1em;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      margin-bottom: 14px;
-      text-align: center;
-    }
-    button {
-      width: 100%;
-      padding: 12px;
-      font-size: 1em;
-      background: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      font-weight: 600;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      transition: background 0.3s;
-    }
-    button:hover {
-      background: #5a4ccf;
-    }
-    .output {
-      margin-top: 14px;
-      padding: 14px;
-      text-align: center;
-      border-radius: 10px;
-      font-size: 1.1em;
-    }
-    .output.success {
-      background: var(--success);
-      color: white;
-    }
-    .output.error {
-      background: var(--error);
-      color: white;
-    }
-    #guestList {
-      list-style: none;
-      padding: 0;
-      margin-top: 20px;
-      max-height: 300px;
-      overflow-y: auto;
-      border: 1px solid #e2e8f0;
-      border-radius: 10px;
-      display: none;
-    }
-    #guestList li {
-      padding: 12px 16px;
-      border-bottom: 1px solid #edf2f7;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .check {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      border: 2px solid #cbd5e0;
-      flex-shrink: 0;
-    }
-    .checked {
-      background: var(--success);
-      border-color: var(--success);
-    }
-    .footer-note {
-      text-align: center;
-      font-size: 0.8em;
-      color: #a0aec0;
-      margin: 32px 0;
-    }
-    #progressContainer {
-      margin-top: 20px;
-      position: relative;
-      height: 26px;
-      background: #e2e8f0;
-      border-radius: 13px;
-      overflow: hidden;
-      display: none;
-    }
-    #progressBar {
-      background: var(--primary);
-      height: 100%;
-      width: 0%;
-      transition: width 0.3s;
-    }
-    #progressText {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.9em;
-      font-weight: 600;
-      color: white;
-      text-shadow: 0 0 3px rgba(0,0,0,.4);
-    }
+    #progressBar{transition:width .3s}
   </style>
 </head>
-<body>
-  <div class="splash-screen" id="splash">
-    <div class="loader"></div>
-    <div class="welcome-text">Bem-vindo à Adkira</div>
-  </div>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center p-4">
+  <!-- LOGIN -->
+  <section id="login" class="w-full max-w-sm bg-white rounded-xl shadow p-6 space-y-3">
+    <h2 class="text-xl font-bold text-center">Login</h2>
+    <input id="username" class="w-full border rounded p-2" placeholder="Utilizador" />
+    <input id="password" type="password" class="w-full border rounded p-2" placeholder="Senha" />
+    <button onclick="customLogin()" class="w-full bg-indigo-600 text-white rounded py-2">Entrar</button>
+    <div id="loginError" class="text-red-600 text-center text-sm"></div>
+  </section>
 
-  <header ondblclick="secretOverride()">📋 Adkira Media</header>
-  <main>
-    <div class="tabs">
-      <div class="tab active" onclick="openTab('cliente')">Cliente</div>
-      <div class="tab" onclick="adminLogin()">Admin</div>
+  <!-- CLIENTE -->
+  <section id="cliente" class="hidden w-full max-w-md bg-white rounded-xl shadow p-4 space-y-4">
+    <h2 class="text-lg font-semibold text-center">Validação de Convidados</h2>
+    <div class="flex gap-2">
+      <input id="codeInput" class="flex-1 border rounded p-2" placeholder="Código ou QR" />
+      <button onclick="verifyCode()" class="bg-indigo-600 text-white px-4 rounded">OK</button>
     </div>
-    <div id="cliente" class="tabcontent active">
-      <input id="codeInput" type="text" placeholder="Digite o código do convite" />
-      <button onclick="verify()">Verificar</button>
-      <div class="output" id="result">Nenhum código validado ainda…</div>
-      <div id="progressContainer"><div id="progressBar"></div><span id="progressText"></span></div>
-      <ul id="guestList"></ul>
-    </div>
-    <div id="admin" class="tabcontent">
-      <div id="eventDateSection" style="display:none">
-        <input id="eventDate" type="text" placeholder="Data do evento (DD.MM.AAAA)" />
-        <button onclick="setEventDate()">Definir Data</button>
-      </div>
-      <input id="fileInput" type="file" accept=".txt" onchange="importTxt(event)" style="display:none" />
-      <div id="adminAddSection" style="display:none">
-        <input id="newCode" type="text" placeholder="Novo código" />
-        <input id="newName" type="text" placeholder="Nome do convidado" />
-        <button onclick="addManual()">Adicionar Convidado</button>
-      </div>
-      <button id="overrideBtn" onclick="toggleOverride()" style="display:none">🛡️ Modo Override</button>
-    </div>
-  </main>
-  <div class="footer-note">Adkira Media © 2025</div>
+    <button onclick="openScanner()" class="w-full bg-emerald-600 text-white py-2 rounded">📷 Ler QR Code</button>
+
+    <div class="text-center text-sm">Válidos: <span id="usedTxt">0</span>/<span id="limitTxt">0</span></div>
+    <div class="w-full h-3 bg-gray-200 rounded"><div id="progressBar" class="h-full bg-indigo-600"></div></div>
+
+    <ul id="guestList" class="mt-4 max-h-60 overflow-y-auto divide-y"></ul>
+
+    <div id="qrDiv" class="hidden w-full max-w-xs mx-auto"></div>
+  </section>
+
+  <!-- ADMIN -->
+  <section id="admin" class="hidden w-full max-w-md bg-white rounded-xl shadow p-4 space-y-4">
+    <h2 class="text-lg font-semibold text-center">Painel Admin</h2>
+    <form id="createForm" class="space-y-2">
+      <input id="newUser"     class="w-full border rounded p-2" placeholder="Novo utilizador" />
+      <input id="newPass"     class="w-full border rounded p-2" placeholder="Senha" />
+      <input id="newEvent"    class="w-full border rounded p-2" placeholder="ID do evento" />
+      <input id="newLimit"    type="number" class="w-full border rounded p-2" placeholder="Limite inicial" />
+      <button type="button" onclick="createUserAndEvent()" class="w-full bg-indigo-600 text-white py-2 rounded">Criar utilizador & evento</button>
+    </form>
+    <hr/>
+    <h3 class="font-semibold">Carregar convidados (ficheiro .txt)</h3>
+    <input type="file" accept=".txt" onchange="uploadTxt(event)" />
+    <p class="text-xs text-gray-500">Formato: código, nome (um por linha)</p>
+  </section>
+
+  <footer class="mt-8 text-xs text-gray-500">Adkira Media © 2025</footer>
+
   <script>
-    let guests = {}, totalGuests = 0, usedGuests = 0, override = false, eventDate = null;
-    const PASS = '2025Invites';
-    const STORAGE_KEY = 'adkiraEventData';
+    let currentUser = null;
+    let currentEventId = null;
+    let guests = {}, totalGuests = 0, usedGuests = 0;
 
-    window.addEventListener('load', () => {
-      const splash = document.getElementById('splash');
-      setTimeout(() => splash.style.display = 'none', 3500);
-      loadState();
-      checkAccess();
-    });
+    function customLogin() {
+      const u = document.getElementById('username').value.trim();
+      const p = document.getElementById('password').value.trim();
+      if (!u || !p) return document.getElementById('loginError').textContent = 'Preencha ambos os campos';
+      const users = JSON.parse(localStorage.getItem('users') || '{}');
+      if (!users[u] || users[u].password !== p)
+        return document.getElementById('loginError').textContent = 'Utilizador ou senha incorreta';
 
-    function saveState() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({guests, totalGuests, usedGuests, eventDate}));
-    }
-    function loadState() {
-      const data = localStorage.getItem(STORAGE_KEY);
-      if(data){
-        const d = JSON.parse(data);
-        guests = d.guests || {};
-        totalGuests = d.totalGuests || 0;
-        usedGuests = d.usedGuests || 0;
-        eventDate = d.eventDate || null;
-        for(const code in guests){
-          addToList(code, guests[code].nome, guests[code].usado);
-        }
-        if(totalGuests > 0) showProgress();
-      }
-    }
-    function openTab(tab) {
-      document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.tabcontent').forEach(el => el.classList.remove('active'));
-      document.querySelector(`.tab[onclick*="${tab}"]`).classList.add('active');
-      document.getElementById(tab).classList.add('active');
-    }
-    function adminLogin() {
-      const p = prompt('Código de administrador:');
-      if(p === PASS){
-        openTab('admin');
-        document.getElementById('fileInput').style.display = 'block';
-        document.getElementById('adminAddSection').style.display = 'block';
-        document.getElementById('eventDateSection').style.display = 'block';
-        document.getElementById('overrideBtn').style.display = 'block';
+      currentUser = u;
+      currentEventId = users[u].event;
+
+      if (users[u].admin) {
+        document.getElementById('login').classList.add('hidden');
+        document.getElementById('admin').classList.remove('hidden');
       } else {
-        alert('Código incorreto');
+        document.getElementById('login').classList.add('hidden');
+        document.getElementById('cliente').classList.remove('hidden');
+        carregarEvento();
       }
     }
-    function verify() {
-      const code = document.getElementById('codeInput').value.trim();
-      if(!code){ return showMsg('Digite um código','error'); }
-      if(!guests[code]){ return showMsg('Código inexistente','error'); }
-      if(guests[code].usado){ return showMsg('USADO','error'); }
-      guests[code].usado = true;
-      usedGuests++;
-      showMsg('LIBERADO','success');
-      document.querySelector(`[data-code="${code}"] .check`).classList.add('checked');
-      updateProgress();
-      saveState();
+
+    function createUserAndEvent() {
+      const u = document.getElementById('newUser').value.trim();
+      const p = document.getElementById('newPass').value.trim();
+      const e = document.getElementById('newEvent').value.trim();
+      const l = parseInt(document.getElementById('newLimit').value.trim());
+      if (!u || !p || !e || isNaN(l)) return alert('Preencha todos os campos');
+      const users = JSON.parse(localStorage.getItem('users') || '{}');
+      const events = JSON.parse(localStorage.getItem('events') || '{}');
+
+      users[u] = { password: p, event: e, admin: false };
+      events[e] = { limit: l, used: 0, guests: {} };
+
+      localStorage.setItem('users', JSON.stringify(users));
+      localStorage.setItem('events', JSON.stringify(events));
+      alert('Utilizador e evento criados');
+      document.getElementById('createForm').reset();
     }
-    function showMsg(msg, type){
-      const el = document.getElementById('result');
-      el.className = 'output ' + type;
-      el.textContent = msg;
-    }
-    function addToList(code, nome, usado=false){
-      if(document.querySelector(`[data-code="${code}"]`)) return;
-      const li = document.createElement('li');
-      li.dataset.code = code;
-      li.innerHTML = `<span class="check ${usado?'checked':''}"></span><span>${nome}</span>`;
-      document.getElementById('guestList').appendChild(li);
-      guests[code] = {nome, usado};
-    }
-    function showProgress(){
-      document.getElementById('guestList').style.display = 'block';
-      document.getElementById('progressContainer').style.display = 'block';
-      updateProgress();
-    }
-    function updateProgress(){
-      const percent = Math.round((usedGuests / totalGuests) * 100);
-      document.getElementById('progressBar').style.width = percent + '%';
-      document.getElementById('progressText').textContent = `${usedGuests} / ${totalGuests}`;
-    }
-    function importTxt(e){
+
+    function uploadTxt(e) {
       const file = e.target.files[0];
-      if(!file) return;
+      if (!file || !currentUser) return;
+      const events = JSON.parse(localStorage.getItem('events') || '{}');
       const reader = new FileReader();
-      reader.onload = ev => {
-        const lines = ev.target.result.split(/\r?\n/).filter(Boolean);
-        guests = {}; totalGuests = 0; usedGuests = 0;
-        document.getElementById('guestList').innerHTML = '';
-        lines.forEach(l=>{
-          const [code,name] = l.split(/[,:;\t]+/);
-          if(code){
-            addToList(code.trim(), (name||'Convidado').trim());
-            totalGuests++;
-          }
+      reader.onload = function(evt) {
+        const lines = evt.target.result.split(/\r?\n/);
+        lines.forEach(line => {
+          const [code, name] = line.split(/[,:;\t]+/);
+          if (code) events[currentEventId].guests[code.trim()] = { name: (name || 'Convidado').trim(), used: false };
         });
-        showProgress();
-        saveState();
-        alert('Lista carregada com sucesso');
-        e.target.value = '';
+        localStorage.setItem('events', JSON.stringify(events));
+        carregarEvento();
       };
       reader.readAsText(file);
     }
-    function addManual(){
-      const code = document.getElementById('newCode').value.trim();
-      const name = document.getElementById('newName').value.trim();
-      if(!code || !name) return alert('Preencha ambos os campos');
-      if(guests[code]) return alert('Código já existe');
-      addToList(code, name);
-      totalGuests++;
-      showProgress();
-      saveState();
-      document.getElementById('newCode').value = '';
-      document.getElementById('newName').value = '';
-    }
-    function secretOverride(){
-      const p = prompt('Modo de emergência (senha):');
-      if(p === PASS){
-        override = true;
-        alert('Modo override ativado');
+
+    function carregarEvento() {
+      const events = JSON.parse(localStorage.getItem('events') || '{}');
+      const ev = events[currentEventId];
+      if (!ev) return;
+      totalGuests = ev.limit;
+      usedGuests = ev.used;
+      document.getElementById('usedTxt').textContent = usedGuests;
+      document.getElementById('limitTxt').textContent = totalGuests;
+      document.getElementById('progressBar').style.width = Math.round((usedGuests / totalGuests) * 100) + '%';
+      document.getElementById('guestList').innerHTML = '';
+      for (const [code, data] of Object.entries(ev.guests)) {
+        const li = document.createElement('li');
+        li.className = 'flex gap-2 p-2 border-b';
+        li.innerHTML = `<span class="h-5 w-5 rounded-full border-2 ${data.used ? 'bg-green-500 border-green-500' : ''}"></span><span class="flex-1">${data.name}</span><span class="text-xs text-gray-500">${code}</span>`;
+        document.getElementById('guestList').appendChild(li);
       }
     }
-    function toggleOverride(){
-      override = !override;
-      alert(`Modo override ${override ? 'ativado' : 'desativado'}`);
-    }
-    function setEventDate(){
-      const raw = document.getElementById('eventDate').value.trim();
-      const match = raw.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
-      if(!match) return alert('Formato inválido. Use DD.MM.AAAA');
-      const [_,d,m,y] = match;
-      eventDate = `${y}-${m}-${d}`;
-      saveState();
-      alert('Data do evento definida.');
-      checkAccess();
-    }
-    function checkAccess(){
-      if(override) return;
-      if(!eventDate) return;
-      const now = new Date();
-      const event = new Date(eventDate + 'T00:00:00');
-      const before = new Date(event); before.setDate(event.getDate()-2);
-      const after = new Date(event); after.setDate(event.getDate()+1); after.setHours(2);
-      if(now < before || now > after){
-        alert('⏱️ Fora do horário autorizado. Contacte a Adkira.');
+
+    function verifyCode() {
+      const code = document.getElementById('codeInput').value.trim();
+      if (!code) return;
+      const events = JSON.parse(localStorage.getItem('events') || '{}');
+      const ev = events[currentEventId];
+      const guest = ev.guests[code];
+      const resultEl = document.getElementById('result');
+      if (!guest) {
+        resultEl.textContent = 'Código inexistente';
+        resultEl.className = 'text-white bg-red-500 p-2 rounded';
+      } else if (guest.used) {
+        resultEl.textContent = 'Já usado';
+        resultEl.className = 'text-white bg-yellow-500 p-2 rounded';
+      } else if (ev.used >= ev.limit) {
+        resultEl.textContent = 'Limite excedido';
+        resultEl.className = 'text-white bg-red-500 p-2 rounded';
+      } else {
+        guest.used = true;
+        ev.used++;
+        resultEl.textContent = 'LIBERADO';
+        resultEl.className = 'text-white bg-green-500 p-2 rounded';
       }
+      localStorage.setItem('events', JSON.stringify(events));
+      carregarEvento();
+      document.getElementById('codeInput').value = '';
+    }
+
+    function openScanner() {
+      const qrDiv = document.getElementById('qrDiv');
+      qrDiv.classList.remove('hidden');
+      const qr = new Html5Qrcode('qrDiv');
+      qr.start({ facingMode: 'environment' }, { fps: 10, qrbox: 250 }, msg => {
+        document.getElementById('codeInput').value = msg;
+        qr.stop();
+        qr.clear();
+        qrDiv.classList.add('hidden');
+        verifyCode();
+      });
     }
   </script>
 </body>
