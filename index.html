@@ -7,7 +7,7 @@
   <script src="https://unpkg.com/html5-qrcode@latest"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, doc, getDoc, collection, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDah3W_j437Ute0WvLaAo1MdoM8XSZrkPU",
@@ -24,14 +24,13 @@
     let guests = {}, totalGuests = 0, usedGuests = 0, currentCode = "", scanner = null;
 
     window.login = async () => {
-  const deviceId = localStorage.getItem("device_id") || crypto.randomUUID();
-  localStorage.setItem("device_id", deviceId);
+      const deviceId = localStorage.getItem("device_id") || crypto.randomUUID();
+      localStorage.setItem("device_id", deviceId);
       const code = document.getElementById("accessCode").value.trim();
       if (!code) return alert("Insira o código de acesso.");
 
       const userRef = doc(db, "usuarios", code);
       const userSnap = await getDoc(userRef);
-
       if (!userSnap.exists()) return alert("Código inválido ou não registado.");
       const userData = userSnap.data();
 
@@ -40,22 +39,22 @@
       if (eventDate < now) return alert("Acesso expirado. Contacte o organizador.");
 
       const sessionsRef = collection(db, "sessoes", code, "dispositivos");
-  const sessionsSnap = await getDocs(sessionsRef);
-  const currentSessions = sessionsSnap.docs.map(doc => doc.id);
-  const limite = userData.limiteDispositivos || 2;
+      const sessionsSnap = await getDocs(sessionsRef);
+      const currentSessions = sessionsSnap.docs.map(doc => doc.id);
+      const limite = userData.limiteDispositivos || 2;
 
-  if (!currentSessions.includes(deviceId) && currentSessions.length >= limite) {
-    return alert("Limite de dispositivos excedido. Contacte o organizador.");
-  }
+      if (!currentSessions.includes(deviceId) && currentSessions.length >= limite) {
+        return alert("Limite de dispositivos excedido. Contacte o organizador.");
+      }
 
-  if (!currentSessions.includes(deviceId)) {
-    const newSessionRef = doc(db, "sessoes", code, "dispositivos", deviceId);
-    await updateDoc(newSessionRef, { ativo: true }).catch(async () => {
-      await setDoc(newSessionRef, { ativo: true });
-    });
-  }
+      if (!currentSessions.includes(deviceId)) {
+        const newSessionRef = doc(db, "sessoes", code, "dispositivos", deviceId);
+        await updateDoc(newSessionRef, { ativo: true }).catch(async () => {
+          await setDoc(newSessionRef, { ativo: true });
+        });
+      }
 
-  currentCode = code;
+      currentCode = code;
       document.getElementById("loginScreen").style.display = "none";
       document.getElementById("appScreen").style.display = "block";
 
@@ -125,7 +124,6 @@
       usedGuests++;
       updateProgress();
 
-      // Atualiza no Firestore
       const docRef = doc(db, "convidados", currentCode, "lista", guests[code].docId);
       await updateDoc(docRef, { usado: true });
 
@@ -146,85 +144,109 @@
       );
     };
   </script>
-  </script>
+</head>
+<body>
+  <div id="loginScreen" class="login-box">
+    <h2>Acesso ao Evento</h2>
+    <input id="accessCode" placeholder="Insira o seu código de acesso" />
+    <button onclick="login()">Entrar</button>
+  </div>
 
-<!-- Painel Admin -->
-<script>
-  const isAdmin = location.hash === '#admin';
-  if (isAdmin) {
-    document.body.innerHTML = `
-      <h2>Painel Administrativo</h2>
-      <input id="clienteId" placeholder="Código do cliente" />
-      <input id="dataEvento" type="datetime-local" />
-      <input id="limite" type="number" placeholder="Limite de dispositivos" />
-      <button onclick="criarCliente()">Criar Cliente</button>
+  <div id="appScreen" style="display:none">
+    <div id="contador">Contagem até ao evento: <span id="contadorTexto"></span></div>
+    <button onclick="recarregarLista()">🔄 Atualizar Lista</button>
+    <button onclick="startScanner()">📷 Escanear QR Code</button>
+    <input type="text" placeholder="Código manual" onkeydown="if(event.key==='Enter')verifyCode(this.value);" />
+    <p id="progresso"></p>
+    <ul id="guestList"></ul>
+    <div id="qr-reader"></div>
+  </div>
 
-      <h3>Adicionar Convidados</h3>
-      <textarea id="convidadosLista" rows="10" placeholder="nome,codigo"></textarea>
-      <button onclick="adicionarConvidados()">Adicionar à lista</button>
-    `;
-  }
+  <!-- Painel Admin -->
+  <script>
+    const isAdmin = location.hash === '#admin';
+    if (isAdmin && !sessionStorage.getItem('adminAuth')) {
+      const senha = prompt('🔒 Introduza a palavra-passe de administrador:');
+      if (senha !== '3Ki@ra1116') {
+        alert('Palavra-passe incorreta!');
+        location.href = location.pathname;
+      } else {
+        sessionStorage.setItem('adminAuth', 'ok');
+      }
+    }
 
-  async function criarCliente() {
-    const id = document.getElementById("clienteId").value.trim();
-    const data = document.getElementById("dataEvento").value;
-    const limite = parseInt(document.getElementById("limite").value) || 2;
-    if (!id || !data) return alert("Preencha todos os campos");
+    if (isAdmin) {
+      document.body.innerHTML = `
+        <h2>Painel Administrativo</h2>
+        <input id="clienteId" placeholder="Código do cliente" />
+        <input id="dataEvento" type="datetime-local" />
+        <input id="limite" type="number" placeholder="Limite de dispositivos" />
+        <button onclick="criarCliente()">Criar Cliente</button>
 
-    await setDoc(doc(db, "usuarios", id), {
-      dataEvento: new Date(data).toISOString(),
-      limiteDispositivos: limite
-    });
-    alert("Cliente criado com sucesso");
-  }
+        <h3>Adicionar Convidados</h3>
+        <textarea id="convidadosLista" rows="10" placeholder="nome,codigo"></textarea>
+        <button onclick="adicionarConvidados()">Adicionar à lista</button>
+      `;
+    }
 
-  async function adicionarConvidados() {
-    const id = document.getElementById("clienteId").value.trim();
-    const lista = document.getElementById("convidadosLista").value.trim();
-    if (!id || !lista) return alert("Preencha o código do cliente e os convidados");
+    async function criarCliente() {
+      const id = document.getElementById("clienteId").value.trim();
+      const data = document.getElementById("dataEvento").value;
+      const limite = parseInt(document.getElementById("limite").value) || 2;
+      if (!id || !data) return alert("Preencha todos os campos");
 
-    const linhas = lista.split("
-");
-    for (let linha of linhas) {
-      const [nome, codigo] = linha.split(",").map(s => s.trim());
-      if (!nome || !codigo) continue;
-      await setDoc(doc(collection(db, "convidados", id, "lista")), {
-        nome,
-        codigo,
-        usado: false
+      await setDoc(doc(db, "usuarios", id), {
+        dataEvento: new Date(data).toISOString(),
+        limiteDispositivos: limite
+      });
+      alert("Cliente criado com sucesso");
+    }
+
+    async function adicionarConvidados() {
+      const id = document.getElementById("clienteId").value.trim();
+      const lista = document.getElementById("convidadosLista").value.trim();
+      if (!id || !lista) return alert("Preencha o código do cliente e os convidados");
+
+      const linhas = lista.split("\n");
+      for (let linha of linhas) {
+        const [nome, codigo] = linha.split(",").map(s => s.trim());
+        if (!nome || !codigo) continue;
+        await setDoc(doc(collection(db, "convidados", id, "lista")), {
+          nome,
+          codigo,
+          usado: false
+        });
+      }
+      alert("Convidados adicionados com sucesso");
+    }
+
+    function exportarCSV(somenteValidados = false) {
+      const linhas = [["Nome", "Código", "Usado"]];
+      Object.entries(guests).forEach(([codigo, dados]) => {
+        if (somenteValidados && !dados.usado) return;
+        linhas.push([dados.nome, codigo, dados.usado ? "Sim" : "Não"]);
+      });
+
+      const csv = linhas.map(e => e.join(",")).join("\n");
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = somenteValidados ? "validados.csv" : "convidados.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    if (!isAdmin) {
+      const exportDiv = document.createElement("div");
+      exportDiv.innerHTML = `
+        <button onclick="exportarCSV(false)">⬇️ Exportar Todos (CSV)</button>
+        <button onclick="exportarCSV(true)">⬇️ Exportar Validados (CSV)</button>
+      `;
+      document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("appScreen")?.prepend(exportDiv);
       });
     }
-    alert("Convidados adicionados com sucesso");
-  }
-// Exportar CSV
-function exportarCSV(somenteValidados = false) {
-  const linhas = [["Nome", "Código", "Usado"]];
-  Object.entries(guests).forEach(([codigo, dados]) => {
-    if (somenteValidados && !dados.usado) return;
-    linhas.push([dados.nome, codigo, dados.usado ? "Sim" : "Não"]);
-  });
-
-  const csv = linhas.map(e => e.join(",")).join("
-");
-  const blob = new Blob([csv], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = somenteValidados ? "validados.csv" : "convidados.csv";
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-// Botões para exportar
-if (!isAdmin) {
-  const exportDiv = document.createElement("div");
-  exportDiv.innerHTML = `
-    <button onclick="exportarCSV(false)">⬇️ Exportar Todos (CSV)</button>
-    <button onclick="exportarCSV(true)">⬇️ Exportar Validados (CSV)</button>
-  `;
-  document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById("appScreen")?.prepend(exportDiv);
-  });
-}
-</script>
-</html>ódigo HTML permanece igual -->
+  </script>
+</body>
+</html>
