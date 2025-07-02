@@ -2,74 +2,88 @@
 <html lang="pt">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AdKira – Gerador de Convites + QR</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>AdKira – Validação</title>
   <style>
-    body{font-family:Arial,Helvetica,sans-serif;background:#f4f4f4;padding:20px;max-width:900px;margin:auto}
-    h1{text-align:center;color:#5c67f2}
-    textarea{width:100%;height:150px;padding:10px;font-size:1em;margin-bottom:10px}
-    input,select,button{padding:10px;font-size:1em;margin-bottom:10px;width:100%;box-sizing:border-box}
-    #output{white-space:pre;background:#fff;padding:15px;border:1px solid #ccc;border-radius:8px;margin-top:15px}
-    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:16px;margin-top:20px}
-    .qr-box{background:#fff;padding:10px;border:1px solid #ddd;border-radius:10px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.05)}
-    .qr-box canvas{width:120px;height:120px}
-    .row{display:flex;gap:10px}
+    :root{--primary:#6a5acd;--success:#38a169;--error:#e53e3e;--bg:#f8f9fa;--text:#2d3748;--light:#edf2f7}
+    body,html{margin:0;padding:0;height:100%;font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text)}
+    .splash-screen{position:fixed;inset:0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999;animation:fadeOut 1s ease forwards;animation-delay:2.5s}
+    .loader{border:6px solid #f3f3f3;border-top:6px solid var(--primary);border-radius:50%;width:60px;height:60px;animation:spin 1s linear infinite;margin-bottom:20px}
+    .welcome-text{font-size:1.6em;font-weight:700;opacity:0;transform:translateY(20px);animation:slideIn 1s ease forwards;animation-delay:1.2s}
+    @keyframes spin{to{transform:rotate(360deg)}}@keyframes slideIn{to{opacity:1;transform:translateY(0)}}@keyframes fadeOut{to{opacity:0;visibility:hidden}}
+
+    /* Fullscreen scanner */
+    #qrFullscreen{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;display:none;justify-content:center;align-items:center;flex-direction:column}
+    #qrFullscreenClose{position:absolute;top:10px;right:10px;background:#fff;border:none;padding:10px;border-radius:6px;cursor:pointer;font-weight:bold;z-index:10000}
+    #qrViewFull{width:100vw;height:100vh}
+
+    /* Mensagem central após leitura */
+    #qrStatus{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:3em;font-weight:700;text-align:center;opacity:0;transition:opacity .2s;text-shadow:0 0 10px rgba(0,0,0,.7);}
+    #qrStatus.success{color:var(--success)}
+    #qrStatus.error{color:var(--error)}
+
+    /* Estrutura principal */
+    main{margin:32px auto;max-width:500px;background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.1);overflow:hidden}
+    .tabs{display:flex}.tab{flex:1;padding:14px;text-align:center;background:var(--light);cursor:pointer;font-weight:600;transition:background .3s}.tab.active{background:var(--primary);color:#fff}
+    .tabcontent{display:none;padding:24px}.tabcontent.active{display:block}
+    input[type=text]{width:100%;padding:12px;font-size:1em;border:1px solid #ccc;border-radius:10px;margin-bottom:14px;text-align:center}
+    button{width:100%;padding:12px;font-size:1em;background:var(--primary);color:#fff;border:none;border-radius:10px;cursor:pointer;font-weight:600;box-shadow:0 2px 6px rgba(0,0,0,.1);transition:background .3s}button:hover{background:#5a4ccf}
+    .output{margin-top:14px;padding:14px;text-align:center;border-radius:10px;font-size:1.1em}
+    .output.success{background:var(--success);color:#fff}.output.error{background:var(--error);color:#fff}
+    #guestList{list-style:none;padding:0;margin-top:20px;max-height:300px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:10px;display:none}
+    #guestList li{padding:12px 16px;border-bottom:1px solid #edf2f7;display:flex;align-items:center;gap:10px}
+    .check{width:20px;height:20px;border-radius:50%;border:2px solid #cbd5e0;flex-shrink:0}.checked{background:var(--success);border-color:var(--success)}
+    .footer-note{text-align:center;font-size:.8em;color:#a0aec0;margin:32px 0}
+    #progressContainer{margin-top:20px;position:relative;height:26px;background:#e2e8f0;border-radius:13px;overflow:hidden;display:none}
+    #progressBar{background:var(--primary);height:100%;width:0%;transition:width .3s}
+    #progressText{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.9em;font-weight:600;color:#fff;text-shadow:0 0 3px rgba(0,0,0,.4)}
   </style>
-  <!-- biblioteca QRCode.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode@latest"></script>
 </head>
 <body>
-  <h1>🔐 AdKira – Gerador de Convites + QR</h1>
-  <label for="names">Nomes dos convidados (um por linha):</label>
-  <textarea id="names" placeholder="Ex: Maria João\nCarlos Alberto\n...\n"></textarea>
+  <div class="splash-screen" id="splash"><div class="loader"></div><div class="welcome-text">Bem‑vindo à AdKira</div></div>
 
-  <div class="row">
-    <input type="text" id="prefix" placeholder="Prefixo do código (opcional)" />
-    <input type="number" id="length" placeholder="Dígitos (ex: 3 = 001)" min="1" value="3" />
+  <div id="qrFullscreen">
+    <button id="qrFullscreenClose" onclick="closeFullscreen()">Fechar</button>
+    <div id="qrViewFull"></div>
+    <div id="qrStatus"></div>
   </div>
 
-  <button onclick="generateList()">Gerar Lista & QR</button>
-  <button onclick="downloadTXT()">📥 Baixar .txt</button>
-  <button onclick="downloadQRPngs()">📦 Baixar QR como .zip</button>
-  <button onclick="copyToClipboard()">📋 Copiar Lista</button>
-  <button onclick="clearAll()">🧹 Limpar Tudo</button>
+  <header ondblclick="secretOverride()">📋 AdKira</header>
+  <main>
+    <div class="tabs"><div class="tab active" onclick="openTab('cliente')">Cliente</div><div class="tab" onclick="adminLogin()">Admin</div></div>
+    <div id="cliente" class="tabcontent active">
+      <button onclick="startFullscreenScanner()">📷 Escanear QR Code (Tela Cheia)</button>
+      <input id="codeInput" type="text" placeholder="Digite o código do convite" />
+      <button onclick="verify()">Verificar</button>
+      <div class="output" id="result">Nenhum código validado ainda…</div>
+      <div id="progressContainer"><div id="progressBar"></div><span id="progressText"></span></div>
+      <ul id="guestList"></ul>
+    </div>
+    <div id="admin" class="tabcontent">
+      <input id="fileInput" type="file" accept=".txt" onchange="importTxt(event)" style="display:none" />
+      <div id="adminAddSection" style="display:none">
+        <input id="newCode" type="text" placeholder="Novo código" />
+        <input id="newName" type="text" placeholder="Nome do convidado" />
+        <button onclick="addManual()">Adicionar Convidado</button>
+      </div>
+      <button id="uploadBtn" onclick="document.getElementById('fileInput').click()">📥 Carregar lista (.txt)</button>
+      <button id="overrideBtn" onclick="toggleOverride()" style="display:none;margin-top:10px">🛡️ Modo Override</button>
+    </div>
+  </main>
+  <div class="footer-note">AdKira © 2025</div>
 
-  <div id="counter"></div>
-  <div id="output"></div>
-  <section id="qrContainer" class="grid"></section>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
 <script>
-let listData="";
-function generateList(){
-  const names=document.getElementById('names').value.trim().split(/\r?\n/).filter(Boolean);
-  const prefix=document.getElementById('prefix').value.trim();
-  const digits=parseInt(document.getElementById('length').value);
-  const used=new Set();
-  let out="",counter=1;
-  const qrWrap=document.getElementById('qrContainer');qrWrap.innerHTML='';
-  names.forEach(name=>{
-    let code=String(counter).padStart(digits,'0');
-    if(prefix)code=prefix+code;
-    while(used.has(code)){counter++;code=String(counter).padStart(digits,'0');if(prefix)code=prefix+code;}
-    used.add(code);
-    out+=`${code},${name}\n`;
-    // cria QR
-    const box=document.createElement('div');box.className='qr-box';
-    const canvas=document.createElement('div');box.appendChild(canvas);
-    const label=document.createElement('div');label.textContent=code;label.style.marginTop='6px';label.style.fontSize='0.8em';box.appendChild(label);
-    qrWrap.appendChild(box);
-    new QRCode(canvas,{text:code,width:120,height:120});
-    counter++;
-  });
-  listData=out.trim();
-  document.getElementById('output').textContent=listData;
-  document.getElementById('counter').textContent=`Total: ${names.length} convidados.`;
-}
-function downloadTXT(){if(!listData)return alert('Gere a lista primeiro.');const blob=new Blob([listData],{type:'text/plain'});const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='lista_convidados.txt';link.click();}
-function copyToClipboard(){if(!listData)return alert('Gere a lista primeiro.');navigator.clipboard.writeText(listData).then(()=>alert('Lista copiada!'));}
-function clearAll(){document.getElementById('names').value='';document.getElementById('output').textContent='';document.getElementById('counter').textContent='';document.getElementById('qrContainer').innerHTML='';listData='';}
-async function downloadQRPngs(){const boxes=document.querySelectorAll('.qr-box canvas');if(!boxes.length)return alert('Gere os QR primeiro.');const zip=new JSZip();let i=1;boxes.forEach(cv=>{const data=cv.toDataURL('image/png').split(',')[1];zip.file(`qr_${i}.png`,data,{base64:true});i++;});const blob=await zip.generateAsync({type:'blob'});const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='qr_codes.zip';link.click();}
-</script>
-</body>
-</html>
+let guests={},totalGuests=0,usedGuests=0,override=false;
+const PASS='2025Invites',STORAGE_KEY='adkiraEventData';
+let fullscreenScanner=null;
+window.addEventListener('load',()=>{setTimeout(()=>document.getElementById('splash').style.display='none',3500);loadState();if(localStorage.getItem('keepScanner')==='true'){startFullscreenScanner();}});
+function saveState(){localStorage.setItem(STORAGE_KEY,JSON.stringify({guests,totalGuests,usedGuests}));}
+function loadState(){const d=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');if(d.guests){guests=d.guests;totalGuests=d.totalGuests||0;usedGuests=d.usedGuests||0;Object.keys(guests).forEach(c=>addToList(c,guests[c].nome,guests[c].usado));if(totalGuests>0)showProgress();}}
+function openTab(t){document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active'));document.querySelectorAll('.tabcontent').forEach(e=>e.classList.remove('active'));document.querySelector(`.tab[onclick*="${t}"]`).classList.add('active');document.getElementById(t).classList.add('active');}
+function adminLogin(){const p=prompt('Código de administrador:');if(p===PASS){openTab('admin');document.getElementById('fileInput').style.display='block';document.getElementById('adminAddSection').style.display='block';document.getElementById('overrideBtn').style.display='block';}else alert('Código incorreto');}
+function verify(){const code=document.getElementById('codeInput').value.trim();if(!code)return flashMsg('DIGITE O CÓDIGO','error');if(!guests[code])return flashMsg('CÓDIGO INEXISTENTE','error');if(guests[code].usado)return flashMsg('USADO','error',true);guests[code].usado=true;usedGuests++;flashMsg('PERMITIDO','success',true);document.querySelector(`[data-code="${code}"] .check`).classList.add('checked');updateProgress();saveState();document.getElementById('codeInput').value='';}
+function flashMsg(msg,type,fullscreen=false){const el=document.getElementById('result');el.className='output '+type;el.textContent=msg;if(fullscreen){const fs=document.getElementById('qrStatus');fs.textContent=msg;fs.className=type;fs.style.opacity='1';setTimeout(()=>fs.style.opacity='0',3000);}}
+function addToList(code,nome,usado=false){if(document.querySelector(`[data-code="${code}"]`))return;const li=document.createElement('li');li.dataset.code=code;li.innerHTML=`<span class="check ${usado?'checked':''}"></span><span>${nome}</span>`;document.getElementById('guestList').appendChild(li);guests[code]={nome,usado};}
+function showProgress(){document.getElementById('guestList').style.display='block';document.getElementById('progressContainer').style.display='block';updateProgress();}
+function updateProgress(){const percent=Math
