@@ -39,7 +39,6 @@
     <button id="qrFullscreenClose" onclick="closeFullscreen()">Fechar</button>
     <div id="qrViewFull"></div>
     <div id="qrStatus"></div>
-    <input type="file" accept="image/*" onchange="scanFromImage(event)" style="margin-top:20px;background:#fff;padding:10px;border-radius:8px;" />
   </div>
   <header ondblclick="secretOverride()">📋 AdKira</header>
   <main>
@@ -84,7 +83,6 @@ function secretOverride(){const p=prompt('Modo emergência:');if(p===PASS){overr
 function toggleOverride(){override=!override;alert('Modo override '+(override?'ativado':'desativado'));}
 function startFullscreenScanner(){document.getElementById('qrFullscreen').style.display='flex';localStorage.setItem('keepScanner','true');fullscreenScanner=new Html5Qrcode('qrViewFull');fullscreenScanner.start({facingMode:'environment'},{fps:10,qrbox:300},text=>{document.getElementById('codeInput').value=text;verify();},()=>{});}
 function closeFullscreen(){if(fullscreenScanner){fullscreenScanner.stop().then(()=>fullscreenScanner.clear()).then(()=>fullscreenScanner=null);}document.getElementById('qrFullscreen').style.display='none';localStorage.removeItem('keepScanner');document.getElementById('qrStatus').textContent='';}
-function scanFromImage(event){const file=event.target.files[0];if(!file)return;Html5Qrcode.getCameras().then(()=>{const reader=new FileReader();reader.onload=function(){const imgData=reader.result;Html5QrcodeScanner.prototype.scanFile(imgData,true).then(decoded=>{document.getElementById('codeInput').value=decoded;verify();}).catch(()=>alert('Código não detectado na imagem.'));};reader.readAsDataURL(file);});}
 </script>
 </body>
 </html>
