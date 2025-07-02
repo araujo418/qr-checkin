@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>AdKira – Validação</title>
+  <title>Invites digitais – Validação</title>
   <style>
     :root{--primary:#6a5acd;--success:#38a169;--error:#e53e3e;--bg:#f8f9fa;--text:#2d3748;--light:#edf2f7}
     body,html{margin:0;padding:0;height:100%;font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text)}
@@ -37,7 +37,7 @@
   <script src="https://unpkg.com/html5-qrcode@latest"></script>
 </head>
 <body>
-  <div class="splash-screen" id="splash"><div class="loader"></div><div class="welcome-text">Bem‑vindo à AdKira</div></div>
+  <div class="splash-screen" id="splash"><div class="loader"></div><div class="welcome-text">Bem‑vindo à Invites digitais</div></div>
 
   <div id="qrFullscreen">
     <button id="qrFullscreenClose" onclick="closeFullscreen()">Fechar</button>
@@ -71,11 +71,11 @@
       <button id="overrideBtn" onclick="toggleOverride()" style="display:none;margin-top:10px">🛡️ Modo Override</button>
     </div>
   </main>
-  <div class="footer-note">AdKira © 2025</div>
+  <div class="footer-note">Invites digitais © 2025</div>
 
 <script>
 let guests = {}, totalGuests = 0, usedGuests = 0, override = false;
-const STORAGE_KEY = 'adkiraEventData', PASS = '2025Invites';
+const STORAGE_KEY = 'invitesDigitaisEventData', PASS = '2025Invites';
 let fullscreenScanner = null, scannerLocked = false;
 
 window.addEventListener('load', () => {
