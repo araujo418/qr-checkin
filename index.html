@@ -6,20 +6,17 @@
   <title>Adkira – Validação de Eventos</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/html5-qrcode"></script>
-  <style>
-    #progressBar{transition:width .3s}
-  </style>
+  <style>#progressBar{transition:width .3s}</style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center p-4">
-
-  <!-- TABS NAVIGATION -->
-  <div class="flex space-x-4 mb-4">
-    <button onclick="showTab('clienteTab')" class="px-4 py-2 bg-indigo-600 text-white rounded">Cliente</button>
-    <button onclick="requestAdminAccess()" class="px-4 py-2 bg-gray-300 text-black rounded">Admin</button>
-  </div>
+  <!-- NAV TABS -->
+  <nav class="flex gap-4 mb-4">
+    <button onclick="showTab('cliente')" id="tabCliente" class="px-4 py-2 bg-indigo-600 text-white rounded">Cliente</button>
+    <button onclick="requestAdminAccess()" id="tabAdmin" class="px-4 py-2 bg-gray-300 text-black rounded">Admin</button>
+  </nav>
 
   <!-- LOGIN -->
-  <section id="login" class="w-full max-w-sm bg-white rounded-xl shadow p-6 space-y-3">
+  <section id="loginBox" class="w-full max-w-sm bg-white rounded-xl shadow p-6 space-y-3">
     <h2 class="text-xl font-bold text-center">Login</h2>
     <input id="username" class="w-full border rounded p-2" placeholder="Utilizador" />
     <input id="password" type="password" class="w-full border rounded p-2" placeholder="Senha" />
@@ -27,57 +24,164 @@
     <div id="loginError" class="text-red-600 text-center text-sm"></div>
   </section>
 
-  <!-- CLIENTE ABA -->
-  <section id="clienteTab" class="hidden w-full max-w-md bg-white rounded-xl shadow p-4 space-y-4">
+  <!-- CLIENTE TAB -->
+  <section id="cliente" class="hidden w-full max-w-md bg-white rounded-xl shadow p-4 space-y-4">
     <h2 class="text-lg font-semibold text-center">Validação de Convidados</h2>
     <div class="flex gap-2">
       <input id="codeInput" class="flex-1 border rounded p-2" placeholder="Código ou QR" />
       <button onclick="verifyCode()" class="bg-indigo-600 text-white px-4 rounded">OK</button>
     </div>
     <button onclick="openScanner()" class="w-full bg-emerald-600 text-white py-2 rounded">📷 Ler QR Code</button>
-
-    <div class="text-center text-sm">Válidos: <span id="usedTxt">0</span>/<span id="limitTxt">0</span></div>
+    <div class="text-center text-sm">Válidos: <span id="usedTxt">0</span> / <span id="limitTxt">0</span></div>
     <div class="w-full h-3 bg-gray-200 rounded"><div id="progressBar" class="h-full bg-indigo-600"></div></div>
-
     <ul id="guestList" class="mt-4 max-h-60 overflow-y-auto divide-y"></ul>
-    <div id="qrDiv" class="hidden w-full max-w-xs mx-auto"></div>
+    <div id="qrView" class="hidden w-full max-w-xs mx-auto"></div>
   </section>
 
-  <!-- ADMIN ABA -->
-  <section id="adminTab" class="hidden w-full max-w-md bg-white rounded-xl shadow p-4 space-y-4">
+  <!-- ADMIN TAB -->
+  <section id="admin" class="hidden w-full max-w-md bg-white rounded-xl shadow p-4 space-y-6">
     <h2 class="text-lg font-semibold text-center">Painel Admin</h2>
-    <form id="createForm" class="space-y-2">
-      <input id="newUser"     class="w-full border rounded p-2" placeholder="Novo utilizador" />
-      <input id="newPass"     class="w-full border rounded p-2" placeholder="Senha" />
-      <input id="newEvent"    class="w-full border rounded p-2" placeholder="ID do evento" />
-      <input id="newLimit"    type="number" class="w-full border rounded p-2" placeholder="Limite inicial" />
-      <button type="button" onclick="createUserAndEvent()" class="w-full bg-indigo-600 text-white py-2 rounded">Criar utilizador & evento</button>
-    </form>
-    <hr/>
-    <h3 class="font-semibold">Carregar convidados (ficheiro .txt)</h3>
-    <input type="file" accept=".txt" onchange="uploadTxt(event)" />
-    <p class="text-xs text-gray-500">Formato: código, nome (um por linha)</p>
+
+    <!-- CRIAR UTILIZADOR -->
+    <div class="space-y-2 bg-gray-50 p-3 rounded">
+      <h3 class="font-semibold">Criar utilizador</h3>
+      <input id="newUser" class="w-full border rounded p-2" placeholder="Nome de utilizador" />
+      <input id="newPass" class="w-full border rounded p-2" placeholder="Senha" />
+      <input id="newLimit" type="number" class="w-full border rounded p-2" placeholder="Limite de convidados" />
+      <button onclick="createUser()" class="w-full bg-indigo-600 text-white py-2 rounded">Adicionar</button>
+    </div>
+
+    <!-- SELECIONAR UTILIZADOR EXISTENTE -->
+    <div class="space-y-2 bg-gray-50 p-3 rounded">
+      <h3 class="font-semibold">Gerir utilizador</h3>
+      <select id="userSelect" class="w-full border rounded p-2" onchange="populateUserInfo()"></select>
+      <input type="file" accept=".txt" onchange="uploadGuestList(event)" />
+      <p class="text-xs text-gray-500">Formato: código, nome (um por linha)</p>
+      <div class="text-sm">Limite: <span id="selLimit">0</span> | Usados: <span id="selUsed">0</span></div>
+    </div>
   </section>
 
-  <footer class="mt-8 text-xs text-gray-500">Adkira Media © 2025</footer>
+  <footer class="mt-6 text-xs text-gray-500">Adkira Media © 2025</footer>
 
-  <script>
-    const ADMIN_CODE = "2025@!!Kiara1993";
+<script>
+/***** CONFIG *****/
+const ADMIN_UNLOCK_CODE = "2025@!!Kiara1993";
 
-    function showTab(tabId) {
-      document.getElementById('clienteTab').classList.add('hidden');
-      document.getElementById('adminTab').classList.add('hidden');
-      document.getElementById(tabId).classList.remove('hidden');
-    }
+/***** DATA MODEL *****/
+// Estrutura: users = { username: {password, limit, used, guests:{code:{name,used}} } }
+function loadUsers(){ return JSON.parse(localStorage.getItem('users')||'{}'); }
+function saveUsers(u){ localStorage.setItem('users',JSON.stringify(u)); }
 
-    function requestAdminAccess() {
-      const input = prompt("Digite o código de administrador:");
-      if (input === ADMIN_CODE) {
-        showTab('adminTab');
-      } else {
-        alert("Código incorreto.");
-      }
-    }
-  </script>
+// Garante que existe pelo menos um admin (vai pedir login depois)
+(function ensureDefaults(){
+  const users = loadUsers();
+  if(!users['araujocataca116']){
+    users['araujocataca116'] = {password:'Ki@ra1116.',limit:0,used:0,guests:{}};
+    saveUsers(users);
+  }
+})();
+
+/***** NAV TABS *****/
+function showTab(id){
+  document.querySelectorAll('#cliente,#admin').forEach(s=>s.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+function requestAdminAccess(){
+  const code = prompt('Código de administrador:');
+  if(code===ADMIN_UNLOCK_CODE){
+    showTab('admin');
+    refreshUserSelect();
+  } else alert('Código incorreto');
+}
+
+/***** LOGIN CLIENTE *****/
+let currentUser=null;
+function customLogin(){
+  const u=document.getElementById('username').value.trim();
+  const p=document.getElementById('password').value.trim();
+  const users=loadUsers();
+  if(!users[u]||users[u].password!==p){
+    document.getElementById('loginError').textContent='Utilizador ou senha incorreta';return;
+  }
+  currentUser=u;
+  document.getElementById('loginBox').classList.add('hidden');
+  document.getElementById('tabCliente').click();
+  loadClientView();
+}
+
+/***** CLIENTE VIEW *****/
+function loadClientView(){
+  const udata=loadUsers()[currentUser];
+  document.getElementById('usedTxt').textContent=udata.used;
+  document.getElementById('limitTxt').textContent=udata.limit;
+  document.getElementById('progressBar').style.width=udata.limit? (udata.used/udata.limit*100)+'%':'0%';
+  const list=document.getElementById('guestList');
+  list.innerHTML='';
+  Object.entries(udata.guests).forEach(([code,g])=>{
+    const li=document.createElement('li');
+    li.className='flex gap-2 p-2';
+    li.innerHTML=`<span class="h-4 w-4 rounded-full border-2 ${g.used?'bg-green-500 border-green-500':''}"></span><span class="flex-1 truncate">${g.name}</span><span class="text-xs text-gray-500">${code}</span>`;
+    list.appendChild(li);
+  });
+}
+function verifyCode(){
+  const code=document.getElementById('codeInput').value.trim();
+  if(!code) return;
+  const users=loadUsers();
+  const udata=users[currentUser];
+  const guest=udata.guests[code];
+  if(!guest) return alert('Código inexistente');
+  if(guest.used) return alert('Já usado');
+  if(udata.used>=udata.limit) return alert('Limite excedido');
+  guest.used=true; udata.used++;
+  saveUsers(users);
+  loadClientView();
+  document.getElementById('codeInput').value='';
+}
+function openScanner(){
+  const view=document.getElementById('qrView');
+  view.classList.remove('hidden');
+  const qr=new Html5Qrcode('qrView');
+  qr.start({facingMode:'environment'},{fps:10,qrbox:250},msg=>{
+    qr.stop(); qr.clear(); view.classList.add('hidden');
+    document.getElementById('codeInput').value=msg; verifyCode();
+  });
+}
+
+/***** ADMIN FUNCTIONS *****/
+function refreshUserSelect(){
+  const sel=document.getElementById('userSelect');
+  sel.innerHTML='<option value="" disabled selected>Escolha utilizador</option>';
+  const users=loadUsers();
+  Object.keys(users).forEach(u=>{ if(u!=="araujocataca116") sel.innerHTML+=`<option>${u}</option>`; });
+}
+function createUser(){
+  const u=document.getElementById('newUser').value.trim();
+  const p=document.getElementById('newPass').value.trim();
+  const l=parseInt(document.getElementById('newLimit').value.trim());
+  if(!u||!p||isNaN(l)) return alert('Preenche todos os campos');
+  const users=loadUsers(); if(users[u]) return alert('Utilizador já existe');
+  users[u]={password:p,limit:l,used:0,guests:{}}; saveUsers(users);
+  alert('Utilizador criado'); document.getElementById('createForm').reset();
+  refreshUserSelect();
+}
+function populateUserInfo(){
+  const u=document.getElementById('userSelect').value; if(!u) return;
+  const users=loadUsers(); const d=users[u];
+  document.getElementById('selLimit').textContent=d.limit;
+  document.getElementById('selUsed').textContent=d.used;
+}
+function uploadGuestList(e){
+  const file=e.target.files[0]; const u=document.getElementById('userSelect').value;
+  if(!file||!u) return alert('Escolhe um utilizador e um ficheiro');
+  const readers=new FileReader(); readers.onload=ev=>{
+    const lines=ev.target.result.split(/\r?\n/).filter(Boolean);
+    const users=loadUsers(); const d=users[u]; let count=0;
+    lines.forEach(l=>{ const [code,name]=l.split(/[,:;\t]+/); if(code){d.guests[code.trim()]={name:(name||'Convidado').trim(),used:false}; count++;}});
+    d.limit+=count; saveUsers(users); alert('Convidados adicionados: '+count); populateUserInfo(); };
+  readers.readAsText(file);
+  e.target.value="";
+}
+</script>
 </body>
 </html>
