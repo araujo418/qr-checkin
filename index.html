@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Invites Digitais - Check-in</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="https://unpkg.com/html5-qrcode@latest"></script>
   <style>
     body {
@@ -66,10 +68,7 @@
     <div id="qr-reader" style="width:300px;margin:auto;"></div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, doc, getDoc, collection, getDocs, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
+  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDah3W_j437Ute0WvLaAo1MdoM8XSZrkPU",
       authDomain: "invites-digitais.firebaseapp.com",
@@ -79,56 +78,60 @@
       appId: "1:493623104477:web:ac1ba84fce18da6f78dc34"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
     let guests = {}, total = 0, validados = 0, codigoCliente = "", scanner = null;
 
-    window.login = async () => {
+    function login() {
       const code = document.getElementById("accessCode").value.trim();
       if (!code) return alert("Insira o código de acesso");
 
-      const userRef = doc(db, "usuarios", code);
-      const userSnap = await getDoc(userRef);
-      if (!userSnap.exists()) return alert("Código inválido ou não registado");
+      const userRef = db.collection("usuarios").doc(code);
+      userRef.get().then(docSnap => {
+        if (!docSnap.exists) return alert("Código inválido ou não registado");
 
-      const userData = userSnap.data();
-      const eventDate = new Date(userData.dataEvento);
-      if (new Date() > eventDate) return alert("Evento expirado");
+        const data = docSnap.data();
+        const eventDate = new Date(data.dataEvento);
+        if (new Date() > eventDate) return alert("Evento expirado");
 
-      codigoCliente = code;
-      document.getElementById("loginScreen").style.display = "none";
-      document.getElementById("appScreen").style.display = "block";
-      iniciarContagem(eventDate);
-      await carregarConvidados();
-    };
+        codigoCliente = code;
+        document.getElementById("loginScreen").style.display = "none";
+        document.getElementById("appScreen").style.display = "block";
+        iniciarContagem(eventDate);
+        carregarConvidados();
+      });
+    }
 
-    async function carregarConvidados() {
-      const listRef = collection(db, "convidados", codigoCliente, "lista");
-      const snap = await getDocs(listRef);
+    function carregarConvidados() {
       const ul = document.getElementById("guestList");
       ul.innerHTML = "";
       guests = {}; total = 0; validados = 0;
-      snap.forEach(docSnap => {
-        const data = docSnap.data();
-        const li = document.createElement("li");
-        li.dataset.codigo = data.codigo;
-        li.innerHTML = `<span class="${data.usado ? 'checked' : ''}">${data.nome}</span>`;
-        ul.appendChild(li);
-        guests[data.codigo] = { nome: data.nome, usado: data.usado, id: docSnap.id };
-        total++;
-        if (data.usado) validados++;
+
+      db.collection("convidados").doc(codigoCliente).collection("lista").get().then(snapshot => {
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const li = document.createElement("li");
+          li.dataset.codigo = data.codigo;
+          li.innerHTML = `<span class="${data.usado ? 'checked' : ''}">${data.nome}</span>`;
+          ul.appendChild(li);
+          guests[data.codigo] = { nome: data.nome, usado: data.usado, id: doc.id };
+          total++;
+          if (data.usado) validados++;
+        });
+        atualizarProgresso();
       });
-      atualizarProgresso();
     }
 
     function atualizarProgresso() {
       document.getElementById("progresso").textContent = `${validados} de ${total} convidados validados`;
     }
 
-    window.recarregarLista = carregarConvidados;
+    function recarregarLista() {
+      carregarConvidados();
+    }
 
-    window.verifyCode = async (code) => {
+    function verifyCode(code) {
       if (!guests[code]) return alert("Código não encontrado na lista");
       if (guests[code].usado) return alert("Este código já foi utilizado");
 
@@ -137,12 +140,12 @@
       validados++;
       atualizarProgresso();
 
-      const ref = doc(db, "convidados", codigoCliente, "lista", guests[code].id);
-      await updateDoc(ref, { usado: true });
+      const ref = db.collection("convidados").doc(codigoCliente).collection("lista").doc(guests[code].id);
+      ref.update({ usado: true });
       alert(`✔️ ${guests[code].nome} validado!`);
-    };
+    }
 
-    window.startScanner = () => {
+    function startScanner() {
       const qrRegion = document.getElementById("qr-reader");
       scanner = new Html5Qrcode("qr-reader");
       scanner.start(
@@ -154,7 +157,7 @@
         },
         error => {}
       );
-    };
+    }
 
     function iniciarContagem(data) {
       const el = document.getElementById("contadorTexto");
