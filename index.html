@@ -68,11 +68,9 @@
 const ADMIN_UNLOCK_CODE = "2025@!!Kiara1993";
 
 /***** DATA MODEL *****/
-// Estrutura: users = { username: {password, limit, used, guests:{code:{name,used}} } }
 function loadUsers(){ return JSON.parse(localStorage.getItem('users')||'{}'); }
 function saveUsers(u){ localStorage.setItem('users',JSON.stringify(u)); }
 
-// Garante que existe pelo menos um admin (vai pedir login depois)
 (function ensureDefaults(){
   const users = loadUsers();
   if(!users['araujocataca116']){
@@ -162,7 +160,10 @@ function createUser(){
   if(!u||!p||isNaN(l)) return alert('Preenche todos os campos');
   const users=loadUsers(); if(users[u]) return alert('Utilizador já existe');
   users[u]={password:p,limit:l,used:0,guests:{}}; saveUsers(users);
-  alert('Utilizador criado'); document.getElementById('createForm').reset();
+  alert('Utilizador criado');
+  document.getElementById('newUser').value = '';
+  document.getElementById('newPass').value = '';
+  document.getElementById('newLimit').value = '';
   refreshUserSelect();
 }
 function populateUserInfo(){
