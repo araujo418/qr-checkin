@@ -14,7 +14,6 @@
       --light: #edf2f7;
     }
     body, html {margin:0;padding:0;height:100%;font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);}    
-    /* splash */
     .splash-screen{position:fixed;inset:0;background:white;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999;animation:fadeOut 1s ease forwards;animation-delay:2.5s}
     .loader{border:6px solid #f3f3f3;border-top:6px solid var(--primary);border-radius:50%;width:60px;height:60px;animation:spin 1s linear infinite;margin-bottom:20px}
     .welcome-text{font-size:1.6em;font-weight:bold;opacity:0;transform:translateY(20px);animation:slideIn 1s ease forwards;animation-delay:1.2s}
@@ -37,7 +36,6 @@
 </head>
 <body>
   <div class="splash-screen" id="splash"><div class="loader"></div><div class="welcome-text">Bem‑vindo à AdKira</div></div>
-
   <header ondblclick="secretOverride()">📋 AdKira</header>
   <main>
     <div class="tabs">
@@ -65,7 +63,6 @@
     </div>
   </main>
   <div class="footer-note">AdKira © 2025</div>
-
 <script>
 let guests={},totalGuests=0,usedGuests=0,override=false;
 const PASS='2025Invites';
@@ -78,4 +75,13 @@ function adminLogin(){const p=prompt('Código de administrador:');if(p===PASS){o
 function verify(){const code=document.getElementById('codeInput').value.trim();if(!code)return showMsg('Digite um código','error');if(!guests[code])return showMsg('Código inexistente','error');if(guests[code].usado)return showMsg('USADO','error');guests[code].usado=true;usedGuests++;showMsg('LIBERADO','success');document.querySelector(`[data-code="${code}"] .check`).classList.add('checked');updateProgress();saveState();}
 function showMsg(msg,type){const el=document.getElementById('result');el.className='output '+type;el.textContent=msg;}
 function addToList(code,nome,usado=false){if(document.querySelector(`[data-code="${code}"]`))return;const li=document.createElement('li');li.dataset.code=code;li.innerHTML=`<span class="check ${usado?'checked':''}"></span><span>${nome}</span>`;document.getElementById('guestList').appendChild(li);guests[code]={nome,usado};}
-function showProgress(){document.getElementById('guestList').style.display='block';document.getElementById
+function showProgress(){document.getElementById('guestList').style.display='block';document.getElementById('progressContainer').style.display='block';updateProgress();}
+function updateProgress(){const percent=Math.round((usedGuests/totalGuests)*100);document.getElementById('progressBar').style.width=percent+'%';document.getElementById('progressText').textContent=`${usedGuests} / ${totalGuests}`;}
+function importTxt(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=ev=>{const lines=ev.target.result.split(/\r?\n/).filter(Boolean);guests={};totalGuests=0;usedGuests=0;document.getElementById('guestList').innerHTML='';lines.forEach(l=>{const [code,name]=l.split(/[,:;\t]+/);if(code){addToList(code.trim(),(name||'Convidado').trim());totalGuests++;}});showProgress();saveState();document.getElementById('scanBtn').style.display='inline-block';alert('Lista carregada com sucesso');e.target.value='';};reader.readAsText(file);}
+function addManual(){const code=document.getElementById('newCode').value.trim();const name=document.getElementById('newName').value.trim();if(!code||!name)return alert('Preencha ambos os campos');if(guests[code])return alert('Código já existe');addToList(code,name);totalGuests++;showProgress();saveState();document.getElementById('newCode').value='';document.getElementById('newName').value='';}
+function secretOverride(){const p=prompt('Modo de emergência (senha):');if(p===PASS){override=true;alert('Modo override ativado');}}
+function toggleOverride(){override=!override;alert(`Modo override ${override?'ativado':'desativado'}`);}
+function openScanner(){document.getElementById('qrView').style.display='block';const scanner=new Html5Qrcode("qrView");scanner.start({facingMode:"environment"},{fps:10,qrbox:250},(decodedText)=>{document.getElementById('codeInput').value=decodedText;scanner.stop();verify();},(errorMsg)=>{});}
+</script>
+</body>
+</html>
