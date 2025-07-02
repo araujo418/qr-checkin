@@ -56,6 +56,25 @@
   <footer class="mt-8 text-xs text-gray-500">Adkira Media © 2025</footer>
 
   <script>
+    /* =================== INIT DEFAULT ADMIN =================== */
+    (function(){
+      if(!localStorage.getItem('users')){
+        const users = {
+          "araujocataca116": {
+            password: "Ki@ra1116.",
+            event: "painel-admin",
+            admin: true
+          }
+        };
+        const events = {
+          "painel-admin": { limit: 0, used: 0, guests: {} }
+        };
+        localStorage.setItem('users', JSON.stringify(users));
+        localStorage.setItem('events', JSON.stringify(events));
+      }
+    })();
+    /* ========================================================= */
+
     let currentUser = null;
     let currentEventId = null;
     let guests = {}, totalGuests = 0, usedGuests = 0;
@@ -90,6 +109,8 @@
       const users = JSON.parse(localStorage.getItem('users') || '{}');
       const events = JSON.parse(localStorage.getItem('events') || '{}');
 
+      if(users[u]) return alert('Utilizador já existe');
+
       users[u] = { password: p, event: e, admin: false };
       events[e] = { limit: l, used: 0, guests: {} };
 
@@ -105,11 +126,13 @@
       const events = JSON.parse(localStorage.getItem('events') || '{}');
       const reader = new FileReader();
       reader.onload = function(evt) {
-        const lines = evt.target.result.split(/\r?\n/);
+        const lines = evt.target.result.split(/\r?\n/).filter(Boolean);
+        let count = 0;
         lines.forEach(line => {
           const [code, name] = line.split(/[,:;\t]+/);
-          if (code) events[currentEventId].guests[code.trim()] = { name: (name || 'Convidado').trim(), used: false };
+          if (code) { events[currentEventId].guests[code.trim()] = { name: (name || 'Convidado').trim(), used: false }; count++; }
         });
+        events[currentEventId].limit += count;
         localStorage.setItem('events', JSON.stringify(events));
         carregarEvento();
       };
@@ -124,12 +147,12 @@
       usedGuests = ev.used;
       document.getElementById('usedTxt').textContent = usedGuests;
       document.getElementById('limitTxt').textContent = totalGuests;
-      document.getElementById('progressBar').style.width = Math.round((usedGuests / totalGuests) * 100) + '%';
+      document.getElementById('progressBar').style.width = totalGuests? Math.round((usedGuests / totalGuests) * 100) + '%' : '0%';
       document.getElementById('guestList').innerHTML = '';
       for (const [code, data] of Object.entries(ev.guests)) {
         const li = document.createElement('li');
         li.className = 'flex gap-2 p-2 border-b';
-        li.innerHTML = `<span class="h-5 w-5 rounded-full border-2 ${data.used ? 'bg-green-500 border-green-500' : ''}"></span><span class="flex-1">${data.name}</span><span class="text-xs text-gray-500">${code}</span>`;
+        li.innerHTML = `<span class="h-5 w-5 rounded-full border-2 ${data.used ? 'bg-green-500 border-green-500' : ''}"></span><span class="flex-1 truncate">${data.name}</span><span class="text-xs text-gray-500">${code}</span>`;
         document.getElementById('guestList').appendChild(li);
       }
     }
@@ -137,42 +160,4 @@
     function verifyCode() {
       const code = document.getElementById('codeInput').value.trim();
       if (!code) return;
-      const events = JSON.parse(localStorage.getItem('events') || '{}');
-      const ev = events[currentEventId];
-      const guest = ev.guests[code];
-      const resultEl = document.getElementById('result');
-      if (!guest) {
-        resultEl.textContent = 'Código inexistente';
-        resultEl.className = 'text-white bg-red-500 p-2 rounded';
-      } else if (guest.used) {
-        resultEl.textContent = 'Já usado';
-        resultEl.className = 'text-white bg-yellow-500 p-2 rounded';
-      } else if (ev.used >= ev.limit) {
-        resultEl.textContent = 'Limite excedido';
-        resultEl.className = 'text-white bg-red-500 p-2 rounded';
-      } else {
-        guest.used = true;
-        ev.used++;
-        resultEl.textContent = 'LIBERADO';
-        resultEl.className = 'text-white bg-green-500 p-2 rounded';
-      }
-      localStorage.setItem('events', JSON.stringify(events));
-      carregarEvento();
-      document.getElementById('codeInput').value = '';
-    }
-
-    function openScanner() {
-      const qrDiv = document.getElementById('qrDiv');
-      qrDiv.classList.remove('hidden');
-      const qr = new Html5Qrcode('qrDiv');
-      qr.start({ facingMode: 'environment' }, { fps: 10, qrbox: 250 }, msg => {
-        document.getElementById('codeInput').value = msg;
-        qr.stop();
-        qr.clear();
-        qrDiv.classList.add('hidden');
-        verifyCode();
-      });
-    }
-  </script>
-</body>
-</html>
+      const events = JSON.parse
