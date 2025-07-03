@@ -34,7 +34,46 @@
     #progressBar{background:var(--primary);height:100%;width:0%;transition:width .3s}
     #progressText{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.9em;font-weight:600;color:#fff;text-shadow:0 0 3px rgba(0,0,0,.4)}
   </style>
-  <script src="https://unpkg.com/html5-qrcode@latest"></script>
+  <script src="https://unpkg.com/html5-qrcode@latest">
+async function atualizarLista() {
+  const clientId = prompt("Introduza o seu código de cliente:");
+  if (!clientId) return alert("Código não fornecido.");
+
+  const manifestUrl = `https://docs.google.com/uc?id=manifesto_${clientId}&export=download`;
+
+  try {
+    const res = await fetch(manifestUrl);
+    if (!res.ok) throw new Error("Manifesto não encontrado");
+    const data = await res.json();
+
+    if (!Array.isArray(data.lista)) return alert("Manifesto inválido.");
+
+    for (const txtUrl of data.lista) {
+      const resTxt = await fetch(txtUrl);
+      if (!resTxt.ok) {
+        console.warn("Erro ao carregar:", txtUrl);
+        continue;
+      }
+      const content = await resTxt.text();
+      content.split(/?
+/).filter(Boolean).forEach(l => {
+        const [code,name] = l.split(/[,:;	]+/);
+        if (code && !guests[code.trim()]) {
+          addToList(code.trim(), (name||'Convidado').trim());
+          totalGuests++;
+        }
+      });
+    }
+    showProgress();
+    saveState();
+    alert("Lista atualizada com sucesso!");
+  } catch (err) {
+    console.error(err);
+    alert("Erro ao atualizar a lista. Verifique o código do cliente.");
+  }
+}
+
+</script>
 </head>
 <body>
   <div class="splash-screen" id="splash"><div class="loader"></div><div class="welcome-text">Bem‑vindo à Invites digitais</div></div>
@@ -54,6 +93,7 @@
     </div>
     <div id="cliente" class="tabcontent active">
       <button onclick="startFullscreenScanner()">📷 Escanear QR Code (Tela Cheia)</button>
+      <button onclick="atualizarLista()">🔄 Atualizar Lista</button>
       <input id="codeInput" type="text" placeholder="Digite o código do convite" />
       <button onclick="verifyManual()">Verificar</button>
       <div class="output" id="result">Nenhum código validado ainda…</div>
@@ -213,6 +253,45 @@ function adminLogin(){
     document.getElementById('overrideBtn').style.display = 'block';
   } else alert('Código incorreto');
 }
+
+async function atualizarLista() {
+  const clientId = prompt("Introduza o seu código de cliente:");
+  if (!clientId) return alert("Código não fornecido.");
+
+  const manifestUrl = `https://docs.google.com/uc?id=manifesto_${clientId}&export=download`;
+
+  try {
+    const res = await fetch(manifestUrl);
+    if (!res.ok) throw new Error("Manifesto não encontrado");
+    const data = await res.json();
+
+    if (!Array.isArray(data.lista)) return alert("Manifesto inválido.");
+
+    for (const txtUrl of data.lista) {
+      const resTxt = await fetch(txtUrl);
+      if (!resTxt.ok) {
+        console.warn("Erro ao carregar:", txtUrl);
+        continue;
+      }
+      const content = await resTxt.text();
+      content.split(/?
+/).filter(Boolean).forEach(l => {
+        const [code,name] = l.split(/[,:;	]+/);
+        if (code && !guests[code.trim()]) {
+          addToList(code.trim(), (name||'Convidado').trim());
+          totalGuests++;
+        }
+      });
+    }
+    showProgress();
+    saveState();
+    alert("Lista atualizada com sucesso!");
+  } catch (err) {
+    console.error(err);
+    alert("Erro ao atualizar a lista. Verifique o código do cliente.");
+  }
+}
+
 </script>
 </body>
 </html>
