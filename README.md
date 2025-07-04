@@ -75,6 +75,8 @@ Separador pode ser vírgula, dois-pontos, ponto-e-vírgula ou tabulação.
 * Animações e sons na validação.
 * Sincronização online para múltiplos validadores.
 
+# Atualização forçada
+
 ---
 
 ## 📧 Suporte
