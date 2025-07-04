@@ -21,218 +21,113 @@
       --text:#edf2f7;
       --light:#2d3748;
     }
-    * { box-sizing: border-box; }
-    body, html {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      font-family: 'Segoe UI', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      transition: background .3s, color .3s;
+    body,html {
+      margin:0;padding:0;height:100%;
+      font-family:'Segoe UI',sans-serif;
+      background:var(--bg);color:var(--text);
+      transition:background .3s,color .3s;
     }
     .splash-screen {
-      position: fixed;
-      inset: 0;
-      background: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 99999;
-      animation: fadeOut 1s ease forwards;
-      animation-delay: 2.5s;
+      position:fixed;inset:0;background:#fff;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      z-index:99999;
+      animation:fadeOut 1s ease forwards;animation-delay:2.5s;
     }
     .loader {
-      border: 6px solid #f3f3f3;
-      border-top: 6px solid var(--primary);
-      border-radius: 50%;
-      width: 60px;
-      height: 60px;
-      animation: spin 1s linear infinite;
-      margin-bottom: 20px;
+      border:6px solid #f3f3f3;border-top:6px solid var(--primary);
+      border-radius:50%;width:60px;height:60px;
+      animation:spin 1s linear infinite;margin-bottom:20px;
     }
     .welcome-text {
-      font-size: 1.6em;
-      font-weight: 700;
-      opacity: 0;
-      transform: translateY(20px);
-      animation: slideIn 1s ease forwards;
-      animation-delay: 1.2s;
+      font-size:1.6em;font-weight:700;opacity:0;
+      transform:translateY(20px);
+      animation:slideIn 1s ease forwards;animation-delay:1.2s;
     }
-    @keyframes spin { to { transform: rotate(360deg) } }
-    @keyframes slideIn { to { opacity: 1; transform: translateY(0) } }
-    @keyframes fadeOut { to { opacity: 0; visibility: hidden } }
-
+    @keyframes spin {to {transform:rotate(360deg)}}
+    @keyframes slideIn {to {opacity:1;transform:translateY(0)}}
+    @keyframes fadeOut {to {opacity:0;visibility:hidden}}
     main {
-      margin: 32px auto;
-      max-width: 500px;
-      background: var(--bg);
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, .1);
-      overflow: hidden;
-      padding: 16px;
-      transition: background .3s;
+      margin:32px auto;max-width:500px;background:var(--bg);
+      border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.1);
+      overflow:hidden;
+      padding:16px;
+      transition:background .3s;
     }
-    .tabs { display: flex; }
+    .tabs {display:flex}
     .tab {
-      flex: 1;
-      padding: 14px;
-      text-align: center;
-      background: var(--light);
-      cursor: pointer;
-      font-weight: 600;
-      transition: background .3s;
+      flex:1;padding:14px;text-align:center;background:var(--light);
+      cursor:pointer;font-weight:600;transition:background .3s;
     }
-    .tab.active {
-      background: var(--primary);
-      color: #fff;
-    }
-    .tabcontent { display: none; padding: 24px; }
-    .tabcontent.active { display: block; }
+    .tab.active {background:var(--primary);color:#fff}
+    .tabcontent {display:none;padding:24px}
+    .tabcontent.active {display:block}
     button {
-      width: 100%;
-      padding: 12px;
-      font-size: 1em;
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      font-weight: 600;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, .1);
-      transition: background .3s;
+      width:100%;padding:12px;font-size:1em;background:var(--primary);color:#fff;
+      border:none;border-radius:10px;cursor:pointer;font-weight:600;
+      box-shadow:0 2px 6px rgba(0,0,0,.1);transition:background .3s;
     }
-    button:hover { background: #5a4ccf; }
+    button:hover {background:#5a4ccf}
     #guestList {
-      list-style: none;
-      padding: 0;
-      margin-top: 20px;
-      max-height: 300px;
-      overflow-y: auto;
-      border: 1px solid #e2e8f0;
-      border-radius: 10px;
-      display: none;
-      background: var(--bg);
+      list-style:none;padding:0;margin-top:20px;max-height:300px;overflow-y:auto;
+      border:1px solid #e2e8f0;border-radius:10px;display:none;
+      background:var(--bg);
     }
     #guestList li {
-      padding: 12px 16px;
-      border-bottom: 1px solid #edf2f7;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      padding:12px 16px;border-bottom:1px solid #edf2f7;
+      display:flex;align-items:center;gap:10px;
     }
     .check {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      border: 2px solid #cbd5e0;
-      flex-shrink: 0;
+      width:20px;height:20px;border-radius:50%;
+      border:2px solid #cbd5e0;flex-shrink:0;
     }
     .checked {
-      background: var(--success);
-      border-color: var(--success);
-      position: relative;
+      background:var(--success);border-color:var(--success);
+      position:relative;
     }
     .checked::after {
-      content: '✔';
-      color: white;
-      font-size: 14px;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
+      content:'✔';color:white;font-size:14px;
+      position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
     }
-    .footer-note {
-      text-align: center;
-      font-size: .8em;
-      color: #a0aec0;
-      margin: 32px 0;
-    }
+    .footer-note {text-align:center;font-size:.8em;color:#a0aec0;margin:32px 0;}
     #progressContainer {
-      margin-top: 20px;
-      position: relative;
-      height: 26px;
-      background: #e2e8f0;
-      border-radius: 13px;
-      overflow: hidden;
-      display: none;
+      margin-top:20px;position:relative;height:26px;background:#e2e8f0;
+      border-radius:13px;overflow:hidden;display:none;
     }
     #progressBar {
-      background: var(--primary);
-      height: 100%;
-      width: 0%;
-      transition: width .3s;
+      background:var(--primary);height:100%;width:0%;transition:width .3s;
     }
     #progressText {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: .9em;
-      font-weight: 600;
-      color: #fff;
-      text-shadow: 0 0 3px rgba(0, 0, 0, .4);
+      position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+      font-size:.9em;font-weight:600;color:#fff;text-shadow:0 0 3px rgba(0,0,0,.4);
     }
     #lastScanned {
-      margin: 12px 0;
-      padding: 12px;
-      border: 2px dashed var(--primary);
-      border-radius: 10px;
-      text-align: center;
-      font-weight: 600;
+      margin:12px 0;padding:12px;
+      border:2px dashed var(--primary);
+      border-radius:10px;text-align:center;
+      font-weight:600;
     }
     #searchInput {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 14px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 1em;
-      text-align: center;
+      width:100%;padding:10px;
+      margin-bottom:14px;
+      border:1px solid #ccc;border-radius:8px;
+      font-size:1em;
+      text-align:center;
     }
     #themeToggle {
-      margin-top: 14px;
-      background: #333;
+      margin-top:14px;
+      background:#333;
     }
     #clienteUploadBtn {
-      margin-top: 20px;
+      margin-top:20px;
     }
     #expiredMessage {
-      padding: 16px;
-      margin-top: 20px;
-      background: var(--error);
-      color: white;
-      border-radius: 10px;
-      text-align: center;
-      display: none;
-    }
-    #qrFullscreen {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,.9);
-      z-index: 9999;
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-    }
-    #qrViewFull {
-      width: 100vw;
-      height: 80vh;
-    }
-    #qrOverlayText {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 3rem;
-      font-weight: bold;
-      text-align: center;
-      opacity: 0;
-      transition: opacity .3s;
+      padding:16px;
+      margin-top:20px;
+      background:var(--error);
+      color:white;
+      border-radius:10px;
+      text-align:center;
+      display:none;
     }
   </style>
   <script src="https://unpkg.com/html5-qrcode@latest"></script>
@@ -242,35 +137,48 @@
     <div class="loader"></div>
     <div class="welcome-text">Bem‑vindo à Invites digitais</div>
   </div>
-  <div id="qrFullscreen">
-    <div id="qrViewFull"></div>
-    <div id="qrOverlayText"></div>
-    <button onclick="closeFullscreen()">Fechar</button>
+
+  <div id="qrFullscreen" style="position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;display:none;justify-content:center;align-items:center;flex-direction:column">
+    <button id="qrFullscreenClose" onclick="closeFullscreen()">Fechar</button>
+    <div id="qrViewFull" style="width:100vw;height:100vh"></div>
+    <div id="qrStatus"></div>
+    <div id="qrGuestName"></div>
+    <button id="nextBtn" onclick="enableNextScan()" style="display:none">Próximo</button>
   </div>
+
   <main>
     <div class="tabs">
       <div class="tab active" onclick="openTab('cliente')">Cliente</div>
       <div class="tab" onclick="adminLogin()">Admin</div>
     </div>
+
     <div id="cliente" class="tabcontent active">
       <div id="expiredMessage">❌ Licença expirada. Entre em contato para renovar.</div>
+
       <div id="clienteContent">
         <div style="display:flex;flex-direction:column;gap:14px;">
           <button onclick="startFullscreenScanner()">📷 Escanear QR Code (Tela Cheia)</button>
           <button onclick="exportPresenca()">📤 Exportar presença (CSV)</button>
         </div>
+
         <div id="lastScanned">Nenhum convidado validado ainda</div>
+
         <input id="searchInput" type="text" placeholder="🔍 Pesquisar convidado" oninput="filterGuestList()"/>
+
         <div id="progressContainer">
           <div id="progressBar"></div>
           <span id="progressText"></span>
         </div>
+
         <input id="clienteFileInput" type="file" accept=".txt" onchange="clienteImportTxt(event)" style="display:none" />
         <button id="clienteUploadBtn" onclick="document.getElementById('clienteFileInput').click()">📥 Carregar lista (.txt)</button>
+
         <button id="themeToggle" onclick="toggleTheme()">🌓 Alternar Tema</button>
+
         <ul id="guestList"></ul>
       </div>
     </div>
+
     <div id="admin" class="tabcontent">
       <div>
         <div><strong>Data de validade atual:</strong> <span id="validadeAdmin">Nenhuma</span></div>
@@ -287,15 +195,11 @@
       </div>
       <button id="uploadBtn" onclick="document.getElementById('fileInput').click()">📥 Carregar lista (.txt)</button>
       <button id="overrideBtn" onclick="toggleOverride()" style="display:none;margin-top:10px">🛡️ Modo Override</button>
-      <button onclick="resetUsados()" style="margin-top:10px">🔄 Resetar Todos Usados</button>
     </div>
   </main>
+
   <div class="footer-note">Invites digitais © 2025</div>
-  <script>
-    // === TODO O JAVASCRIPT COMPLETO QUE TEM AS MENSAGENS DE 3 SEGUNDOS FICA AQUI ===
-    // Ele é muito grande para caber na mesma mensagem aqui no limite do chat
-    // MAS EU VOU TE MANDAR JÁ DE IMEDIATO NA PRÓXIMA MENSAGEM PRA COLAR AQUI.
-  </script><script>
+<script>
 let guests = {}, totalGuests = 0, usedGuests = 0, override = false;
 const STORAGE_KEY = 'invitesDigitaisEventData';
 const VALIDITY_KEY = 'invitesValidade';
@@ -342,19 +246,19 @@ function clearValidity() {
   alert('Validade removida');
 }
 
-function showOverlayText(text, color) {
-  const overlay = document.getElementById('qrOverlayText');
-  overlay.textContent = text;
-  overlay.style.color = color;
-  overlay.style.opacity = '1';
-  setTimeout(() => {
-    overlay.style.opacity = '0';
-  }, 3000);
+function playSound(type) {
+  const audio = new Audio(type === 'success'
+    ? 'https://freesound.org/data/previews/331/331912_3248244-lq.mp3'
+    : 'https://freesound.org/data/previews/331/331912_3248244-lq.mp3');
+  audio.play();
+}
+
+function vibrate() {
+  if (navigator.vibrate) navigator.vibrate([200]);
 }
 
 function showScanStatus(status, name, type){
   scannerLocked = true;
-  showOverlayText(status, type === 'success' ? '#38a169' : '#e53e3e');
   document.getElementById('qrStatus').textContent = status;
   document.getElementById('qrGuestName').textContent = name;
   document.getElementById('qrStatus').style.color = type === 'success' ? '#38a169' : '#e53e3e';
@@ -449,7 +353,7 @@ function importTxt(e){
     if(lines[0].startsWith('#validade:')){
       validade = lines[0].split(':')[1].trim();
       localStorage.setItem(VALIDITY_KEY, validade);
-      lines.shift();
+      lines.shift(); // remove a linha da validade
     }
 
     lines.forEach(l => {
@@ -544,27 +448,6 @@ function loadTheme(){
   const saved = localStorage.getItem(THEME_KEY) || 'light';
   document.documentElement.setAttribute('data-theme', saved);
 }
-
-function playSound(type) {
-  const audio = new Audio(type === 'success'
-    ? 'https://freesound.org/data/previews/331/331912_3248244-lq.mp3'
-    : 'https://freesound.org/data/previews/331/331912_3248244-lq.mp3');
-  audio.play();
-}
-
-function vibrate() {
-  if (navigator.vibrate) navigator.vibrate([200]);
-}
-
-function resetUsados(){
-  Object.keys(guests).forEach(code => guests[code].usado = false);
-  usedGuests = 0;
-  saveState();
-  document.getElementById('guestList').querySelectorAll('.check').forEach(c => c.classList.remove('checked'));
-  updateProgress();
-  alert('Todos os convidados foram resetados como NÃO usados.');
-}
 </script>
-
 </body>
 </html>
