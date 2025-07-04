@@ -23,9 +23,7 @@ function enableNextScan(){
   document.getElementById('nextBtn').style.display = 'none';
   scannerLocked = false;
 }
-// ───────────────────────────────────────────────────────────
-// Verificação de códigos
-// ───────────────────────────────────────────────────────────
+
 function verify(code) {
   if (!code) return;
   if (!guests[code])
@@ -45,15 +43,6 @@ function verify(code) {
     ?.classList.add('checked');
 }
 
-function verifyManual() {
-  const code = document.getElementById('codeInput').value.trim();
-  verify(code);
-  document.getElementById('codeInput').value = '';
-}
-
-// ───────────────────────────────────────────────────────────
-// Scanner QR em ecrã completo
-// ───────────────────────────────────────────────────────────
 function startFullscreenScanner() {
   document.getElementById('qrFullscreen').style.display = 'flex';
 
@@ -67,7 +56,7 @@ function startFullscreenScanner() {
     txt => {
       if (!scannerLocked) verify(txt);
     },
-    () => {} // callback de erro ignorado
+    () => {}
   );
 }
 
@@ -82,9 +71,6 @@ function closeFullscreen() {
   enableNextScan();
 }
 
-// ───────────────────────────────────────────────────────────
-// Guias (abas)
-// ───────────────────────────────────────────────────────────
 function openTab(id) {
   document.querySelectorAll('.tab').forEach(e => e.classList.remove('active'));
   document
@@ -95,9 +81,6 @@ function openTab(id) {
   document.getElementById(id).classList.add('active');
 }
 
-// ───────────────────────────────────────────────────────────
-// Persistência em localStorage
-// ───────────────────────────────────────────────────────────
 function saveState() {
   localStorage.setItem(
     STORAGE_KEY,
@@ -119,15 +102,11 @@ function loadState() {
     if (totalGuests > 0) showProgress();
   }
 
-  // Oculta botão de upload se o cliente já carregou a sua lista
   if (localStorage.getItem('clienteTxtImportado') === 'true') {
     document.getElementById('clienteUploadBtn').style.display = 'none';
   }
 }
 
-// ───────────────────────────────────────────────────────────
-// Importação de ficheiros TXT
-// ───────────────────────────────────────────────────────────
 function importTxt(e) {
   const file = e.target.files[0];
   if (!file) return;
@@ -164,9 +143,6 @@ function clienteImportTxt(e) {
   document.getElementById('clienteUploadBtn').style.display = 'none';
 }
 
-// ───────────────────────────────────────────────────────────
-// Gestão manual de convidados (Admin)
-// ───────────────────────────────────────────────────────────
 function addManual() {
   const code = document.getElementById('newCode').value.trim();
   const name = document.getElementById('newName').value.trim();
@@ -180,7 +156,6 @@ function addManual() {
   saveState();
 }
 
-// Cria visualmente cada convidado na lista
 function addToList(code, nome, usado = false) {
   if (document.querySelector(`[data-code="${code}"]`)) return;
 
@@ -194,9 +169,6 @@ function addToList(code, nome, usado = false) {
   guests[code] = { nome, usado };
 }
 
-// ───────────────────────────────────────────────────────────
-// Barra de progresso
-// ───────────────────────────────────────────────────────────
 function showProgress() {
   document.getElementById('guestList').style.display = 'block';
   document.getElementById('progressContainer').style.display = 'block';
@@ -210,9 +182,6 @@ function updateProgress() {
     `${usedGuests} / ${totalGuests}`;
 }
 
-// ───────────────────────────────────────────────────────────
-// Funções administrativas
-// ───────────────────────────────────────────────────────────
 function toggleOverride() {
   override = !override;
   alert('Modo override ' + (override ? 'ativado' : 'desativado'));
@@ -229,7 +198,6 @@ function adminLogin() {
   }
 }
 
-// Exporta apenas convidados já validados/«usados»
 function exportUsedGuests() {
   let content = '';
   for (const [code, info] of Object.entries(guests)) {
@@ -242,4 +210,48 @@ function exportUsedGuests() {
   link.download = 'convidados_usados.txt';
   link.click();
 }
-// ───────────────────────────────────────────────────────────
+
+// nova função para carregar do link e esconder o campo depois
+function loadWeTransfer() {
+  const link = document.getElementById('weTransferLink').value.trim();
+  if (!link) {
+    alert('Por favor, insira um link válido.');
+    return;
+  }
+
+  fetch(link)
+    .then(response => {
+      if (!response.ok) throw new Error('Falha ao baixar o arquivo.');
+      return response.text();
+    })
+    .then(text => {
+      guests = {};
+      totalGuests = 0;
+      usedGuests = 0;
+      document.getElementById('guestList').innerHTML = '';
+
+      text
+        .split(/\r?\n/)
+        .filter(Boolean)
+        .forEach(l => {
+          const [code, name] = l.split(/[,:;\t]+/);
+          if (code) {
+            addToList(code.trim(), (name || 'Convidado').trim());
+            totalGuests++;
+          }
+        });
+
+      showProgress();
+      saveState();
+      alert('Lista carregada com sucesso!');
+      document.getElementById('scanBtn').disabled = false;
+
+      // esconder o campo e botão de link
+      document.getElementById('weTransferLink').style.display = 'none';
+      document.getElementById('loadWeTransferBtn').style.display = 'none';
+    })
+    .catch(err => {
+      console.error(err);
+      alert('Erro ao carregar a lista. Verifique o link.');
+    });
+}

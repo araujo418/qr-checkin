@@ -25,19 +25,23 @@
       <div class="tab active" onclick="openTab('cliente')">Cliente</div>
       <div class="tab" onclick="adminLogin()">Admin</div>
     </div>
+
     <div id="cliente" class="tabcontent active">
-      <button onclick="startFullscreenScanner()">📷 Escanear QR Code (Tela Cheia)</button>
-      <input id="codeInput" type="text" placeholder="Digite o código do convite" aria-label="Código do convite" />
-      <button onclick="verifyManual()">Verificar</button>
+      <input id="weTransferLink" type="text" placeholder="Cole aqui o link" />
+      <button id="loadWeTransferBtn" onclick="loadWeTransfer()">🔗 Carregar lista</button>
+
+      <button id="scanBtn" onclick="startFullscreenScanner()" disabled>📷 Escanear QR Code (Tela Cheia)</button>
+
       <div class="output" id="result">Nenhum código validado ainda…</div>
+
       <div id="progressContainer">
         <div id="progressBar"></div>
         <span id="progressText"></span>
       </div>
-      <input id="clienteFileInput" type="file" accept=".txt" onchange="clienteImportTxt(event)" style="display:none" />
-      <button id="clienteUploadBtn" onclick="document.getElementById('clienteFileInput').click()">📥 Carregar lista (.txt)</button>
+
       <ul id="guestList"></ul>
     </div>
+
     <div id="admin" class="tabcontent">
       <input id="fileInput" type="file" accept=".txt" onchange="importTxt(event)" style="display:none" />
       <div id="adminAddSection" style="display:none">
@@ -50,6 +54,7 @@
       <button id="overrideBtn" onclick="toggleOverride()" style="display:none;margin-top:10px">🛡️ Modo Override</button>
     </div>
   </main>
+
   <div class="footer-note">Invites digitais © 2025</div>
 
   <script src="https://unpkg.com/html5-qrcode@latest"></script>
