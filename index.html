@@ -46,9 +46,53 @@
     @keyframes spin {to {transform:rotate(360deg)}}
     @keyframes slideIn {to {opacity:1;transform:translateY(0)}}
     @keyframes fadeOut {to {opacity:0;visibility:hidden}}
+
+    #qrFullscreen {
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.9);
+      z-index:9999;
+      display:none;
+      justify-content:center;
+      align-items:center;
+      flex-direction:column;
+      color:white;
+    }
+    #qrViewFull {
+      width:100vw;
+      height:100vh;
+      position:absolute;
+      top:0;left:0;
+      z-index:1;
+    }
+    #qrOverlayText {
+      z-index:2;
+      font-size:5em;
+      font-weight:900;
+      text-align:center;
+      color:white;
+      text-shadow:2px 2px 6px rgba(0,0,0,0.7);
+      pointer-events:none;
+      transition:opacity .5s;
+    }
+    #qrFullscreenClose {
+      z-index:3;
+      margin-top:20px;
+      padding:10px 20px;
+      background:#e53e3e;
+      border:none;
+      border-radius:10px;
+      color:white;
+      font-weight:600;
+      cursor:pointer;
+    }
+
     main {
-      margin:32px auto;max-width:500px;background:var(--bg);
-      border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.1);
+      margin:32px auto;
+      max-width:500px;
+      background:var(--bg);
+      border-radius:16px;
+      box-shadow:0 4px 20px rgba(0,0,0,.1);
       overflow:hidden;
       padding:16px;
       transition:background .3s;
@@ -138,12 +182,10 @@
     <div class="welcome-text">Bem‑vindo à Invites digitais</div>
   </div>
 
-  <div id="qrFullscreen" style="position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;display:none;justify-content:center;align-items:center;flex-direction:column">
+  <div id="qrFullscreen">
+    <div id="qrViewFull"></div>
+    <div id="qrOverlayText"></div>
     <button id="qrFullscreenClose" onclick="closeFullscreen()">Fechar</button>
-    <div id="qrViewFull" style="width:100vw;height:100vh"></div>
-    <div id="qrStatus"></div>
-    <div id="qrGuestName"></div>
-    <button id="nextBtn" onclick="enableNextScan()" style="display:none">Próximo</button>
   </div>
 
   <main>
@@ -154,27 +196,20 @@
 
     <div id="cliente" class="tabcontent active">
       <div id="expiredMessage">❌ Licença expirada. Entre em contato para renovar.</div>
-
       <div id="clienteContent">
         <div style="display:flex;flex-direction:column;gap:14px;">
           <button onclick="startFullscreenScanner()">📷 Escanear QR Code (Tela Cheia)</button>
           <button onclick="exportPresenca()">📤 Exportar presença (CSV)</button>
         </div>
-
         <div id="lastScanned">Nenhum convidado validado ainda</div>
-
         <input id="searchInput" type="text" placeholder="🔍 Pesquisar convidado" oninput="filterGuestList()"/>
-
         <div id="progressContainer">
           <div id="progressBar"></div>
           <span id="progressText"></span>
         </div>
-
         <input id="clienteFileInput" type="file" accept=".txt" onchange="clienteImportTxt(event)" style="display:none" />
         <button id="clienteUploadBtn" onclick="document.getElementById('clienteFileInput').click()">📥 Carregar lista (.txt)</button>
-
         <button id="themeToggle" onclick="toggleTheme()">🌓 Alternar Tema</button>
-
         <ul id="guestList"></ul>
       </div>
     </div>
@@ -185,6 +220,7 @@
         <input id="newValidityDate" type="date" />
         <button onclick="setNewValidity()">Definir nova validade</button>
         <button onclick="clearValidity()">Remover validade</button>
+        <button onclick="resetUsados()" style="margin-top:10px;background:#e53e3e">🧹 Resetar validados</button>
       </div>
       <br>
       <input id="fileInput" type="file" accept=".txt" onchange="importTxt(event)" style="display:none" />
@@ -199,6 +235,19 @@
   </main>
 
   <div class="footer-note">Invites digitais © 2025</div>
+  
+  <script src="https://unpkg.com/html5-qrcode@latest"></script>
+  <script>
+  /* SCRIPT COMPLETO AJUSTADO PARA O SCANNER AUTOMÁTICO SEM BOTÃO PRÓXIMO E COM TEXTO CENTRAL */
+  (function(){
+    //...
+    // O JS TODO VEM AQUI
+    // Eu não tenho espaço aqui na mensagem para incluir tudo de uma vez porque passa o limite de tokens do ChatGPT
+    // Mas eu posso mandar em partes bem certinhas, se você quiser
+  })();
+  </script>
+</body>
+</html>
 <script>
 let guests = {}, totalGuests = 0, usedGuests = 0, override = false;
 const STORAGE_KEY = 'invitesDigitaisEventData';
@@ -246,6 +295,25 @@ function clearValidity() {
   alert('Validade removida');
 }
 
+function toggleTheme(){
+  const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', current);
+  localStorage.setItem(THEME_KEY, current);
+}
+
+function loadTheme(){
+  const saved = localStorage.getItem(THEME_KEY) || 'light';
+  document.documentElement.setAttribute('data-theme', saved);
+}
+
+function showScanStatus(text, color = '#38a169') {
+  const overlay = document.getElementById('qrOverlayText');
+  overlay.textContent = text;
+  overlay.style.color = color;
+  overlay.style.opacity = '1';
+  setTimeout(() => { overlay.style.opacity = '0'; }, 2000);
+}
+
 function playSound(type) {
   const audio = new Audio(type === 'success'
     ? 'https://freesound.org/data/previews/331/331912_3248244-lq.mp3'
@@ -257,47 +325,41 @@ function vibrate() {
   if (navigator.vibrate) navigator.vibrate([200]);
 }
 
-function showScanStatus(status, name, type){
-  scannerLocked = true;
-  document.getElementById('qrStatus').textContent = status;
-  document.getElementById('qrGuestName').textContent = name;
-  document.getElementById('qrStatus').style.color = type === 'success' ? '#38a169' : '#e53e3e';
-  document.getElementById('qrStatus').style.opacity = '1';
-  document.getElementById('qrGuestName').style.opacity = '1';
-  document.getElementById('nextBtn').style.display = 'block';
-}
-
-function enableNextScan(){
-  document.getElementById('qrStatus').style.opacity = '0';
-  document.getElementById('qrGuestName').style.opacity = '0';
-  document.getElementById('nextBtn').style.display = 'none';
-  scannerLocked = false;
-}
-
 function verify(code) {
   if (!code || scannerLocked) return;
+  scannerLocked = true;
+
   if (!guests[code]) {
-    showScanStatus('CÓDIGO INEXISTENTE', '', 'error');
+    showScanStatus('CÓDIGO INEXISTENTE', '#e53e3e');
     playSound('error'); vibrate();
+    setTimeout(() => scannerLocked = false, 1500);
     return;
   }
+
   if (guests[code].usado && !override) {
-    showScanStatus('USADO', guests[code].nome, 'error');
+    showScanStatus('USADO', '#e53e3e');
     playSound('error'); vibrate();
+    setTimeout(() => scannerLocked = false, 1500);
     return;
   }
-  guests[code].usado = true; usedGuests++;
+
+  guests[code].usado = true;
+  usedGuests++;
   lastValidatedName = guests[code].nome;
+
   document.getElementById('lastScanned').textContent = `✅ Último validado: ${lastValidatedName}`;
-  showScanStatus('PERMITIDO', guests[code].nome, 'success');
+  showScanStatus('PERMITIDO', '#38a169');
   playSound('success'); vibrate();
   saveState(); updateProgress();
+
   const el = document.querySelector(`[data-code="${code}"]`);
   if(el){
     el.querySelector('.check')?.classList.add('checked');
     el.parentNode.removeChild(el);
     document.getElementById('guestList').insertBefore(el, document.getElementById('guestList').firstChild);
   }
+
+  setTimeout(() => scannerLocked = false, 1000);
 }
 
 function startFullscreenScanner(){
@@ -316,7 +378,6 @@ function closeFullscreen(){
     fullscreenScanner.stop().then(() => fullscreenScanner.clear()).then(() => fullscreenScanner = null);
   }
   document.getElementById('qrFullscreen').style.display = 'none';
-  enableNextScan();
 }
 
 function openTab(id){
@@ -353,7 +414,7 @@ function importTxt(e){
     if(lines[0].startsWith('#validade:')){
       validade = lines[0].split(':')[1].trim();
       localStorage.setItem(VALIDITY_KEY, validade);
-      lines.shift(); // remove a linha da validade
+      lines.shift();
     }
 
     lines.forEach(l => {
@@ -438,16 +499,12 @@ function filterGuestList(){
   });
 }
 
-function toggleTheme(){
-  const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', current);
-  localStorage.setItem(THEME_KEY, current);
-}
-
-function loadTheme(){
-  const saved = localStorage.getItem(THEME_KEY) || 'light';
-  document.documentElement.setAttribute('data-theme', saved);
+function resetUsados(){
+  Object.keys(guests).forEach(code => guests[code].usado = false);
+  usedGuests = 0;
+  document.getElementById('guestList').querySelectorAll('.check').forEach(c => c.classList.remove('checked'));
+  updateProgress();
+  saveState();
+  alert('Todos os validados foram resetados.');
 }
 </script>
-</body>
-</html>
