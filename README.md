@@ -84,5 +84,5 @@ Caso tenha dúvidas ou sugestões, entre em contacto com a organização atravé
 
 ---
 
-Se quiser, posso também gerar este README.md num ficheiro e incluir no teu projeto.
+Se quiser, posso também gerar este README.md num ficheiro e incluir no teu projeto..
 Queres que eu já o prepare para download?
