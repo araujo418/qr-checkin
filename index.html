@@ -4,80 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>InvitesQR Final</title>
-  <script src="https://unpkg.com/html5-qrcode@latest">
-function verificarOnline() {
-  const offline = !navigator.onLine;
-  document.getElementById("offlineOverlay").style.display = offline ? "flex" : "none";
-}
-window.addEventListener('online', verificarOnline);
-window.addEventListener('offline', verificarOnline);
-
-
-
-
-function abrirAba(aba) {
-  // Scanner
-  document.getElementById("scannerContainer").style.display = (aba === 'scanner') ? 'block' : 'none';
-
-  // Lista
-  const listaVisivel = (aba === 'lista');
-  document.getElementById("guestList").style.display = listaVisivel ? 'block' : 'none';
-  document.getElementById("result").style.display = listaVisivel ? 'block' : 'none';
-  document.getElementById("searchInput").style.display = listaVisivel ? 'block' : 'none';
-  document.querySelector("button[onclick='carregarConvidados()']").style.display = listaVisivel ? 'inline-block' : 'none';
-  document.querySelector("button[onclick='baixarCSV()']").style.display = listaVisivel ? 'inline-block' : 'none';
-  document.getElementById("progressBar").style.display = listaVisivel ? 'block' : 'none';
-
-  // Info
-  const infoVisivel = (aba === 'info');
-  document.getElementById("validadeMsg").style.display = infoVisivel ? 'block' : 'none';
-  document.getElementById("doneMsg").style.display = infoVisivel ? 'block' : 'none';
-}
-
-
-
-const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-document.body.classList.toggle("dark", prefersDark);
-
-function alternarTema() {
-  document.body.classList.toggle("dark");
-}
-
-
-window.addEventListener("load", () => {
-  setTimeout(() => {
-    const splash = document.getElementById("splashScreen");
-    if (splash) splash.remove();
-  }, 2000);
-});
-
-
-
-async function verificarConexaoReal() {
-  try {
-    const res = await fetch("https://rnvunprjvppbjavkaoek.supabase.co/rest/v1/clientes?select=id&limit=1", {
-      headers: {
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${SUPABASE_KEY}`
-      }
-    });
-    return res.ok;
-  } catch {
-    return false;
-  }
-}
-
-async function atualizarEstadoConexao() {
-  const online = await verificarConexaoReal();
-  document.getElementById("offlineOverlay").style.display = online ? "none" : "flex";
-}
-
-setInterval(atualizarEstadoConexao, 5000);
-atualizarEstadoConexao();
-
-atualizarEstadoConexao();
-
-</script>
+  <script src="https://unpkg.com/html5-qrcode@latest"></script>
   <style>
     body { margin: 0; background: #121212; color: white; font-family: sans-serif; text-align: center; }
     input, button { padding: 14px; border-radius: 10px; border: none; margin: 10px 0; width: 90%; max-width: 400px; font-size: 1em; }
@@ -95,57 +22,14 @@ atualizarEstadoConexao();
     #scannerContainer { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:10000; }
     #scanFeedback { height:20%; color:white; font-size:1.5em; display:flex; align-items:center; justify-content:center; }
   </style>
-
-<style>
-  body.dark { background: #121212; color: white; }
-  body:not(.dark) { background: #f0f0f0; color: black; }
-</style>
-<button onclick="alternarTema()" style="position:fixed;top:10px;left:10px;z-index:1000;">🌓</button>
-
 </head>
 <body>
-
-<div id="splashScreen" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#121212;display:flex;align-items:center;justify-content:center;z-index:9999;">
-  <div style="width:160px;height:160px;border-radius:50%;padding:8px;background:conic-gradient(from 0deg, #6a5acd, #00ffff, #6a5acd);animation:spin 2s linear infinite;">
-    <div style="width:100%;height:100%;border-radius:50%;background:white;display:flex;align-items:center;justify-content:center;">
-      <img src="logo_circular.png" alt="Logo" style="width:90%;height:90%;border-radius:50%;" />
-    </div>
-  </div>
-</div>
-
-<style>
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-</style>
-
-<style>
-  body.dark { background: #121212; color: white; }
-  body:not(.dark) { background: #f0f0f0; color: black; }
-  input, button, progress { transition: all 0.3s ease; }
-  body.dark input { background: #1f1f1f; color: white; }
-  body:not(.dark) input { background: #ffffff; color: black; }
-  body.dark button { background: #6a5acd; color: white; }
-  body:not(.dark) button { background: #6a5acd; color: white; }
-  body.dark #bottomNav { background: #1e1e1e; }
-  body:not(.dark) #bottomNav { background: #ddd; }
-</style>
-
-
   <div id="offline">⚠️ Sem conexão com a internet</div>
   <h1 id="clienteNome">InvitesQR</h1>
   <p style="font-size: 1.1em; color: #ccc;">Entre em contacto connosco pelo <strong>959 823 409</strong></p>
   <input id="tokenInput" type="text" placeholder="Digite o token do cliente" />
   <button onclick="iniciar(document.getElementById('tokenInput').value)">Entrar</button>
   <div id="app" style="display:none;">
-
-<div id="bottomNav" style="position:fixed;bottom:0;left:0;width:100%;background:#1e1e1e;display:flex;justify-content:space-around;padding:10px 0;z-index:999;">
-  <button onclick="abrirAba('scanner')">📷 Scanner</button>
-  <button onclick="abrirAba('lista')">📋 Lista</button>
-  <button onclick="abrirAba('info')">⚙️ Info</button>
-</div>
-
     <div id="validadeMsg"></div>
     <button onclick="startScanner()">📷 Escanear QR Code</button>
     <div id="scannerContainer">
@@ -175,10 +59,6 @@ let deviceId = localStorage.getItem('device_id') || crypto.randomUUID();
 localStorage.setItem('device_id', deviceId);
 let client = null, convidados = [];
 
-let tentativasInvalidas = 0;
-let bloqueadoAte = 0;
-
-
 function vibrar() { if (navigator.vibrate) navigator.vibrate(200); }
 function exibirFeedbackScanner(texto, cor) {
   const fb = document.getElementById("scanFeedback");
@@ -207,13 +87,7 @@ function startScanner() {
     await incrementarScans();
     exibirFeedbackScanner("✔️ Permitido", "#007f00");
     vibrar();
-    
-  const diasRestantes = Math.floor((client.validade * 1000 - Date.now()) / (1000 * 60 * 60 * 24));
-  if (diasRestantes <= 2) {
-    alert("⚠️ Sua licença expira em breve.");
-  }
-
-  await carregarConvidados();
+    await carregarConvidados();
 
     if (client.scans_usados >= client.limite_scans) {
       await scanner.stop(); document.getElementById("scannerContainer").style.display = "none";
@@ -237,60 +111,28 @@ window.addEventListener('offline', () => document.getElementById("offline").styl
 if (!navigator.onLine) document.getElementById("offline").style.display = "block";
 
 async function iniciar(inputToken) {
-
-  const agora = Date.now();
-  if (agora < bloqueadoAte) {
-    alert("⛔ Muitas tentativas inválidas. Tente novamente em alguns segundos.");
-    return;
-  }
-
-  document.body.innerHTML += '<div id="loadingOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#000a;color:white;font-size:1.5em;display:flex;justify-content:center;align-items:center;z-index:9999;">🔐 Validando seu acesso...</div>';
   token = inputToken || token;
   const res = await fetch(`${SUPABASE_URL}/rest/v1/clientes?token=eq.${token}`, {
     headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
   });
   const data = await res.json();
   client = data[0];
-  
-  if (!client) {
-    tentativasInvalidas++;
-    if (tentativasInvalidas >= 3) {
-      bloqueadoAte = Date.now() + 60000;
-      alert("⛔ Muitas tentativas inválidas. Aguarde 1 minuto.");
-    } else {
-      alert("❌ Token inválido.");
-    }
-    document.getElementById("loadingOverlay").remove();
-    return;
-  }
-
+  if (!client) return alert("❌ Token inválido.");
   if (client.dispositivos && client.dispositivos !== deviceId) return alert("❌ Token já usado em outro dispositivo.");
   if (client.validade * 1000 < Date.now()) return alert("⏰ Token expirado.");
   if (client.scans_usados >= client.limite_scans) return alert("⚠️ Limite atingido.");
   if (!client.dispositivos) {
     await fetch(`${SUPABASE_URL}/rest/v1/clientes?token=eq.${token}`, {
       method: "PATCH", headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" },
-      
-      body: JSON.stringify({ dispositivos: `${deviceId} | ${navigator.userAgent}` })
-
+      body: JSON.stringify({ dispositivos: deviceId })
     });
   }
   localStorage.setItem('token', token);
-  
-  document.getElementById("loadingOverlay").remove();
-  tentativasInvalidas = 0;
   document.getElementById("tokenInput").style.display = "none";
-
   document.querySelector("button[onclick^='iniciar']").style.display = "none";
   document.getElementById("app").style.display = "block";
   document.getElementById("clienteNome").innerText = `🎉 Olá, ${client.nome}`;
   document.getElementById("validadeMsg").innerText = `⏳ Válido até: ${new Date(client.validade * 1000).toLocaleDateString()}`;
-  
-  const diasRestantes = Math.floor((client.validade * 1000 - Date.now()) / (1000 * 60 * 60 * 24));
-  if (diasRestantes <= 2) {
-    alert("⚠️ Sua licença expira em breve.");
-  }
-
   await carregarConvidados();
 }
 
@@ -354,90 +196,12 @@ setInterval(async () => {
   });
   const data = await res.json();
   if (data.length === 0) {
-    alert("❌ Sua conta foi desativada. Por favor, contacte a Invites.");
+    alert("❌ Sua conta foi desativada.");
     localStorage.clear();
     location.reload();
   }
 }, 30000);
 
-
-function verificarOnline() {
-  const offline = !navigator.onLine;
-  document.getElementById("offlineOverlay").style.display = offline ? "flex" : "none";
-}
-window.addEventListener('online', verificarOnline);
-window.addEventListener('offline', verificarOnline);
-
-
-
-
-function abrirAba(aba) {
-  // Scanner
-  document.getElementById("scannerContainer").style.display = (aba === 'scanner') ? 'block' : 'none';
-
-  // Lista
-  const listaVisivel = (aba === 'lista');
-  document.getElementById("guestList").style.display = listaVisivel ? 'block' : 'none';
-  document.getElementById("result").style.display = listaVisivel ? 'block' : 'none';
-  document.getElementById("searchInput").style.display = listaVisivel ? 'block' : 'none';
-  document.querySelector("button[onclick='carregarConvidados()']").style.display = listaVisivel ? 'inline-block' : 'none';
-  document.querySelector("button[onclick='baixarCSV()']").style.display = listaVisivel ? 'inline-block' : 'none';
-  document.getElementById("progressBar").style.display = listaVisivel ? 'block' : 'none';
-
-  // Info
-  const infoVisivel = (aba === 'info');
-  document.getElementById("validadeMsg").style.display = infoVisivel ? 'block' : 'none';
-  document.getElementById("doneMsg").style.display = infoVisivel ? 'block' : 'none';
-}
-
-
-
-const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-document.body.classList.toggle("dark", prefersDark);
-
-function alternarTema() {
-  document.body.classList.toggle("dark");
-}
-
-
-window.addEventListener("load", () => {
-  setTimeout(() => {
-    const splash = document.getElementById("splashScreen");
-    if (splash) splash.remove();
-  }, 2000);
-});
-
-
-
-async function verificarConexaoReal() {
-  try {
-    const res = await fetch("https://rnvunprjvppbjavkaoek.supabase.co/rest/v1/clientes?select=id&limit=1", {
-      headers: {
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${SUPABASE_KEY}`
-      }
-    });
-    return res.ok;
-  } catch {
-    return false;
-  }
-}
-
-async function atualizarEstadoConexao() {
-  const online = await verificarConexaoReal();
-  document.getElementById("offlineOverlay").style.display = online ? "none" : "flex";
-}
-
-setInterval(atualizarEstadoConexao, 5000);
-atualizarEstadoConexao();
-
-atualizarEstadoConexao();
-
 </script>
-
-<div id="offlineOverlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#000e;color:#fff;z-index:10000;font-size:1.2em;display:flex;align-items:center;justify-content:center;">
-⚠️ Sem conexão. Conecte-se para continuar.
-</div>
-
 </body>
 </html>
