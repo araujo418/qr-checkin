@@ -12,6 +12,8 @@
       --fundo: #121212;
       --texto: #ffffff;
       --fundoClaro: #f4f4f4;
+      --verde: #2ecc71;
+      --vermelho: #e74c3c;
     }
     body {
       margin: 0;
@@ -37,6 +39,10 @@
       padding: 14px;
       margin: 8px 0;
       width: 100%;
+      transition: transform 0.2s ease;
+    }
+    .btn:active {
+      transform: scale(0.96);
     }
     input {
       width: 100%;
@@ -56,6 +62,9 @@
       padding: 10px;
       border-bottom: 1px solid #333;
     }
+    .validado { color: var(--verde); }
+    .pendente { color: orange; }
+    .invalido { color: var(--vermelho); }
     .top-right {
       position: fixed;
       top: 10px;
@@ -103,6 +112,11 @@
       align-items: center;
       color: white;
     }
+    #validaStatus {
+      text-align: center;
+      font-size: 1.1em;
+      margin: 10px 0;
+    }
   </style>
 </head>
 <body>
@@ -136,6 +150,7 @@
       <button class="btn" onclick="carregarConvidados()">🔄 Recarregar Lista</button>
       <button class="btn" onclick="baixarCSV()">⬇️ Exportar Lista</button>
     </div>
+    <div id="validaStatus"></div>
     <div id="guestList" class="card"></div>
   </div>
 
@@ -160,7 +175,7 @@
       lista.innerHTML = "";
       convidados.forEach(c => {
         const div = document.createElement("div");
-        div.className = "guest";
+        div.className = "guest " + (c.status === 'validado' ? 'validado' : 'pendente');
         div.innerText = `${c.nome} - ${c.status}`;
         lista.appendChild(div);
       });
@@ -179,7 +194,14 @@
     }
 
     function escanearQR() {
-      alert("📷 Scanner será ativado aqui.");
+      const status = document.getElementById("validaStatus");
+      status.innerHTML = "<span style='color:orange;'>⏳ Validando código...</span>";
+      setTimeout(() => {
+        const sucesso = Math.random() > 0.5;
+        status.innerHTML = sucesso
+          ? "<span style='color:#2ecc71;'>✅ Permitido - João Silva</span>"
+          : "<span style='color:#e74c3c;'>❌ Já usado - João Silva</span>";
+      }, 1200);
     }
 
     function alternarTema() {
@@ -189,7 +211,7 @@
     function verificarConexao() {
       fetch("https://rnvunprjvppbjavkaoek.supabase.co/rest/v1/clientes?select=id&limit=1", {
         headers: {
-          apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJudnVucHJqdnBwYmphdmthb2VrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2NjYzOTksImV4cCI6MjA2NzI0MjM5OX0.5E37Qm-KMmyGtGKbOINbDqMQlZlfgcQx91RQ01qslT8"
+          apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzIiwicmVmIjoicm52dW5wcmp2cHBiamF2a2FvZWsiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTc1MTY2NjM5OSwiZXhwIjoyMDY3MjQyMzk5fQ.5E37Qm-KMmyGtGKbOINbDqMQlZlfgcQx91RQ01qslT8"
         }
       }).then(r => {
         document.getElementById("offlineScreen").style.display = r.ok ? "none" : "flex";
