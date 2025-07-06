@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>InvitesQR</title>
   <script src="https://unpkg.com/html5-qrcode@latest"></script>
   <style>
@@ -13,8 +13,9 @@
       --button: #6a5acd;
       --button-hover: #5a4ccf;
       --input-bg: #1f1f1f;
+      --used: #00e676;
+      --not-used: #888;
     }
-
     body {
       background: var(--bg);
       color: var(--text);
@@ -23,34 +24,11 @@
       padding: 0;
       text-align: center;
     }
-
-    .tabs {
-      display: flex;
-      justify-content: center;
-      background: #1a1a1a;
-    }
-
-    .tab {
-      flex: 1;
-      padding: 12px;
-      cursor: pointer;
-      background: #2a2a2a;
-      color: #bbb;
-      font-weight: bold;
-      border: none;
-    }
-
-    .tab.active {
-      background: var(--primary);
-      color: white;
-    }
-
     main {
       padding: 20px;
       max-width: 500px;
       margin: auto;
     }
-
     button {
       background: var(--button);
       color: white;
@@ -62,11 +40,9 @@
       font-size: 1em;
       cursor: pointer;
     }
-
     button:hover {
       background: var(--button-hover);
     }
-
     input[type="text"] {
       width: 100%;
       padding: 14px;
@@ -78,45 +54,38 @@
       text-align: center;
       font-size: 1em;
     }
-
-    #guestList {
-      list-style: none;
-      padding: 0;
+    #guestContainer {
+      max-height: 300px;
+      overflow-y: auto;
       text-align: left;
       margin-top: 20px;
       border-top: 1px solid #333;
     }
-
-    #guestList li {
-      padding: 10px 0;
+    .guest {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       border-bottom: 1px solid #333;
+      padding: 10px 0;
     }
-
+    .guest .status {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+    .guest .status.usado {
+      background-color: var(--used);
+    }
+    .guest .status.novo {
+      background-color: var(--not-used);
+    }
     #qr-reader {
       margin: 20px auto;
       width: 100%;
       max-width: 400px;
       display: none;
     }
-
-    #footer {
-      margin-top: 40px;
-      font-size: 0.8em;
-      color: #888;
-    }
-
-    #whatsapp {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: #25d366;
-      color: white;
-      padding: 12px 14px;
-      border-radius: 50%;
-      font-size: 20px;
-      text-decoration: none;
-    }
-
     progress {
       width: 100%;
       margin-top: 10px;
@@ -125,45 +94,51 @@
       overflow: hidden;
       background: #444;
     }
-
-    progress::-webkit-progress-bar {
-      background-color: #444;
-    }
-
-    progress::-webkit-progress-value {
-      background-color: var(--primary);
-    }
-
     #doneMsg {
       color: #00e676;
       font-weight: bold;
       margin-top: 20px;
     }
+    #loginMsg {
+      font-size: 0.9em;
+      color: #ccc;
+      margin-bottom: 20px;
+    }
+    #errorMsg {
+      color: #ff4d4d;
+      font-weight: bold;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
-  <div class="tabs">
-    <button class="tab active">Cliente</button>
+<main>
+  <div id="login" style="display:none">
+    <input id="tokenInput" type="text" placeholder="Digite o token do cliente" />
+    <button onclick="iniciar(document.getElementById('tokenInput').value)">Entrar</button>
+    <div id="loginMsg">Se gostaria de adquirir um teste, entre em contacto connosco pelo número <b>959 823 409</b>.</div>
+    <div id="errorMsg"></div>
   </div>
-  <main>
-    <div id="login">
-      <input id="tokenInput" type="text" placeholder="Digite o token do cliente" />
-      <button onclick="iniciar(document.getElementById('tokenInput').value)">Entrar</button>
-    </div>
 
-    <div id="app" style="display:none">
-      <h2 id="clienteNome"></h2>
-      <button onclick="startScanner()">📷 Escanear QR Code (Tela Cheia)</button>
-      <div id="result">Nenhum convidado validado ainda</div>
-      <input id="searchInput" type="text" placeholder="🔍 Pesquisar convidado" oninput="filtrarConvidados()" />
-      <progress id="progressBar" max="100" value="0"></progress>
-      <ul id="guestList"></ul>
-      <div id="doneMsg" style="display:none">🎉 Todos os convidados foram validados!</div>
-    </div>
+  <div id="app" style="display:none">
+    <h2 id="clienteNome"></h2>
+    <button onclick="startScanner()">📷 Escanear QR Code</button>
+    <div id="result">Nenhum convidado validado ainda</div>
+    <input id="searchInput" type="text" placeholder="🔍 Pesquisar convidado" oninput="filtrarConvidados()" />
+    <progress id="progressBar" max="100" value="0"></progress>
+    <div id="guestContainer"></div>
+    <div id="doneMsg" style="display:none">🎉 Todos os convidados foram validados!</div>
+  </div>
 
-    <div id="qr-reader"></div>
-    <div id="footer">Invites digitais © 2025</div>
-    <a id="whatsapp" href="https://wa.me/244959823409">💬</a>
+  <div id="qr-reader"></div>
+
+<div id="scanFeedback" style="display:none; position:fixed; top:40%; left:50%; transform:translate(-50%, -50%);
+ background:#000000cc; color:white; font-size:2em; padding:20px 30px; border-radius:12px; text-align:center; z-index:9999;">
+  <div id="scanStatusText">✅ PERMITIDO</div>
+  <div id="scanGuestName" style="font-size:0.8em; margin-top:10px;"></div>
+</div>
+</main>
+
 <script>
 const SUPABASE_URL = "https://rnvunprjvppbjavkaoek.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJudnVucHJqdnBwYmphdmthb2VrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2NjYzOTksImV4cCI6MjA2NzI0MjM5OX0.5E37Qm-KMmyGtGKbOINbDqMQlZlfgcQx91RQ01qslT8";
@@ -171,9 +146,13 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 let token = localStorage.getItem('token');
 let deviceId = localStorage.getItem('device_id') || crypto.randomUUID();
 localStorage.setItem('device_id', deviceId);
-
 let client = null;
 let convidados = [];
+
+window.onload = () => {
+  if (token) iniciar(token);
+  else document.getElementById("login").style.display = "block";
+};
 
 async function iniciar(inputToken) {
   token = inputToken || token;
@@ -185,14 +164,15 @@ async function iniciar(inputToken) {
   });
   const data = await res.json();
   client = data[0];
-  if (!client) return alert("❌ Token inválido.");
+  if (!client) return mostrarErro("❌ Token inválido.");
+
   if (client.dispositivos && client.dispositivos !== deviceId)
-    return alert("❌ Este token já foi usado em outro dispositivo.");
+    return mostrarErro("❌ Este token já foi usado em outro dispositivo.");
   const now = Date.now();
   if (client.validade * 1000 < now)
-    return alert("⏰ Token expirado.");
+    return mostrarErro("⏰ Token expirado.");
   if (client.scans_usados >= client.limite_scans)
-    return alert("⚠️ Limite de validações atingido.");
+    return mostrarErro("⚠️ Limite de validações atingido.");
 
   if (!client.dispositivos) {
     await fetch(`${SUPABASE_URL}/rest/v1/clientes?token=eq.${token}`, {
@@ -213,6 +193,10 @@ async function iniciar(inputToken) {
   await carregarConvidados();
 }
 
+function mostrarErro(msg) {
+  document.getElementById("errorMsg").innerText = msg;
+}
+
 async function carregarConvidados() {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/convidados?token_cliente=eq.${token}`, {
     headers: {
@@ -225,25 +209,32 @@ async function carregarConvidados() {
 }
 
 function renderConvidados() {
-  const list = document.getElementById("guestList");
+  const container = document.getElementById("guestContainer");
   const query = document.getElementById("searchInput").value.toLowerCase();
   let usados = 0;
-  list.innerHTML = "";
+  container.innerHTML = "";
 
-  convidados.filter(c => c.nome.toLowerCase().includes(query)).forEach(c => {
+  let filtrados = convidados.filter(c => c.nome.toLowerCase().includes(query));
+  filtrados.sort((a, b) => b.status === "usado" ? 1 : -1); // usados sobem
+
+  filtrados.forEach(c => {
     if (c.status === "usado") usados++;
-    const li = document.createElement("li");
-    li.textContent = `${c.nome} - ${c.status}`;
-    list.appendChild(li);
+    const div = document.createElement("div");
+    div.className = "guest";
+    div.innerHTML = `
+      <div style="display:flex;align-items:center;">
+        <div class="status ${c.status === "usado" ? "usado" : "novo"}"></div>
+        <span>${c.nome}</span>
+      </div>
+      <span>${c.status === "usado" ? "✅" : ""}</span>`;
+    container.appendChild(div);
   });
 
   const pct = convidados.length ? (usados / convidados.length) * 100 : 0;
   document.getElementById("progressBar").value = pct;
   document.getElementById("result").innerText = `${usados}/${convidados.length} validados`;
 
-  if (usados === convidados.length && convidados.length > 0) {
-    document.getElementById("doneMsg").style.display = "block";
-  }
+  document.getElementById("doneMsg").style.display = usados === convidados.length ? "block" : "none";
 }
 
 function filtrarConvidados() {
@@ -275,10 +266,45 @@ async function incrementarScans() {
   client.scans_usados++;
 }
 
+
 function startScanner() {
   const qr = new Html5Qrcode("qr-reader");
   document.getElementById("qr-reader").style.display = "block";
   qr.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, async content => {
+    const match = convidados.find(c => c.id.toString() === content.trim());
+    const feedbackBox = document.getElementById("scanFeedback");
+    const statusText = document.getElementById("scanStatusText");
+    const guestName = document.getElementById("scanGuestName");
+
+    if (!match) {
+      statusText.innerText = "❌ NÃO ENCONTRADO";
+      feedbackBox.style.background = "#ff4444";
+      guestName.innerText = "";
+      feedbackBox.style.display = "block";
+      setTimeout(() => { feedbackBox.style.display = "none"; }, 3000);
+      return;
+    }
+
+    guestName.innerText = match.nome;
+
+    if (match.status === "usado") {
+      statusText.innerText = "❌ JÁ VALIDADO";
+      feedbackBox.style.background = "#cc0000";
+    } else {
+      statusText.innerText = "✅ PERMITIDO";
+      feedbackBox.style.background = "#00c851";
+      await marcarComoUsado(match.id);
+      await incrementarScans();
+    }
+
+    feedbackBox.style.display = "block";
+    await carregarConvidados();
+    setTimeout(() => {
+      feedbackBox.style.display = "none";
+    }, 3000);
+  }, () => {});
+}
+, { fps: 10, qrbox: 250 }, async content => {
     const match = convidados.find(c => c.id.toString() === content.trim());
     if (!match) return alert("Convidado não encontrado.");
     if (match.status === "usado") return alert("Convidado já validado.");
