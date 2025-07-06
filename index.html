@@ -267,10 +267,52 @@ async function incrementarScans() {
 }
 
 
+
 function startScanner() {
   const qr = new Html5Qrcode("qr-reader");
   document.getElementById("qr-reader").style.display = "block";
-  qr.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, async content => {
+  qr.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: 250 },
+    async content => {
+      const match = convidados.find(c => c.id.toString() === content.trim());
+      const feedbackBox = document.getElementById("scanFeedback");
+      const statusText = document.getElementById("scanStatusText");
+      const guestName = document.getElementById("scanGuestName");
+
+      if (!match) {
+        statusText.innerText = "❌ NÃO ENCONTRADO";
+        feedbackBox.style.background = "#ff4444";
+        guestName.innerText = "";
+        feedbackBox.style.display = "block";
+        setTimeout(() => { feedbackBox.style.display = "none"; }, 3000);
+        return;
+      }
+
+      guestName.innerText = match.nome;
+
+      if (match.status === "usado") {
+        statusText.innerText = "❌ JÁ VALIDADO";
+        feedbackBox.style.background = "#cc0000";
+      } else {
+        statusText.innerText = "✅ PERMITIDO";
+        feedbackBox.style.background = "#00c851";
+        await marcarComoUsado(match.id);
+        await incrementarScans();
+      }
+
+      feedbackBox.style.display = "block";
+      await carregarConvidados();
+      setTimeout(() => {
+        feedbackBox.style.display = "none";
+      }, 3000);
+    },
+    error => {
+      console.warn("Erro ao iniciar leitura: ", error);
+    }
+  );
+}
+, { fps: 10, qrbox: 250 }, async content => {
     const match = convidados.find(c => c.id.toString() === content.trim());
     const feedbackBox = document.getElementById("scanFeedback");
     const statusText = document.getElementById("scanStatusText");
@@ -306,11 +348,35 @@ function startScanner() {
 }
 , { fps: 10, qrbox: 250 }, async content => {
     const match = convidados.find(c => c.id.toString() === content.trim());
-    if (!match) return alert("Convidado não encontrado.");
-    if (match.status === "usado") return alert("Convidado já validado.");
+    if (!match) return 
+    statusText.innerText = "❌ NÃO ENCONTRADO";
+    feedbackBox.style.background = "#ff4444";
+    feedbackBox.style.display = "block";
+    guestName.innerText = "";
+    setTimeout(() => {
+      feedbackBox.style.display = "none";
+    }, 3000);
+    
+    if (match.status === "usado") return 
+    statusText.innerText = "❌ JÁ VALIDADO";
+    feedbackBox.style.background = "#cc0000";
+    feedbackBox.style.display = "block";
+    guestName.innerText = match.nome;
+    setTimeout(() => {
+      feedbackBox.style.display = "none";
+    }, 3000);
+    
     await marcarComoUsado(match.id);
     await incrementarScans();
-    alert("✔️ Presença confirmada para: " + match.nome);
+    
+    statusText.innerText = "✔️ PERMITIDO";
+    feedbackBox.style.background = "#00c851";
+    feedbackBox.style.display = "block";
+    guestName.innerText = match.nome;
+    setTimeout(() => {
+      feedbackBox.style.display = "none";
+    }, 3000);
+    
     await carregarConvidados();
   }, () => {});
 }
