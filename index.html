@@ -11,7 +11,7 @@
     input { background: #1f1f1f; color: white; }
     button { background: #6a5acd; color: white; }
     button:hover { background: #5a4ccf; }
-    #qr-reader { width: 100%; max-width: 400px; margin: 10px auto; display: none; }
+    #qr-reader { width: 100%; max-width: 400px; margin: 10px auto; }
     ul { list-style: none; padding: 0; max-width: 400px; margin: auto; text-align: left; }
     li { padding: 10px; border-bottom: 1px solid #333; font-size: 1em; }
     #whatsapp { position: fixed; bottom: 20px; right: 20px; background: #25d366; color: white; padding: 12px 14px; border-radius: 50%; font-size: 20px; text-decoration: none; z-index: 999; }
@@ -46,28 +46,33 @@
     <div id="doneMsg" style="display:none;color:#00e676;margin-top:20px;">🎉 Todos os convidados foram validados!</div>
   </div>
   <div id="modal" onclick="this.style.display='none'"></div>
-  
 
 <script>
 const SUPABASE_URL = "https://rnvunprjvppbjavkaoek.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJudnVucHJqdnBwYmphdmthb2VrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2NjYzOTksImV4cCI6MjA2NzI0MjM5OX0.5E37Qm-KMmyGtGKbOINbDqMQlZlfgcQx91RQ01qslT8";
 
 let scanner = null;
-let permitirSom = false;
 let token = localStorage.getItem('token');
 let deviceId = localStorage.getItem('device_id') || crypto.randomUUID();
 localStorage.setItem('device_id', deviceId);
 let client = null, convidados = [];
 
 function vibrar() { if (navigator.vibrate) navigator.vibrate(200); }
+
 function exibirFeedbackScanner(texto, cor) {
   const fb = document.getElementById("scanFeedback");
   fb.innerText = texto;
   fb.style.background = cor;
 }
 
-function startScanner() {
-  document.getElementById("scannerContainer").style.display = "block";
+async function startScanner() {
+  const scannerContainer = document.getElementById("scannerContainer");
+  const qrReader = document.getElementById("qr-reader");
+
+  scannerContainer.style.display = "block";
+
+  await new Promise(resolve => setTimeout(resolve, 300)); // Garante renderização
+
   if (!scanner) scanner = new Html5Qrcode("qr-reader");
 
   let ultimoId = null;
@@ -90,10 +95,11 @@ function startScanner() {
     await carregarConvidados();
 
     if (client.scans_usados >= client.limite_scans) {
-      await scanner.stop(); document.getElementById("scannerContainer").style.display = "none";
+      await scanner.stop();
+      scannerContainer.style.display = "none";
       alert("⚠️ Limite atingido.");
     }
-  }, console.warn);
+  }, e => {}); // Silencia erros de parse
 }
 
 function fecharScanner() {
@@ -201,7 +207,6 @@ setInterval(async () => {
     location.reload();
   }
 }, 30000);
-
 </script>
 </body>
 </html>
