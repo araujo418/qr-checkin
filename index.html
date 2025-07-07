@@ -111,7 +111,7 @@
     document.getElementById("scannerContainer").style.display = "block";
     await new Promise(r => setTimeout(r, 300));
     if (!scanner) scanner = new Html5Qrcode("qr-reader");
-    scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, async content => {
+    scanner.start($1, $2, async content => {
       const match = convidados.find(c => c.id.toString() === content.trim());
       if (!match) return;
       if (match.status === "usado") return;
@@ -121,7 +121,10 @@
         body: JSON.stringify({ status: "usado" })
       });
       await carregarConvidados();
-    }, () => {});
+    }, error => {
+      document.getElementById("scanFeedback").innerText = "❌ Erro ao acessar a câmara. Verifique as permissões.";
+      console.error("Erro na câmara:", error);
+    });
   }
 
   function fecharScanner() {
