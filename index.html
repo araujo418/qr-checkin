@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>InvitesQR</title>
+  <!-- QR libs -->
   <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode@latest"></script>
   <style>
@@ -62,14 +63,28 @@ else {
 function salvarEstado(){localStorage.setItem('demoGerados',JSON.stringify(gerados));localStorage.setItem('demoStart',demoStart);}
 function ocultarDemo(){demoDisabled=true;localStorage.setItem('demoDisabled','1');document.getElementById('btnPainelDemo').style.display='none';document.getElementById('painelDemo')?.remove();}
 function gerarQRPrompt(){if(demoDisabled)return;if(gerados.length>=demoMax)return alert('Limite de 3 alcançado');const nome=prompt('Nome:');if(!nome)return;const id=Math.floor(Math.random()*100000);gerados.push({id,nome,status:'novo'});salvarEstado();renderDemoQR();}
-function renderDemoQR(){const cont=document.getElementById('qrContainerDemo');if(!cont)return;cont.innerHTML='';gerados.forEach((c,i)=>{const item=document.createElement('div');item.className='guestItem';const canvas=document.createElement('canvas');new QRious({element:canvas,value:c.id.toString(),size:200});const btn=document.createElement('button');btn.className='download-btn';btn.textContent='Salvar';btn.onclick=()=>{const a=document.createElement('a');a.href=canvas.toDataURL();a.download=`${c.nome}.png`;a.click();};item.appendChild(canvas);item.appendChild(btn);item.appendChild(document.createElement('div')).textContent=`${c.status==='usado'?'✅':'🆕'} ${c.nome}`;cont.appendChild(item);});}
+function renderDemoQR(){const cont=document.getElementById('qrContainerDemo');if(!cont)return;cont.innerHTML='';gerados.forEach((c,i)=>{const item=document.createElement('div');item.className='guestItem';const canvas=document.createElement('canvas');new QRious({element:canvas,value:c.id.toString(),size:200});const btn=document.createElement('button');btn.className='download-btn';btn.textContent='Salvar';btn.onclick=()=>{
+  try {
+    const blob = dataURLToBlob(canvas.toDataURL('image/png'));
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${c.nome.replace(/\s+/g,'_')}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    alert("Não foi possível salvar. Tente fazer captura de tela.");
+  }
+};
+item.appendChild(canvas);item.appendChild(btn);item.appendChild(document.createElement('div')).textContent=`${c.status==='usado'?'✅':'🆕'} ${c.nome}`;cont.appendChild(item);});}
+function dataURLToBlob(dataURL){const parts=dataURL.split(';base64,');const contentType=parts[0].split(':')[1];const byteCharacters=atob(parts[1]);const byteArrays=[];for(let i=0;i<byteCharacters.length;i++){byteArrays.push(byteCharacters.charCodeAt(i));}return new Blob([new Uint8Array(byteArrays)],{type:contentType});}
 let scanner=null;
 function abrirScannerDemo(){if(demoDisabled)return;if(!gerados.length)return alert('Gere pelo menos 1 QR primeiro');document.getElementById('scannerOverlay').style.display='flex';if(!scanner)scanner=new Html5Qrcode('reader');scanner.start({facingMode:'environment'},{fps:10,qrbox:250},content=>{const g=gerados.find(x=>x.id.toString()===content.trim());if(!g){alert('QR não encontrado');return;}if(g.status==='usado'){alert('Já validado');return;}g.status='usado';salvarEstado();renderDemoQR();alert(`✔️ ${g.nome} validado!`);if(gerados.filter(x=>x.status==='usado').length>=demoMax)ocultarDemo();},err=>console.warn(err));}
 function fecharScannerDemo(){document.getElementById('scannerOverlay').style.display='none';if(scanner)scanner.stop();}
 function startTimer(){atualizaTimer();setInterval(()=>{if(demoDisabled)return;atualizaTimer();},1000);}
-function atualizaTimer(){const t=document.getElementById('timer');if(!t)return;const restante=Math.max(0,demoDuration-(Date.now()-demoStart));const m=Math.floor(restante/60000).toString().padStart(2,'0');const s=Math.floor((restante%60000)/1000).toString().padStart(2,'0');t.textContent=`⏳ ${m}:${s}`;if(restante<=0){alert('⏰ Tempo esgotado');ocultarDemo();}}
-function reiniciarDemo(){if(confirm('Reiniciar o modo demo? Todos os dados serão apagados.')){localStorage.removeItem('demoGerados');localStorage.setItem('demoStart',Date.now());location.reload();}}
-const SUPABASE_URL='https://rnvunprjvppbjavkaoek.supabase.co';const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';function showAlert(m,ok){const b=document.getElementById('alertBox');b.style.display='block';b.style.background=ok?'#2e7d32':'#b71c1c';b.textContent=m;setTimeout(()=>b.style.display='none',4000);}async function entrarCliente(){const t=document.getElementById('tokenInput').value.trim();if(!t)return showAlert('❌ Digite o token.');showAlert('⏳ Validando...');try{const r=await fetch(`${SUPABASE_URL}/rest/v1/clientes?token=eq.${t}`,{headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`}});const d=await r.json()[0];if(!d)return showAlert('Token inválido');showAlert(`Bem‑vindo, ${d.nome}!`,true);}catch(e){showAlert('Erro');}}
+function atualizaTimer(){const t=document.getElementById('timer');if(!t)return;const restante=Math.max(0,demoDuration-(Date.now()-demoStart));if(restante<=0){ocultarDemo();return;}const m=Math.floor(restante/60000),s=Math.floor((restante%60000)/1000);t.textContent=`⏳ Demo: ${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;}
 </script>
 </body>
 </html>
