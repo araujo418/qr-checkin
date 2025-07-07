@@ -1,85 +1,74 @@
+
 <!DOCTYPE html>
 <html lang="pt">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>InvitesQR</title>
-  <!-- Biblioteca de leitura de QR -->
   <script src="https://unpkg.com/html5-qrcode@latest"></script>
   <style>
     :root{
-      --primary:#5aa189;          /* cor pedida */
-      --primary-dark:#4b8c76;     /* tom mais escuro para hover */
-      --bg:#121212;              /* fundo */
-      --surface:#1a1a1a;         /* cartões / inputs */
+      --primary:#5aa189;
+      --primary-dark:#4b8c76;
+      --bg:#121212;
+      --surface:#1a1a1a;
       --text:#ffffff;
       --muted:#cccccc;
     }
     *,*:before,*:after{box-sizing:border-box;}
     body{margin:0;background:var(--bg);color:var(--text);font-family:sans-serif;text-align:center;}
     a{text-decoration:none;color:inherit;}
-    h1{margin:20px 0 10px;font-size:1.6em;}
+    #logo{width:120px;height:120px;border-radius:50%;object-fit:cover;margin:20px auto 10px;display:block;}
+    h1{margin:10px 0;font-size:1.6em;}
     p{margin:0 0 20px;color:var(--muted);}
-
-    /* Campos e botões */
     input,button{padding:14px;border:none;border-radius:10px;margin:10px auto;width:90%;max-width:440px;font-size:1em;display:block;}
     input{background:var(--surface);color:var(--text);} 
-    button{background:var(--primary);color:var(--text);cursor:pointer;transition:.2s;}
+    button{background:var(--primary);color:var(--text);cursor:pointer;transition:background .2s;}
     button:hover{background:var(--primary-dark);}  
-
-    /* Barra de progresso */
     progress{width:90%;max-width:440px;height:12px;border-radius:8px;background:#444;overflow:hidden;}
     progress::-webkit-progress-value{background:var(--primary);}  
-
-    /* Aviso offline */
     #offline{display:none;background:#e53e3e;font-weight:bold;padding:10px;}
-
-    /* Área principal do app */
     #app{display:none;}
-    ul{list-style:none;padding:0;margin:20px auto 0;max-width:440px;text-align:left;}
+    ul{list-style:none;padding:0;margin:0;text-align:left;}
     li{padding:10px;border-bottom:1px solid #333;font-size:1em;}
-
-    /* Botão flutuante para WhatsApp */
+    #guestList{max-height:40vh;overflow-y:auto;background:var(--surface);border-radius:12px;padding:10px;margin:20px auto 0;max-width:440px;box-shadow:inset 0 0 4px rgba(0,0,0,.3);}
     #whatsapp{position:fixed;bottom:20px;right:20px;background:#25d366;width:56px;height:56px;display:flex;align-items:center;justify-content:center;font-size:26px;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.3);z-index:1000;}
-
-    /* Botão especial "Scanear" com ícone + texto */
     .action-btn{width:120px;height:120px;border-radius:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:24px;gap:6px;background:var(--primary);}  
     .action-btn span:last-child{font-size:.85em;}
-
-    /* Scanner em ecrã inteiro */
     #scannerContainer{display:none;position:fixed;inset:0;background:#000;z-index:10000;}
     #qr-reader{width:100%;height:80%;}
     #scanFeedback{height:20%;color:#fff;font-size:1.4em;display:flex;align-items:center;justify-content:center;}
-
-    /* Modal genérico */
-    #modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);color:#fff;font-size:1.4em;align-items:center;justify-content:center;padding:20px;z-index:9999;}
   </style>
 </head>
 <body>
-  <div id="offline">⚠️ Sem conexão com a internet</div>
-  <h1 id="clienteNome">InvitesQR</h1>
-  <p>Contacte <strong>959&nbsp;823&nbsp;409</strong> para suporte</p>
+  <!-- Logo em formato circular -->
+  <img id="logo" src="Invites.png" alt="Logo Invites">
 
+  <div id="offline">⚠️ Sem ligação à internet</div>
+  <h1 id="clienteNome">InvitesQR</h1>
+  <p>Contacte <strong>959&nbsp;823&nbsp;409</strong> para assistência</p>
+
+  <!-- Login -->
   <input id="tokenInput" type="text" placeholder="Digite o token do cliente">
   <button id="entrarBtn">Entrar</button>
 
+  <!-- Área principal -->
   <div id="app">
     <div id="validadeMsg"></div>
 
-    <!-- Botão de scan -->
     <button class="action-btn" onclick="startScanner()">
       <span>📷</span>
       <span>Scanear</span>
     </button>
 
-    <!-- Área do scanner -->
+    <!-- Scanner -->
     <div id="scannerContainer">
       <div id="qr-reader"></div>
       <div id="scanFeedback"></div>
       <button onclick="fecharScanner()" style="position:absolute;top:10px;right:10px;background:red;color:white;padding:10px;border-radius:8px;">❌ Fechar</button>
     </div>
 
-    <!-- Feedback de validação -->
+    <!-- Estado -->
     <div id="result">Nenhum convidado validado ainda</div>
 
     <input id="searchInput" type="text" placeholder="🔍 Pesquisar convidado" oninput="filtrarConvidados()">
@@ -87,170 +76,143 @@
     <button onclick="baixarCSV()">📥 Exportar CSV</button>
 
     <progress id="progressBar" max="100" value="0"></progress>
-
     <ul id="guestList"></ul>
     <div id="doneMsg" style="display:none;color:#00e676;margin-top:20px;">🎉 Todos os convidados foram validados!</div>
   </div>
 
-  <!-- Botão WhatsApp -->
+  <!-- WhatsApp -->
   <a id="whatsapp" href="https://wa.me/244959823409" target="_blank">💬</a>
-  
-  <div id="modal" onclick="this.style.display='none'"></div>
 
 <script>
-// ------------------ CONFIGURAÇÃO SUPABASE ------------------
-const SUPABASE_URL = "https://rnvunprjvppbjavkaoek.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJudnVucHJqdnBwYmphdmthb2VrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2NjYzOTksImV4cCI6MjA2NzI0MjM5OX0.5E37Qm-KMmyGtGKbOINbDqMQlZlfgcQx91RQ01qslT8";
-//--------------------------------------------------------------
-let scanner = null;
-let token   = localStorage.getItem('token');
-let deviceId = localStorage.getItem('device_id') || crypto.randomUUID();
-localStorage.setItem('device_id', deviceId);
-let client = null, convidados = [];
+  const SUPABASE_URL = "https://rnvunprjvppbjavkaoek.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJudnVucHJqdnBwYmphdmthb2VrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2NjYzOTksImV4cCI6MjA2NzI0MjM5OX0.5E37Qm-KMmyGtGKbOINbDqMQlZlfgcQx91RQ01qslT8";
 
-document.getElementById('entrarBtn').addEventListener('click', () => iniciar(document.getElementById('tokenInput').value));
+  let scanner=null, token=localStorage.getItem('token');
+  const deviceId = localStorage.getItem('device_id') || crypto.randomUUID();
+  localStorage.setItem('device_id', deviceId);
+  let client=null, convidados=[];
 
-function vibrar(){ if(navigator.vibrate) navigator.vibrate(200); }
-function exibirFeedbackScanner(texto, cor){
-  const fb = document.getElementById("scanFeedback");
-  fb.textContent = texto;
-  fb.style.background = cor;
-}
+  document.getElementById('entrarBtn').addEventListener('click',()=>iniciar(document.getElementById('tokenInput').value));
 
-async function startScanner(){
-  const scannerContainer = document.getElementById("scannerContainer");
-  scannerContainer.style.display = "block";
-  await new Promise(r => setTimeout(r, 300)); // esperando layout
-  if(!scanner) scanner = new Html5Qrcode("qr-reader");
-  let ultimoId = null;
-  scanner.start(
-    { facingMode: "environment" },
-    { fps: 10, qrbox: 250 },
-    async content => {
-      const match = convidados.find(c => c.id.toString() === content.trim());
-      if(!match) return exibirFeedbackScanner("❌ Não encontrado", "#a00");
-      if(match.status === "usado"){ exibirFeedbackScanner("⚠️ Usado", "#aa8800"); vibrar(); return; }
-      if(match.id === ultimoId) return; // evita repetir
-      ultimoId = match.id;
-      await marcarComoUsado(match.id);
-      await incrementarScans();
-      exibirFeedbackScanner("✔️ Permitido", "#007f00");
-      vibrar();
-      await carregarConvidados();
-      if(client.scans_usados >= client.limite_scans){
-        await scanner.stop();
-        scannerContainer.style.display = "none";
-        alert("⚠️ Limite atingido.");
-      }
-    },
-    () => {} // ignora erros de leitura
-  );
-}
-function fecharScanner(){ document.getElementById("scannerContainer").style.display = "none"; if(scanner) scanner.stop(); }
+  // Feedback visual do scanner
+  function exibirFeedbackScanner(txt,cor){
+    const fb=document.getElementById('scanFeedback');
+    fb.textContent=txt; fb.style.background=cor;
+    if(navigator.vibrate) navigator.vibrate(200);
+  }
 
-// Banner online/offline
-window.addEventListener('online',  () => document.getElementById("offline").style.display = "none");
-window.addEventListener('offline', () => document.getElementById("offline").style.display = "block");
-if(!navigator.onLine) document.getElementById("offline").style.display = "block";
+  async function iniciar(inputToken){
+    token=inputToken||token;
+    if(!token) return alert('Digite o token.');
 
-// ------------------ INICIAR APP ------------------
-async function iniciar(inputToken){
-  token = inputToken || token;
-  if(!token) return alert("Digite o token.");
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/clientes?token=eq.${token}`, {
-    headers:{ apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-  });
-  const data = await res.json();
-  client = data[0];
-  if(!client)                          return alert("❌ Token inválido.");
-  if(client.dispositivos && client.dispositivos !== deviceId) return alert("❌ Token já usado noutro dispositivo.");
-  if(client.validade * 1000 < Date.now())                      return alert("⏰ Token expirado.");
-  if(client.scans_usados >= client.limite_scans)               return alert("⚠️ Limite atingido.");
-  // Regista dispositivo na primeira vez
-  if(!client.dispositivos){
-    await fetch(`${SUPABASE_URL}/rest/v1/clientes?token=eq.${token}`, {
-      method:"PATCH",
-      headers:{ apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type":"application/json" },
-      body: JSON.stringify({ dispositivos: deviceId })
+    const res=await fetch(`${SUPABASE_URL}/rest/v1/clientes?token=eq.${token}`,{
+      headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`}
+    });
+    const data=await res.json(); client=data[0];
+    if(!client)               return alert('❌ Token inválido.');
+    if(client.dispositivos && client.dispositivos!==deviceId) return alert('❌ Token já usado noutro dispositivo.');
+    if(client.validade*1000<Date.now()) return alert('⏰ Token expirado.');
+    if(client.scans_usados>=client.limite_scans) return alert('⚠️ Limite atingido.');
+
+    if(!client.dispositivos){
+      await fetch(`${SUPABASE_URL}/rest/v1/clientes?token=eq.${token}`,{
+        method:'PATCH',
+        headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json'},
+        body:JSON.stringify({dispositivos:deviceId})
+      });
+    }
+
+    localStorage.setItem('token',token);
+    document.getElementById('tokenInput').style.display='none';
+    document.getElementById('entrarBtn').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('clienteNome').innerText=`🎉 Olá, ${client.nome}`;
+    document.getElementById('validadeMsg').innerText=`⏳ Válido até: ${new Date(client.validade*1000).toLocaleDateString()}`;
+    await carregarConvidados();
+  }
+
+  async function carregarConvidados(){
+    const res=await fetch(`${SUPABASE_URL}/rest/v1/convidados?token_cliente=eq.${token}`,{
+      headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`}
+    });
+    convidados=await res.json(); renderConvidados();
+  }
+
+  function renderConvidados(){
+    const list=document.getElementById('guestList');
+    const query=document.getElementById('searchInput').value.toLowerCase();
+    let usados=0; list.innerHTML='';
+    convidados.filter(c=>c.nome.toLowerCase().includes(query)).forEach(c=>{
+      if(c.status==='usado') usados++;
+      const li=document.createElement('li');
+      li.textContent=`${c.status==='usado'?'✅':'🟢'} ${c.nome}`;
+      list.appendChild(li);
+    });
+    document.getElementById('progressBar').value=convidados.length?(usados/convidados.length)*100:0;
+    document.getElementById('result').textContent=`${usados}/${convidados.length} validados`;
+    document.getElementById('doneMsg').style.display=(usados===convidados.length && convidados.length)?'block':'none';
+  }
+
+  function filtrarConvidados(){ renderConvidados(); }
+
+  async function marcarComoUsado(id){
+    await fetch(`${SUPABASE_URL}/rest/v1/convidados?id=eq.${id}`,{
+      method:'PATCH',
+      headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json'},
+      body:JSON.stringify({status:'usado'})
     });
   }
-  localStorage.setItem('token', token);
-  document.getElementById("tokenInput").style.display = "none";
-  document.getElementById("entrarBtn").style.display  = "none";
-  document.getElementById("app").style.display        = "block";
-  document.getElementById("clienteNome").innerText    = `🎉 Olá, ${client.nome}`;
-  document.getElementById("validadeMsg").innerText    = `⏳ Válido até: ${new Date(client.validade * 1000).toLocaleDateString()}`;
-  await carregarConvidados();
-}
 
-// ------------------ CONVIDADOS ------------------
-async function carregarConvidados(){
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/convidados?token_cliente=eq.${token}`, {
-    headers:{ apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-  });
-  convidados = await res.json();
-  renderConvidados();
-}
-function renderConvidados(){
-  const list  = document.getElementById("guestList");
-  const query = document.getElementById("searchInput").value.toLowerCase();
-  let usados  = 0;
-  list.innerHTML = "";
-  convidados.filter(c => c.nome.toLowerCase().includes(query)).forEach(c => {
-    if(c.status === "usado") usados++;
-    const li = document.createElement("li");
-    li.textContent = `${c.status === 'usado' ? '✅' : '🟢'} ${c.nome}`;
-    list.appendChild(li);
-  });
-  const pct = convidados.length ? (usados / convidados.length) * 100 : 0;
-  document.getElementById("progressBar").value = pct;
-  document.getElementById("result").textContent = `${usados}/${convidados.length} validados`;
-  if(usados === convidados.length && convidados.length > 0) document.getElementById("doneMsg").style.display = "block";
-}
-function filtrarConvidados(){ renderConvidados(); }
-
-// Marcar convidado como usado
-async function marcarComoUsado(id){
-  await fetch(`${SUPABASE_URL}/rest/v1/convidados?id=eq.${id}`, {
-    method:"PATCH",
-    headers:{ apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type":"application/json" },
-    body: JSON.stringify({ status: "usado" })
-  });
-}
-// Incrementar contagem de scans
-async function incrementarScans(){
-  await fetch(`${SUPABASE_URL}/rest/v1/clientes?token=eq.${token}`, {
-    method:"PATCH",
-    headers:{ apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type":"application/json" },
-    body: JSON.stringify({ scans_usados: client.scans_usados + 1 })
-  });
-  client.scans_usados++;
-}
-
-// ------------------ EXPORTAR CSV ------------------
-function baixarCSV(){
-  if(!convidados.length) return alert("Nenhum convidado carregado.");
-  const linhas = ["Nome,Status", ...convidados.map(c => `\"${c.nome}\",\"${c.status}\"`)];
-  const blob = new Blob([linhas.join("\n")], { type:"text/csv" });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement("a");
-  a.href = url; a.download = "convidados.csv"; document.body.appendChild(a); a.click(); document.body.removeChild(a);
-}
-
-// ------------------ ATUALIZAÇÕES EM TEMPO REAL ------------------
-setInterval(() => { if(token) carregarConvidados(); }, 30000);
-setInterval(async () => {
-  if(!token) return;
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/clientes?token=eq.${token}`, {
-    headers:{ apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-  });
-  const data = await res.json();
-  if(!data.length){
-    alert("❌ Sua conta foi desativada.");
-    localStorage.clear();
-    location.reload();
+  async function incrementarScans(){
+    await fetch(`${SUPABASE_URL}/rest/v1/clientes?token=eq.${token}`,{
+      method:'PATCH',
+      headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json'},
+      body:JSON.stringify({scans_usados:client.scans_usados+1})
+    });
+    client.scans_usados++;
   }
-}, 30000);
+
+  async function startScanner(){
+    document.getElementById('scannerContainer').style.display='block';
+    await new Promise(r=>setTimeout(r,300));
+    if(!scanner) scanner=new Html5Qrcode('qr-reader');
+    let lastId=null;
+    scanner.start({facingMode:'environment'},{fps:10,qrbox:250},async content=>{
+      const match=convidados.find(c=>c.id.toString()===content.trim());
+      if(!match){exibirFeedbackScanner('❌ Não encontrado','#a00');return;}
+      if(match.status==='usado'){exibirFeedbackScanner('⚠️ Usado','#aa8800');return;}
+      if(match.id===lastId) return; lastId=match.id;
+      await marcarComoUsado(match.id); await incrementarScans();
+      exibirFeedbackScanner('✔️ Permitido','#007f00');
+      await carregarConvidados();
+    },console.error);
+  }
+
+  function fecharScanner(){
+    document.getElementById('scannerContainer').style.display='none';
+    if(scanner) scanner.stop();
+  }
+
+  function baixarCSV(){
+    if(!convidados.length) return alert('Nenhum convidado carregado.');
+    const linhas=['Nome,Status',...convidados.map(c=>`"${c.nome}","${c.status}"`)];
+    const blob=new Blob([linhas.join('\n')],{type:'text/csv'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download='convidados.csv'; a.click(); URL.revokeObjectURL(url);
+  }
+
+  // Verificar conta ativa apenas se token existir
+  setInterval(async ()=>{
+    if(!token) return;
+    try{
+      const r=await fetch(`${SUPABASE_URL}/rest/v1/clientes?token=eq.${token}`,{
+        headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`}
+      });
+      const d=await r.json();
+      if(!d.length){alert('❌ Sua conta foi desativada.');localStorage.clear();location.reload();}
+    }catch(e){console.warn('Falha verificação',e);}
+  },30000);
 </script>
 </body>
 </html>
