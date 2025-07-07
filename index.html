@@ -2,135 +2,74 @@
 <html lang="pt">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>InvitesQR</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode@latest"></script>
   <style>
-    :root{
-      --primary:#5aa189;
-      --primary-dark:#4b8c76;
-      --bg:#121212;
-      --surface:#1a1a1a;
-      --text:#ffffff;
-      --muted:#cccccc;
-    }
-    *,*:before,*:after{box-sizing:border-box;}
-    body{margin:0;background:var(--bg);color:var(--text);font-family:sans-serif;text-align:center;}
-    #logo{width:96px;height:96px;border-radius:50%;object-fit:cover;margin:20px auto 10px;display:block;}
-    input, button {padding:14px;border:none;border-radius:10px;margin:10px auto;width:90%;max-width:440px;font-size:1em;display:block;}
-    input {background:var(--surface);color:var(--text);}
-    button {background:var(--primary);color:var(--text);cursor:pointer;transition:background .2s;}
-    button:hover {background:var(--primary-dark);}
-    #app{display:none;}
-    #guestList{max-height:40vh;overflow-y:auto;background:var(--surface);border-radius:12px;padding:10px;margin:20px auto 0;max-width:440px;box-shadow:inset 0 0 4px rgba(0,0,0,.3);}
-    ul{list-style:none;padding:0;margin:0;text-align:left;}
-    li{padding:10px;border-bottom:1px solid #333;font-size:1em;}
-    #scannerContainer{display:none;position:fixed;inset:0;background:#000;z-index:10000;}
-    #qr-reader{width:100%;height:80%;}
-    #scanFeedback{height:20%;color:#fff;font-size:1.4em;display:flex;align-items:center;justify-content:center;}
+    :root { --bg-dark:#121212;--surface-dark:#1a1a1a;--text-dark:#fff;--bg-light:#f7f7f7;--surface-light:#fff;--text-light:#000;--primary:#5aa189;--primary-dark:#4b8c76; }
+    body{margin:0;font-family:sans-serif;text-align:center;background:var(--bg-dark);color:var(--text-dark);padding:20px;transition:background .3s,color .3s;}
+    body.light{background:var(--bg-light);color:var(--text-light);}button,input{padding:12px;margin:8px;font-size:1em;border-radius:8px;border:none;}button{background:var(--primary);color:#fff;cursor:pointer;}button:hover{background:var(--primary-dark);}#qrContainerDemo canvas{margin:10px auto;display:block;} .guestItem{background:var(--surface-dark);padding:10px;margin:8px auto;border-radius:10px;max-width:300px;position:relative;}body.light .guestItem{background:var(--surface-light);}#timer{position:fixed;top:10px;left:10px;background:#444;padding:8px 12px;border-radius:8px;font-weight:bold;z-index:1001;} .tab-btn{background:#333;border-radius:6px;padding:10px 20px;margin:10px;cursor:pointer;display:inline-block;} .tab-btn.active{background:var(--primary);} .tab-content{display:none;} .tab-content.active{display:block;} #themeToggle{position:fixed;top:10px;right:10px;background:#333;width:40px;height:40px;border-radius:50%;line-height:40px;color:#fff;}body.light #themeToggle{background:#ccc;color:#000;} .download-btn{position:absolute;top:10px;right:10px;font-size:12px;padding:6px 10px;background:#2196F3;color:#fff;border:none;border-radius:5px;cursor:pointer;} #scannerOverlay{position:fixed;inset:0;background:rgba(0,0,0,.9);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:2000;}#reader{width:90%;max-width:400px;}#closeScan{margin-top:10px;}
+    #demoGuide{background:#222;padding:10px;margin:10px auto;max-width:400px;border-radius:8px;line-height:1.5;display:none;}
   </style>
 </head>
 <body>
-  <img id="logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADimHc4AAAMzklEQVR42u1dW2wc1Rn+zmV2Yzt2SB" alt="Logo Invites">
-  <h1 id="clienteNome">InvitesQR</h1>
-  <input id="tokenInput" type="text" placeholder="Digite o token do cliente">
-  <button id="entrarBtn">Entrar</button>
+  <button id="themeToggle" onclick="toggleTheme()">🌙</button>
+  <h1>InvitesQR</h1>
+  <div id="tabsBar">
+    <span class="tab-btn active" onclick="abrirAba('painelPrincipal')" id="btnPainelPrincipal">Painel Principal</span>
+    <span class="tab-btn" onclick="abrirAba('painelDemo')" id="btnPainelDemo">Modo Demo</span>
+  </div>
 
-  <div id="app">
-    <div id="validadeMsg"></div>
-    <button onclick="startScanner()">📷 Scanear</button>
-    <div id="scannerContainer">
-      <div id="qr-reader"></div>
-      <div id="scanFeedback"></div>
-      <button onclick="fecharScanner()" style="position:absolute;top:10px;right:10px;background:red;color:white;padding:10px;border-radius:8px;">❌ Fechar</button>
-    </div>
-    <input id="searchInput" type="text" placeholder="🔍 Pesquisar convidado" oninput="filtrarConvidados()">
-    <ul id="guestList"></ul>
+  <div id="painelPrincipal" class="tab-content active">
+    <input id="tokenInput" type="text" placeholder="Digite o token do cliente">
+    <button onclick="entrarCliente()">Entrar</button>
+    <div id="alertBox" style="display:none"></div>
+  </div>
+
+  <div id="painelDemo" class="tab-content">
+    <div id="timer"></div>
+    <div id="demoGuide"></div>
+    <button onclick="gerarQRPrompt()" id="btnGerar">Gerar QR Code</button>
+    <button onclick="abrirScannerDemo()" id="btnScan">Escanear QR Code</button>
+    <button onclick="reiniciarDemo()">🔄 Reiniciar Demo</button>
+    <div id="qrContainerDemo"></div>
+  </div>
+
+  <div id="scannerOverlay" onclick="event.target.id==='scannerOverlay'&&fecharScannerDemo()">
+    <div id="reader"></div>
+    <button id="closeScan" onclick="fecharScannerDemo()">❌ Fechar</button>
   </div>
 
 <script>
-  const SUPABASE_URL = "https://rnvunprjvppbjavkaoek.supabase.co";
-  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJudnVucHJqdnBwYmphdmthb2VrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2NjYzOTksImV4cCI6MjA2NzI0MjM5OX0.5E37Qm-KMmyGtGKbOINbDqMQlZlfgcQx91RQ01qslT8";
+function toggleTheme(){document.body.classList.toggle('light');document.getElementById('themeToggle').textContent=document.body.classList.contains('light')?'☀️':'🌙';}
+function abrirAba(a){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));document.querySelector(`[onclick="abrirAba('${a}')"]`).classList.add('active');document.getElementById(a).classList.add('active');}
 
-  let scanner = null;
-  let token = localStorage.getItem('token');
-  const deviceId = localStorage.getItem('device_id') || crypto.randomUUID();
-  localStorage.setItem('device_id', deviceId);
-  let client = null, convidados = [];
-
-  document.getElementById('entrarBtn').addEventListener('click', () => iniciar(document.getElementById('tokenInput').value));
-
-  async function iniciar(inputToken) {
-    token = inputToken || token;
-    if (!token) return alert("Digite o token.");
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/clientes?token=eq.${token}`, {
-      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-    });
-    const data = await res.json();
-    client = data[0];
-    if (!client) return alert("❌ Token inválido.");
-    if (client.dispositivos && client.dispositivos !== deviceId) return alert("❌ Token já usado noutro dispositivo.");
-    if (!client.dispositivos) {
-      await fetch(`${SUPABASE_URL}/rest/v1/clientes?token=eq.${token}`, {
-        method: "PATCH",
-        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ dispositivos: deviceId })
-      });
-    }
-    localStorage.setItem('token', token);
-    document.getElementById('tokenInput').style.display = 'none';
-    document.getElementById('entrarBtn').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    document.getElementById('clienteNome').innerText = `🎉 Olá, ${client.nome}`;
-    document.getElementById('validadeMsg').innerText = `⏳ Válido até: ${new Date(client.validade * 1000).toLocaleDateString()}`;
-    await carregarConvidados();
+const demoMax=3,demoDuration=15*60*1000;
+let gerados=JSON.parse(localStorage.getItem('demoGerados')||'[]');
+let demoStart=parseInt(localStorage.getItem('demoStart'))||Date.now();
+let demoDisabled=localStorage.getItem('demoDisabled')==='1';
+let demoIntroShown=localStorage.getItem('demoIntroShown')==='1';
+if(demoDisabled) ocultarDemo();
+else {
+  if(!demoIntroShown){
+    document.getElementById('demoGuide').style.display='block';
+    document.getElementById('demoGuide').innerHTML = `<strong>Modo Demo:</strong><br>1. Gere até 3 QR Codes com nomes<br>2. Salve e compartilhe os QR gerados<br>3. Escaneie para validar cada um<br>⏳ Duração do demo: 15 minutos.`;
+    localStorage.setItem('demoIntroShown','1');
   }
-
-  async function carregarConvidados() {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/convidados?token_cliente=eq.${token}`, {
-      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-    });
-    convidados = await res.json();
-    renderConvidados();
-  }
-
-  function renderConvidados() {
-    const list = document.getElementById("guestList");
-    const query = document.getElementById("searchInput").value.toLowerCase();
-    list.innerHTML = "";
-    convidados.filter(c => c.nome.toLowerCase().includes(query)).forEach(c => {
-      const li = document.createElement("li");
-      li.textContent = `${c.status === 'usado' ? '✅' : '🟢'} ${c.nome}`;
-      list.appendChild(li);
-    });
-  }
-
-  function filtrarConvidados() { renderConvidados(); }
-
-  async function startScanner() {
-    document.getElementById("scannerContainer").style.display = "block";
-    await new Promise(r => setTimeout(r, 300));
-    if (!scanner) scanner = new Html5Qrcode("qr-reader");
-    scanner.start($1, $2, async content => {
-      const match = convidados.find(c => c.id.toString() === content.trim());
-      if (!match) return;
-      if (match.status === "usado") return;
-      await fetch(`${SUPABASE_URL}/rest/v1/convidados?id=eq.${match.id}`, {
-        method: "PATCH",
-        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "usado" })
-      });
-      await carregarConvidados();
-    }, error => {
-      document.getElementById("scanFeedback").innerText = "❌ Erro ao acessar a câmara. Verifique as permissões.";
-      console.error("Erro na câmara:", error);
-    });
-  }
-
-  function fecharScanner() {
-    document.getElementById("scannerContainer").style.display = "none";
-    if (scanner) scanner.stop();
-  }
+  renderDemoQR();startTimer();
+}
+function salvarEstado(){localStorage.setItem('demoGerados',JSON.stringify(gerados));localStorage.setItem('demoStart',demoStart);}
+function ocultarDemo(){demoDisabled=true;localStorage.setItem('demoDisabled','1');document.getElementById('btnPainelDemo').style.display='none';document.getElementById('painelDemo')?.remove();}
+function gerarQRPrompt(){if(demoDisabled)return;if(gerados.length>=demoMax)return alert('Limite de 3 alcançado');const nome=prompt('Nome:');if(!nome)return;const id=Math.floor(Math.random()*100000);gerados.push({id,nome,status:'novo'});salvarEstado();renderDemoQR();}
+function renderDemoQR(){const cont=document.getElementById('qrContainerDemo');if(!cont)return;cont.innerHTML='';gerados.forEach((c,i)=>{const item=document.createElement('div');item.className='guestItem';const canvas=document.createElement('canvas');new QRious({element:canvas,value:c.id.toString(),size:200});const btn=document.createElement('button');btn.className='download-btn';btn.textContent='Salvar';btn.onclick=()=>{const a=document.createElement('a');a.href=canvas.toDataURL();a.download=`${c.nome}.png`;a.click();};item.appendChild(canvas);item.appendChild(btn);item.appendChild(document.createElement('div')).textContent=`${c.status==='usado'?'✅':'🆕'} ${c.nome}`;cont.appendChild(item);});}
+let scanner=null;
+function abrirScannerDemo(){if(demoDisabled)return;if(!gerados.length)return alert('Gere pelo menos 1 QR primeiro');document.getElementById('scannerOverlay').style.display='flex';if(!scanner)scanner=new Html5Qrcode('reader');scanner.start({facingMode:'environment'},{fps:10,qrbox:250},content=>{const g=gerados.find(x=>x.id.toString()===content.trim());if(!g){alert('QR não encontrado');return;}if(g.status==='usado'){alert('Já validado');return;}g.status='usado';salvarEstado();renderDemoQR();alert(`✔️ ${g.nome} validado!`);if(gerados.filter(x=>x.status==='usado').length>=demoMax)ocultarDemo();},err=>console.warn(err));}
+function fecharScannerDemo(){document.getElementById('scannerOverlay').style.display='none';if(scanner)scanner.stop();}
+function startTimer(){atualizaTimer();setInterval(()=>{if(demoDisabled)return;atualizaTimer();},1000);}
+function atualizaTimer(){const t=document.getElementById('timer');if(!t)return;const restante=Math.max(0,demoDuration-(Date.now()-demoStart));const m=Math.floor(restante/60000).toString().padStart(2,'0');const s=Math.floor((restante%60000)/1000).toString().padStart(2,'0');t.textContent=`⏳ ${m}:${s}`;if(restante<=0){alert('⏰ Tempo esgotado');ocultarDemo();}}
+function reiniciarDemo(){if(confirm('Reiniciar o modo demo? Todos os dados serão apagados.')){localStorage.removeItem('demoGerados');localStorage.setItem('demoStart',Date.now());location.reload();}}
+const SUPABASE_URL='https://rnvunprjvppbjavkaoek.supabase.co';const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';function showAlert(m,ok){const b=document.getElementById('alertBox');b.style.display='block';b.style.background=ok?'#2e7d32':'#b71c1c';b.textContent=m;setTimeout(()=>b.style.display='none',4000);}async function entrarCliente(){const t=document.getElementById('tokenInput').value.trim();if(!t)return showAlert('❌ Digite o token.');showAlert('⏳ Validando...');try{const r=await fetch(`${SUPABASE_URL}/rest/v1/clientes?token=eq.${t}`,{headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`}});const d=await r.json()[0];if(!d)return showAlert('Token inválido');showAlert(`Bem‑vindo, ${d.nome}!`,true);}catch(e){showAlert('Erro');}}
 </script>
 </body>
 </html>
