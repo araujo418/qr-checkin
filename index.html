@@ -5,39 +5,257 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>Invites digitais – Validação</title>
   <style>
-    :root{--primary:#6a5acd;--success:#38a169;--error:#e53e3e;--bg:#f8f9fa;--text:#2d3748;--light:#edf2f7}
-    body,html{margin:0;padding:0;height:100%;font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text)}
-    .splash-screen{position:fixed;inset:0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999;animation:fadeOut 1s ease forwards;animation-delay:2.5s}
-    .loader{border:6px solid #f3f3f3;border-top:6px solid var(--primary);border-radius:50%;width:60px;height:60px;animation:spin 1s linear infinite;margin-bottom:20px}
-    .welcome-text{font-size:1.6em;font-weight:700;opacity:0;transform:translateY(20px);animation:slideIn 1s ease forwards;animation-delay:1.2s}
-    @keyframes spin{to{transform:rotate(360deg)}}@keyframes slideIn{to{opacity:1;transform:translateY(0)}}@keyframes fadeOut{to{opacity:0;visibility:hidden}}
+    /* Variáveis de Cores */
+    :root {
+      --primary: #6a5acd;
+      --success: #38a169;
+      --error: #e53e3e;
+      --bg: #f8f9fa;
+      --text: #2d3748;
+      --light: #edf2f7;
+    }
+    
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
 
-    #qrFullscreen{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;display:none;justify-content:center;align-items:center;flex-direction:column}
-    #qrFullscreenClose{position:absolute;top:10px;right:10px;background:#fff;border:none;padding:10px;border-radius:6px;cursor:pointer;font-weight:bold;z-index:10000}
-    #qrViewFull{width:100vw;height:100vh}
-    #qrStatus{position:absolute;top:45%;left:50%;transform:translate(-50%,-50%);font-size:2.5em;font-weight:700;text-align:center;text-shadow:0 0 12px rgba(0,0,0,.8);color:white}
-    #qrGuestName{position:absolute;top:58%;left:50%;transform:translate(-50%,-50%);font-size:1.5em;font-weight:600;text-align:center;color:white}
-    #nextBtn{position:absolute;bottom:40px;background:var(--primary);color:white;border:none;padding:12px 24px;border-radius:8px;font-size:1em;font-weight:bold;cursor:pointer;display:none;z-index:10001}
+    .splash-screen {
+      position: fixed;
+      inset: 0;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 99999;
+      animation: fadeOut 1s ease forwards;
+      animation-delay: 2.5s;
+    }
 
-    main{margin:32px auto;max-width:500px;background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.1);overflow:hidden}
-    .tabs{display:flex}.tab{flex:1;padding:14px;text-align:center;background:var(--light);cursor:pointer;font-weight:600;transition:background .3s}.tab.active{background:var(--primary);color:#fff}
-    .tabcontent{display:none;padding:24px}.tabcontent.active{display:block}
-    input[type=text]{width:100%;padding:12px;font-size:1em;border:1px solid #ccc;border-radius:10px;margin-bottom:14px;text-align:center}
-    button{width:100%;padding:12px;font-size:1em;background:var(--primary);color:#fff;border:none;border-radius:10px;cursor:pointer;font-weight:600;box-shadow:0 2px 6px rgba(0,0,0,.1);transition:background .3s}button:hover{background:#5a4ccf}
-    .output{margin-top:14px;padding:14px;text-align:center;border-radius:10px;font-size:1.1em}
-    .output.success{background:var(--success);color:#fff}.output.error{background:var(--error);color:#fff}
-    #guestList{list-style:none;padding:0;margin-top:20px;max-height:300px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:10px;display:none}
-    #guestList li{padding:12px 16px;border-bottom:1px solid #edf2f7;display:flex;align-items:center;gap:10px}
-    .check{width:20px;height:20px;border-radius:50%;border:2px solid #cbd5e0;flex-shrink:0}.checked{background:var(--success);border-color:var(--success)}
-    .footer-note{text-align:center;font-size:.8em;color:#a0aec0;margin:32px 0}
-    #progressContainer{margin-top:20px;position:relative;height:26px;background:#e2e8f0;border-radius:13px;overflow:hidden;display:none}
-    #progressBar{background:var(--primary);height:100%;width:0%;transition:width .3s}
-    #progressText{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.9em;font-weight:600;color:#fff;text-shadow:0 0 3px rgba(0,0,0,.4)}
+    .loader {
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid var(--primary);
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+
+    .welcome-text {
+      font-size: 1.6em;
+      font-weight: 700;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: slideIn 1s ease forwards;
+      animation-delay: 1.2s;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes slideIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Barra de Progresso */
+    #progressContainer {
+      margin-top: 20px;
+      position: relative;
+      height: 26px;
+      background: #e2e8f0;
+      border-radius: 13px;
+      overflow: hidden;
+      display: none;
+    }
+
+    #progressBar {
+      background: var(--primary);
+      height: 100%;
+      width: 0%;
+      transition: width 0.3s;
+    }
+
+    #progressText {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9em;
+      font-weight: 600;
+      color: #fff;
+      text-shadow: 0 0 3px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Layout Geral */
+    main {
+      margin: 32px auto;
+      max-width: 600px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+    }
+
+    .tabs {
+      display: flex;
+      margin-bottom: 20px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 14px;
+      text-align: center;
+      background: var(--light);
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.3s;
+    }
+
+    .tab.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .tabcontent {
+      display: none;
+      padding: 20px;
+    }
+
+    .tabcontent.active {
+      display: block;
+    }
+
+    input[type="file"], button {
+      width: 100%;
+      padding: 12px;
+      font-size: 1em;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      background: var(--primary);
+      color: white;
+      margin-bottom: 14px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #5a4ccf;
+    }
+
+    .output {
+      margin-top: 14px;
+      padding: 14px;
+      text-align: center;
+      border-radius: 10px;
+      font-size: 1.1em;
+    }
+
+    .output.success {
+      background: var(--success);
+      color: #fff;
+    }
+
+    .output.error {
+      background: var(--error);
+      color: #fff;
+    }
+
+    #guestList {
+      list-style: none;
+      padding: 0;
+      margin-top: 20px;
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      display: none;
+    }
+
+    #guestList li {
+      padding: 12px 16px;
+      border-bottom: 1px solid #edf2f7;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .check {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid #cbd5e0;
+      flex-shrink: 0;
+    }
+
+    .checked {
+      background: var(--success);
+      border-color: var(--success);
+    }
+
+    .footer-note {
+      text-align: center;
+      font-size: 0.8em;
+      color: #a0aec0;
+      margin: 32px 0;
+    }
+
+    /* Fullscreen Scanner */
+    #qrFullscreen {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 9999;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    #qrFullscreenClose {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #fff;
+      border: none;
+      padding: 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      z-index: 10000;
+    }
+
+    #qrViewFull {
+      width: 100vw;
+      height: 100vh;
+    }
+
+    #qrStatus, #qrGuestName {
+      opacity: 0;
+    }
   </style>
   <script src="https://unpkg.com/html5-qrcode@latest"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.js"></script>
 </head>
 <body>
-  <div class="splash-screen" id="splash"><div class="loader"></div><div class="welcome-text">Bem‑vindo à Invites digitais</div></div>
+
+  <div class="splash-screen" id="splash">
+    <div class="loader"></div>
+    <div class="welcome-text">Bem‑vindo à Invites digitais</div>
+  </div>
 
   <div id="qrFullscreen">
     <button id="qrFullscreenClose" onclick="closeFullscreen()">Fechar</button>
@@ -50,38 +268,36 @@
   <main>
     <div class="tabs">
       <div class="tab active" onclick="openTab('cliente')">Cliente</div>
-      <div class="tab" onclick="adminLogin()">Admin</div>
     </div>
     <div id="cliente" class="tabcontent active">
+      <input type="file" id="jsonFileInput" accept=".json" onchange="handleFileUpload(event)" />
       <button onclick="startFullscreenScanner()">📷 Escanear QR Code (Tela Cheia)</button>
-      <input id="codeInput" type="text" placeholder="Digite o código do convite" />
-      <button onclick="verifyManual()">Verificar</button>
       <div class="output" id="result">Nenhum código validado ainda…</div>
       <div id="progressContainer"><div id="progressBar"></div><span id="progressText"></span></div>
       <ul id="guestList"></ul>
-    </div>
-    <div id="admin" class="tabcontent">
-      <input id="fileInput" type="file" accept=".txt" onchange="importTxt(event)" style="display:none" />
-      <div id="adminAddSection" style="display:none">
-        <input id="newCode" type="text" placeholder="Novo código" />
-        <input id="newName" type="text" placeholder="Nome do convidado" />
-        <button onclick="addManual()">Adicionar Convidado</button>
-      </div>
-      <button id="uploadBtn" onclick="document.getElementById('fileInput').click()">📥 Carregar lista (.txt)</button>
-      <button id="overrideBtn" onclick="toggleOverride()" style="display:none;margin-top:10px">🛡️ Modo Override</button>
     </div>
   </main>
   <div class="footer-note">Invites digitais © 2025</div>
 
 <script>
 let guests = {}, totalGuests = 0, usedGuests = 0, override = false;
-const STORAGE_KEY = 'invitesDigitaisEventData', PASS = '2025Invites';
+const STORAGE_KEY = 'invitesDigitaisEventData';
 let fullscreenScanner = null, scannerLocked = false;
 
 window.addEventListener('load', () => {
   setTimeout(() => document.getElementById('splash').style.display = 'none', 3500);
   loadState();
 });
+
+// Função para gerar código aleatório
+function generateRandomCode() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < 8; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
 
 function showScanStatus(status, name, type){
   scannerLocked = true;
@@ -102,18 +318,23 @@ function enableNextScan(){
 
 function verify(code) {
   if (!code) return;
-  if (!guests[code]) return showScanStatus('CÓDIGO INEXISTENTE', '', 'error');
-  if (guests[code].usado && !override) return showScanStatus('USADO', guests[code].nome, 'error');
-  guests[code].usado = true; usedGuests++;
-  showScanStatus('PERMITIDO', guests[code].nome, 'success');
-  saveState(); updateProgress();
-  document.querySelector(`[data-code="${code}"] .check`)?.classList.add('checked');
-}
+  try {
+    const decryptedJson = decryptJson(code);  // Decriptografando o JSON
+    if (!decryptedJson.convidados) {
+      return showScanStatus('CÓDIGO INEXISTENTE', '', 'error');
+    }
 
-function verifyManual(){
-  const code = document.getElementById('codeInput').value.trim();
-  verify(code);
-  document.getElementById('codeInput').value = '';
+    // Processa a lista de convidados
+    decryptedJson.convidados.forEach(guest => {
+      addToList(generateRandomCode(), guest.name);  // Acessando 'name' agora
+    });
+
+    // Exibe o status de sucesso
+    showScanStatus('CÓDIGO VALIDADO', decryptedJson.convidados[0].name, 'success');
+  } catch (error) {
+    console.error('Erro ao descriptografar:', error);
+    showScanStatus('CÓDIGO INVÁLIDO', '', 'error');
+  }
 }
 
 function startFullscreenScanner(){
@@ -155,31 +376,6 @@ function loadState(){
   }
 }
 
-function importTxt(e){
-  const file = e.target.files[0]; if(!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    guests = {}; totalGuests = 0; usedGuests = 0;
-    document.getElementById('guestList').innerHTML = '';
-    ev.target.result.split(/\r?\n/).filter(Boolean).forEach(l => {
-      const [code,name] = l.split(/[,:;\t]+/);
-      if(code){ addToList(code.trim(), (name||'Convidado').trim()); totalGuests++; }
-    });
-    showProgress(); saveState(); alert('Lista carregada!');
-    e.target.value = '';
-  };
-  reader.readAsText(file);
-}
-
-function addManual(){
-  const code = document.getElementById('newCode').value.trim();
-  const name = document.getElementById('newName').value.trim();
-  if(!code || !name) return alert('Preencha ambos');
-  if(guests[code]) return alert('Código já existe');
-  addToList(code, name); totalGuests++;
-  showProgress(); saveState();
-}
-
 function addToList(code,nome,usado=false){
   if(document.querySelector(`[data-code="${code}"]`)) return;
   const li = document.createElement('li'); li.dataset.code = code;
@@ -200,18 +396,54 @@ function updateProgress(){
   document.getElementById('progressText').textContent = `${usedGuests} / ${totalGuests}`;
 }
 
-function toggleOverride(){
-  override = !override;
-  alert('Modo override ' + (override ? 'ativado' : 'desativado'));
+// Função para descriptografar o JSON
+function decryptJson(encryptedJson) {
+  const decrypted = CryptoJS.AES.decrypt(encryptedJson, 'sua-chave-secreta');
+  const json = decrypted.toString(CryptoJS.enc.Utf8);
+  return JSON.parse(json);
 }
 
-function adminLogin(){
-  if(prompt('Código de administrador:') === PASS){
-    openTab('admin');
-    document.getElementById('fileInput').style.display = 'block';
-    document.getElementById('adminAddSection').style.display = 'block';
-    document.getElementById('overrideBtn').style.display = 'block';
-  } else alert('Código incorreto');
+// Função para lidar com o upload do arquivo JSON
+function handleFileUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const content = e.target.result;
+    try {
+      const decryptedJson = decryptJson(content);
+
+      console.log("JSON descriptografado:", decryptedJson); // Log da estrutura do JSON
+
+      // Verifica o ID do JSON para garantir que foi gerado pelo seu sistema
+      if (decryptedJson.id !== 'meuApp2025') {
+        alert("Este arquivo não foi gerado pelo nosso sistema.");
+        return;
+      }
+
+      // Certifique-se de que a estrutura de convidados está correta
+      if (!decryptedJson.convidados || !Array.isArray(decryptedJson.convidados)) {
+        throw new Error("A lista de convidados está ausente ou no formato incorreto.");
+      }
+
+      guests = {};
+      totalGuests = decryptedJson.convidados.length;
+      usedGuests = 0;
+
+      // Adiciona os convidados na lista
+      decryptedJson.convidados.forEach(guest => {
+        addToList(generateRandomCode(), guest.name);  // Corrigido para 'name'
+      });
+
+      showProgress();
+    } catch (error) {
+      console.error('Erro ao carregar JSON:', error);
+      alert("Erro ao carregar o arquivo JSON. Certifique-se de que o formato está correto.");
+    }
+  };
+  
+  reader.readAsText(file);
 }
 </script>
 </body>
