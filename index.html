@@ -275,6 +275,8 @@
       <div class="output" id="result">Nenhum código validado ainda…</div>
       <div id="progressContainer"><div id="progressBar"></div><span id="progressText"></span></div>
       <ul id="guestList"></ul>
+      <button onclick="clearGuestList()">Eliminar Lista</button>
+      <button onclick="uncheckAllGuests()">Desmarcar Todos</button>
     </div>
   </main>
   <div class="footer-note">Invites digitais © 2025</div>
@@ -326,7 +328,7 @@ function verify(code) {
 
     // Processa a lista de convidados
     decryptedJson.convidados.forEach(guest => {
-      addToList(generateRandomCode(), guest.name);  // Acessando 'name' agora
+      addToList(generateRandomCode(), guest.name);  // Corrigido para 'name'
     });
 
     // Exibe o status de sucesso
@@ -444,6 +446,34 @@ function handleFileUpload(event) {
   };
   
   reader.readAsText(file);
+}
+
+// Função para eliminar a lista no aplicativo
+function clearGuestList() {
+  guests = {};
+  totalGuests = 0;
+  usedGuests = 0;
+  document.getElementById('guestList').innerHTML = '';
+  document.getElementById('progressContainer').style.display = 'none';
+  alert('A lista foi apagada no aplicativo.');
+}
+
+// Função para desmarcar todos os lidos
+function uncheckAllGuests() {
+  Object.keys(guests).forEach(code => {
+    guests[code].usado = false;
+  });
+  updateGuestList();
+  showProgress();
+}
+
+// Atualiza a lista de convidados
+function updateGuestList() {
+  const guestList = document.getElementById('guestList');
+  guestList.innerHTML = ''; // Limpa a lista
+  Object.keys(guests).forEach(code => {
+    addToList(code, guests[code].nome, guests[code].usado);
+  });
 }
 </script>
 </body>
