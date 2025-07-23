@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>Invites Digitais – Validação</title>
-  <script src="https://unpkg.com/html5-qrcode@latest"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.js"></script>
   <style>
     * {
@@ -531,12 +531,16 @@
     </div>
 
     <div class="main-card">
-      <div class="upload-area" onclick="document.getElementById('fileInput').click()">
-        <input type="file" id="fileInput" accept=".json" onchange="handleFileUpload(event)">
+      <div class="upload-area">
+        <input type="file" id="fileInput" accept=".json" onchange="handleFileUpload(event)" style="display: none;">
         <div class="upload-icon">📁</div>
         <div class="upload-text">Carregar Lista de Convidados</div>
-        <div class="upload-subtext">Clique ou arraste o arquivo .json aqui</div>
+        <div class="upload-subtext">Clique no botão abaixo ou arraste o arquivo aqui</div>
       </div>
+      
+      <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+        📂 Selecionar Arquivo JSON
+      </button>
 
       <button class="btn btn-success" onclick="startScanner()">
         📷 Iniciar Scanner QR Code
@@ -645,6 +649,8 @@
       if (file) {
         handleFile(file);
       }
+      // Clear the input value to prevent reopening
+      event.target.value = '';
     }
 
     function handleFile(file) {
@@ -804,7 +810,7 @@
       });
     }
 
-    function startScanner() {
+    async function startScanner() {
       if (Object.keys(guestData).length === 0) {
         showMessage('Carregue primeiro a lista de convidados', 'error');
         return;
@@ -816,17 +822,82 @@
       document.getElementById('scannerArea').innerHTML = '';
       
       try {
-        // Use simpler configuration that worked before
-        scanner = new Html5QrcodeScanner("scannerArea", {
-          fps: 10,
-          qrbox: { width: 250, height: 250 }
-        });
+        // First check if we have camera permissions
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        stream.getTracks().forEach(track => track.stop()); // Stop the test stream
         
-        scanner.render(onScanSuccess, onScanError);
+        // Now initialize the scanner
+        scanner = new Html5Qrcode("scannerArea");
+        
+        // Try different camera configurations
+        try {
+          // First try with environment facing mode (back camera)
+          await scanner.start(
+            { facingMode: "environment" },
+            {
+              fps: 10,
+              qrbox: { width: 250, height: 250 },
+              aspectRatio: 1.0
+            },
+            onScanSuccess,
+            onScanError
+          );
+          console.log('Started with back camera');
+        } catch (backCameraError) {
+          console.log('Back camera failed, trying front camera...', backCameraError);
+          try {
+            // If back camera fails, try front camera
+            await scanner.start(
+              { facingMode: "user" },
+              {
+                fps: 10,
+                qrbox: { width: 250, height: 250 },
+                aspectRatio: 1.0
+              },
+              onScanSuccess,
+              onScanError
+            );
+            console.log('Started with front camera');
+          } catch (frontCameraError) {
+            console.log('Front camera failed, trying camera list...', frontCameraError);
+            // If both fail, try with camera list
+            const cameras = await Html5Qrcode.getCameras();
+            console.log('Available cameras:', cameras);
+            
+            if (cameras && cameras.length > 0) {
+              const camera = cameras[0];
+              console.log('Using camera:', camera);
+              
+              await scanner.start(
+                camera.id,
+                {
+                  fps: 10,
+                  qrbox: { width: 250, height: 250 },
+                  aspectRatio: 1.0
+                },
+                onScanSuccess,
+                onScanError
+              );
+              console.log('Started with camera ID:', camera.id);
+            } else {
+              throw new Error('Nenhuma câmara disponível');
+            }
+          }
+        }
         
       } catch (error) {
-        console.error('Scanner initialization error:', error);
-        showMessage('Erro ao inicializar scanner: ' + error.message, 'error');
+        console.error('Scanner error:', error);
+        let errorMessage = 'Erro ao aceder à câmara';
+        
+        if (error.name === 'NotAllowedError') {
+          errorMessage = 'Permissão da câmara negada. Permita o acesso e tente novamente.';
+        } else if (error.name === 'NotFoundError') {
+          errorMessage = 'Nenhuma câmara encontrada no dispositivo.';
+        } else if (error.name === 'NotSupportedError') {
+          errorMessage = 'Câmara não suportada neste navegador.';
+        }
+        
+        showMessage(errorMessage, 'error');
         closeScanner();
       }
     }
@@ -882,13 +953,27 @@
       document.getElementById('nextBtn').style.display = 'none';
     }
 
-    function closeScanner() {
+    async function closeScanner() {
       document.getElementById('scannerOverlay').style.display = 'none';
       if (scanner) {
-        scanner.clear();
-        scanner = null;
+        try {
+          await scanner.stop();
+          scanner.clear();
+        } catch (err) {
+          console.log('Error stopping scanner:', err);
+          // Force clear even if stop fails
+          try {
+            scanner.clear();
+          } catch (clearErr) {
+            console.log('Error clearing scanner:', clearErr);
+          }
+        } finally {
+          scanner = null;
+        }
       }
       scanLocked = false;
+      document.getElementById('scanResult').style.display = 'none';
+      document.getElementById('nextBtn').style.display = 'none';
     }
 
     function clearAllData() {
@@ -944,5 +1029,5 @@
       }
     }
   </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'963bde1b851d77dd',t:'MTc1MzI4MDk0MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'963becafa17977d7',t:'MTc1MzI4MTUzOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
