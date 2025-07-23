@@ -351,13 +351,20 @@
     }
     
     .btn-close {
-      background: #6c757d;
+      background: #dc3545;
       color: white;
-      padding: 10px 20px;
+      padding: 15px 25px;
       border: none;
       border-radius: 8px;
       cursor: pointer;
       font-weight: 600;
+      font-size: 1.1rem;
+      min-width: 120px;
+    }
+    
+    .btn-close:hover {
+      background: #c82333;
+      transform: translateY(-1px);
     }
     
     .btn-next {
@@ -822,68 +829,20 @@
       document.getElementById('scannerArea').innerHTML = '';
       
       try {
-        // First check if we have camera permissions
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        stream.getTracks().forEach(track => track.stop()); // Stop the test stream
-        
-        // Now initialize the scanner
+        // Initialize the scanner directly - no options, just start
         scanner = new Html5Qrcode("scannerArea");
         
-        // Try different camera configurations
-        try {
-          // First try with environment facing mode (back camera)
-          await scanner.start(
-            { facingMode: "environment" },
-            {
-              fps: 10,
-              qrbox: { width: 250, height: 250 },
-              aspectRatio: 1.0
-            },
-            onScanSuccess,
-            onScanError
-          );
-          console.log('Started with back camera');
-        } catch (backCameraError) {
-          console.log('Back camera failed, trying front camera...', backCameraError);
-          try {
-            // If back camera fails, try front camera
-            await scanner.start(
-              { facingMode: "user" },
-              {
-                fps: 10,
-                qrbox: { width: 250, height: 250 },
-                aspectRatio: 1.0
-              },
-              onScanSuccess,
-              onScanError
-            );
-            console.log('Started with front camera');
-          } catch (frontCameraError) {
-            console.log('Front camera failed, trying camera list...', frontCameraError);
-            // If both fail, try with camera list
-            const cameras = await Html5Qrcode.getCameras();
-            console.log('Available cameras:', cameras);
-            
-            if (cameras && cameras.length > 0) {
-              const camera = cameras[0];
-              console.log('Using camera:', camera);
-              
-              await scanner.start(
-                camera.id,
-                {
-                  fps: 10,
-                  qrbox: { width: 250, height: 250 },
-                  aspectRatio: 1.0
-                },
-                onScanSuccess,
-                onScanError
-              );
-              console.log('Started with camera ID:', camera.id);
-            } else {
-              throw new Error('Nenhuma câmara disponível');
-            }
-          }
-        }
+        // Start with back camera (environment) - most common for QR scanning
+        await scanner.start(
+          { facingMode: "environment" },
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0
+          },
+          onScanSuccess,
+          onScanError
+        );
         
       } catch (error) {
         console.error('Scanner error:', error);
@@ -1029,5 +988,5 @@
       }
     }
   </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'963becafa17977d7',t:'MTc1MzI4MTUzOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'963bfb4b47d777d7',t:'MTc1MzI4MjEzNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
