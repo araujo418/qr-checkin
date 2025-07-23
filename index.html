@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt">
 <head>
@@ -112,7 +111,7 @@
     <div id="qrViewFull"></div>
     <div id="qrGuestName"></div>
     <div id="qrStatus"></div>
-    <button id="nextBtn" onclick="enableNextScan()">Próximo</button>
+    <button id="nextBtn" onclick="enableNextScan()">➡️ Próximo</button>
   </div>
 
   <main>
@@ -120,7 +119,8 @@
     <button onclick="startFullscreenScanner()">📷 Escanear QR Code</button>
     <div class="output" id="result">Nenhum código validado ainda…</div>
     <ul id="guestList"></ul>
-    <button onclick="clearGuestList()">Eliminar Lista</button>
+    <button onclick="clearGuestList()">🧹 Eliminar Lista</button>
+    <button onclick="exportToCSV()">📥 Exportar CSV</button>
   </main>
 
   <div class="footer-note">Invites digitais © 2025</div>
@@ -157,7 +157,7 @@ function handleFileUpload(event) {
       decryptedJson.convidados.forEach(guest => {
         const key = guest.name.toUpperCase();
         if (!guests[key]) {
-          guests[key] = { nome: guest.name, usado: false };
+          guests[key] = { nome: guest.name, usado: false, usos: 0 };
         }
       });
       saveState();
@@ -211,20 +211,25 @@ function verify(code) {
     decryptedJson.convidados.forEach(guest => {
       const key = guest.name.toUpperCase();
       if (guests[key] && guests[key].usado) {
+        guests[key].usos = (guests[key].usos || 1) + 1;
         showScanStatus('USADO', guest.name, 'error');
       } else {
         if (!guests[key]) {
-          guests[key] = { nome: guest.name, usado: true };
+          guests[key] = { nome: guest.name, usado: true, usos: 1 };
         } else {
           guests[key].usado = true;
+          guests[key].usos = (guests[key].usos || 0) + 1;
         }
         updateGuestList();
         showScanStatus('PERMITIDO', guest.name, 'success');
       }
     });
+
+    if (fullscreenScanner) fullscreenScanner.pause();
   } catch (error) {
     console.error('Erro ao verificar:', error);
     showScanStatus('CÓDIGO INVÁLIDO', '', 'error');
+    if (fullscreenScanner) fullscreenScanner.pause();
   }
 }
 
@@ -272,6 +277,27 @@ function enableNextScan(){
   document.getElementById('qrGuestName').style.opacity = '0';
   document.getElementById('nextBtn').style.display = 'none';
   scannerLocked = false;
+
+  if (fullscreenScanner) fullscreenScanner.resume();
+}
+
+function exportToCSV() {
+  const header = ['Nome', 'Status', 'Usos'];
+  const rows = Object.values(guests).map(g => [
+    `"${g.nome}"`,
+    g.usado ? 'Validado' : 'Não validado',
+    g.usos || 0
+  ]);
+
+  const csvContent = [header, ...rows].map(e => e.join(',')).join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'convidados_validacao.csv';
+  a.click();
+  URL.revokeObjectURL(url);
 }
 </script>
 </body>
