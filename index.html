@@ -1,983 +1,278 @@
+
 <!DOCTYPE html>
 <html lang="pt">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Invites Digitais – Leitor de Convites</title>
+  <title>Invites digitais – Validação</title>
+  <script src="https://unpkg.com/html5-qrcode@latest"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.js"></script>
   <style>
-    * {
+    body, html {
       margin: 0;
       padding: 0;
-      box-sizing: border-box;
-    }
-    
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      color: #333;
-      padding: 20px;
-    }
-    
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    
-    .header {
-      text-align: center;
-      color: white;
-      margin-bottom: 30px;
-    }
-    
-    .header h1 {
-      font-size: 2.5rem;
-      font-weight: 300;
-      margin-bottom: 10px;
-      text-shadow: 0 2px 10px rgba(0,0,0,0.3);
-    }
-    
-    .header p {
-      font-size: 1.1rem;
-      opacity: 0.9;
-    }
-    
-    .main-card {
-      background: white;
-      border-radius: 20px;
-      padding: 30px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
-    }
-    
-    .section {
-      margin-bottom: 30px;
-      padding-bottom: 25px;
-      border-bottom: 1px solid #e9ecef;
-    }
-    
-    .section:last-child {
-      border-bottom: none;
-      margin-bottom: 0;
-    }
-    
-    .section-title {
-      font-size: 1.4rem;
-      font-weight: 600;
-      color: #333;
-      margin-bottom: 15px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    
-    .upload-area {
-      border: 3px dashed #667eea;
-      border-radius: 15px;
-      padding: 40px;
-      text-align: center;
-      background: #f8f9ff;
-      transition: all 0.3s ease;
-      cursor: pointer;
-      margin-bottom: 20px;
-    }
-    
-    .upload-area:hover {
-      border-color: #5a67d8;
-      background: #f0f4ff;
-    }
-    
-    .upload-area.dragover {
-      border-color: #4c51bf;
-      background: #e6fffa;
-      transform: scale(1.02);
-    }
-    
-    .upload-icon {
-      font-size: 3rem;
-      margin-bottom: 15px;
-      color: #667eea;
-    }
-    
-    .upload-text {
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: #4a5568;
-      margin-bottom: 10px;
-    }
-    
-    .upload-subtext {
-      color: #718096;
-      font-size: 0.9rem;
-    }
-    
-    .file-input {
-      display: none;
-    }
-    
-    .btn {
-      padding: 12px 25px;
-      border: none;
-      border-radius: 10px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      margin-right: 10px;
-      margin-bottom: 10px;
-    }
-    
-    .btn-primary {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-    }
-    
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
-    }
-    
-    .btn-secondary {
-      background: #6c757d;
-      color: white;
-    }
-    
-    .btn-danger {
-      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
-      color: white;
-    }
-    
-    .form-group {
-      margin-bottom: 20px;
-    }
-    
-    .form-label {
-      display: block;
-      font-weight: 600;
-      margin-bottom: 8px;
-      color: #555;
-    }
-    
-    .form-input {
-      width: 100%;
-      padding: 12px 15px;
-      border: 2px solid #e1e5e9;
-      border-radius: 10px;
-      font-size: 1rem;
-      transition: border-color 0.3s ease;
-    }
-    
-    .form-input:focus {
-      outline: none;
-      border-color: #667eea;
-    }
-    
-    .search-container {
-      position: relative;
-      margin-bottom: 20px;
-    }
-    
-    .search-input {
-      width: 100%;
-      padding: 15px 50px 15px 20px;
-      border: 2px solid #e1e5e9;
-      border-radius: 15px;
-      font-size: 1.1rem;
-      transition: all 0.3s ease;
-    }
-    
-    .search-input:focus {
-      outline: none;
-      border-color: #667eea;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-    }
-    
-    .search-icon {
-      position: absolute;
-      right: 15px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: #6c757d;
-      font-size: 1.2rem;
-    }
-    
-    .guest-list {
+      height: 100%;
+      font-family: 'Segoe UI', sans-serif;
       background: #f8f9fa;
-      border-radius: 15px;
-      max-height: 400px;
-      overflow-y: auto;
+      color: #2d3748;
     }
-    
-    .guest-list:empty::before {
-      content: "👥 Nenhum convidado encontrado...";
-      display: block;
-      text-align: center;
-      padding: 60px 20px;
-      color: #6c757d;
-      font-style: italic;
-    }
-    
-    .guest-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+    main {
+      margin: 32px auto;
+      max-width: 600px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
       padding: 20px;
-      border-bottom: 1px solid #e9ecef;
-      transition: background 0.2s ease;
     }
-    
-    .guest-item:hover {
-      background: #e9ecef;
-    }
-    
-    .guest-item:last-child {
-      border-bottom: none;
-    }
-    
-    .guest-item.found {
-      background: #d4edda;
-      border-left: 4px solid #28a745;
-    }
-    
-    .guest-info {
-      flex: 1;
-    }
-    
-    .guest-name {
-      font-weight: 600;
-      font-size: 1.1rem;
-      margin-bottom: 5px;
-    }
-    
-    .guest-code {
-      font-size: 0.9rem;
-      color: #6c757d;
-      font-family: monospace;
-    }
-    
-    .guest-status {
-      text-align: center;
-    }
-    
-    .status-badge {
-      padding: 8px 15px;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-    
-    .status-valid {
-      background: #d4edda;
-      color: #155724;
-    }
-    
-    .status-invalid {
-      background: #f8d7da;
-      color: #721c24;
-    }
-    
-    .stats-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 20px;
-      margin: 20px 0;
-    }
-    
-    .stat-card {
-      background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
-      padding: 20px;
-      border-radius: 15px;
-      text-align: center;
-      color: #2d3436;
-    }
-    
-    .stat-number {
-      font-size: 2rem;
-      font-weight: bold;
-      margin-bottom: 5px;
-    }
-    
-    .stat-label {
-      font-size: 0.9rem;
-      opacity: 0.8;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-    
-    .event-info {
-      background: #e3f2fd;
-      border-radius: 15px;
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-    
-    .event-title {
-      font-size: 1.3rem;
-      font-weight: 600;
-      color: #1976d2;
-      margin-bottom: 10px;
-    }
-    
-    .event-details {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 15px;
-    }
-    
-    .event-detail {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: #424242;
-    }
-    
-    .alert {
-      padding: 15px 20px;
+    input[type="file"], button {
+      width: 100%;
+      padding: 12px;
+      font-size: 1em;
       border-radius: 10px;
-      margin: 15px 0;
+      border: 1px solid #ccc;
+      background: #6a5acd;
+      color: white;
+      margin-bottom: 14px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .output {
+      margin-top: 14px;
+      padding: 14px;
+      text-align: center;
+      border-radius: 10px;
+      font-size: 1.1em;
+    }
+    #guestList {
+      list-style: none;
+      padding: 0;
+      margin-top: 20px;
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+    }
+    #guestList li {
+      padding: 12px 16px;
+      border-bottom: 1px solid #edf2f7;
       display: flex;
       align-items: center;
       gap: 10px;
     }
-    
-    .alert-success {
-      background: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
-    }
-    
-    .alert-error {
-      background: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
-    }
-    
-    .alert-warning {
-      background: #fff3cd;
-      color: #856404;
-      border: 1px solid #ffeaa7;
-    }
-    
-    .alert-info {
-      background: #d1ecf1;
-      color: #0c5460;
-      border: 1px solid #bee5eb;
-    }
-    
-    .decryption-area {
-      background: #fff3cd;
-      border: 1px solid #ffeaa7;
-      border-radius: 10px;
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-    
-    .decryption-title {
-      color: #856404;
-      font-weight: 600;
-      margin-bottom: 15px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    
-    .footer {
-      text-align: center;
-      color: rgba(255, 255, 255, 0.8);
-      margin-top: 30px;
-      font-size: 0.9rem;
-    }
-    
-    .loading {
-      display: none;
-      text-align: center;
-      padding: 20px;
-      color: #6c757d;
-    }
-    
-    .loading.show {
-      display: block;
-    }
-    
-    .spinner {
-      display: inline-block;
+    .check {
       width: 20px;
       height: 20px;
-      border: 3px solid #f3f3f3;
-      border-top: 3px solid #667eea;
       border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-right: 10px;
+      border: 2px solid #cbd5e0;
+      flex-shrink: 0;
     }
-    
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    .checked {
+      background: #38a169;
+      border-color: #38a169;
     }
-    
-    /* Mobile responsiveness */
-    @media (max-width: 768px) {
-      .container {
-        padding: 10px;
-      }
-      
-      .main-card {
-        padding: 20px;
-      }
-      
-      .header h1 {
-        font-size: 2rem;
-      }
-      
-      .event-details {
-        grid-template-columns: 1fr;
-      }
+    #qrFullscreen {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 9999;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+    #qrFullscreenClose {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #fff;
+      border: none;
+      padding: 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      z-index: 10000;
+    }
+    #qrViewFull { width: 100vw; height: 100vh; }
+    #qrStatus, #qrGuestName {
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    .footer-note {
+      text-align: center;
+      font-size: 0.8em;
+      color: #a0aec0;
+      margin: 32px 0;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>Invites Digitais</h1>
-      <p>Leitor Profissional de Convites</p>
-    </div>
 
-    <div class="main-card">
-      <!-- File Upload Section -->
-      <div class="section">
-        <h2 class="section-title">📁 Carregar Lista de Convidados</h2>
-        
-        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
-          <div class="upload-icon">📄</div>
-          <div class="upload-text">Clique ou arraste o arquivo JSON</div>
-          <div class="upload-subtext">Suporta arquivos criptografados e não criptografados</div>
-        </div>
-        
-        <input type="file" id="fileInput" class="file-input" accept=".json" />
-        
-        <div id="decryptionArea" class="decryption-area" style="display: none;">
-          <div class="decryption-title">
-            🔐 Arquivo Criptografado Detectado
-          </div>
-          <div class="form-group">
-            <label class="form-label">Chave de Descriptografia</label>
-            <input type="password" id="decryptionKey" class="form-input" placeholder="Digite a chave de descriptografia">
-          </div>
-          <button class="btn btn-primary" onclick="decryptAndLoad()">
-            🔓 Descriptografar e Carregar
-          </button>
-        </div>
-        
-        <div id="loadingIndicator" class="loading">
-          <div class="spinner"></div>
-          Processando arquivo...
-        </div>
-      </div>
-
-      <!-- Event Information -->
-      <div id="eventInfoSection" class="section" style="display: none;">
-        <h2 class="section-title">🎉 Informações do Evento</h2>
-        <div id="eventInfo" class="event-info"></div>
-        <div id="expirationAlert"></div>
-      </div>
-
-      <!-- Statistics -->
-      <div id="statsSection" class="section" style="display: none;">
-        <h2 class="section-title">📊 Estatísticas</h2>
-        <div class="stats-container">
-          <div class="stat-card">
-            <div class="stat-number" id="totalGuests">0</div>
-            <div class="stat-label">Total</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number" id="foundGuests">0</div>
-            <div class="stat-label">Encontrados</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number" id="searchCount">0</div>
-            <div class="stat-label">Pesquisas</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Search Section -->
-      <div id="searchSection" class="section" style="display: none;">
-        <h2 class="section-title">🔍 Pesquisar Convidado</h2>
-        
-        <div class="search-container">
-          <input type="text" id="searchInput" class="search-input" placeholder="Digite o nome ou código do convidado...">
-          <div class="search-icon">🔍</div>
-        </div>
-        
-        <div style="margin-bottom: 20px;">
-          <button class="btn btn-primary" onclick="searchGuest()">
-            🔍 Pesquisar
-          </button>
-          <button class="btn btn-secondary" onclick="showAllGuests()">
-            👥 Mostrar Todos
-          </button>
-          <button class="btn btn-danger" onclick="clearSearch()">
-            🗑️ Limpar
-          </button>
-        </div>
-      </div>
-
-      <!-- Guest List -->
-      <div id="guestListSection" class="section" style="display: none;">
-        <h2 class="section-title">👥 Lista de Convidados</h2>
-        <div id="guestList" class="guest-list"></div>
-      </div>
-
-      <!-- Alerts -->
-      <div id="alertContainer"></div>
-    </div>
-
-    <div class="footer">
-      © 2025 Invites Digitais - Leitor Profissional de Convites
-    </div>
+  <div id="qrFullscreen">
+    <button id="qrFullscreenClose" onclick="closeFullscreen()">Fechar</button>
+    <div id="qrViewFull"></div>
+    <div id="qrGuestName"></div>
+    <div id="qrStatus"></div>
+    <button id="nextBtn" onclick="enableNextScan()">Próximo</button>
   </div>
 
-  <script>
-    let guestData = null;
-    let currentGuests = [];
-    let searchHistory = [];
-    let isEncrypted = false;
-    let encryptedContent = null;
+  <main>
+    <input type="file" id="jsonFileInput" accept=".json" onchange="handleFileUpload(event)" />
+    <button onclick="startFullscreenScanner()">📷 Escanear QR Code</button>
+    <div class="output" id="result">Nenhum código validado ainda…</div>
+    <ul id="guestList"></ul>
+    <button onclick="clearGuestList()">Eliminar Lista</button>
+  </main>
 
-    // Initialize app
-    document.addEventListener('DOMContentLoaded', function() {
-      setupEventListeners();
+  <div class="footer-note">Invites digitais © 2025</div>
+
+<script>
+let guests = {};
+const STORAGE_KEY = 'invitesDigitaisConvidados';
+let fullscreenScanner = null;
+let scannerLocked = false;
+
+window.onload = () => {
+  loadState();
+};
+
+function decryptJson(encryptedJson) {
+  const decrypted = CryptoJS.AES.decrypt(encryptedJson, 'sua-chave-secreta');
+  const json = decrypted.toString(CryptoJS.enc.Utf8);
+  return JSON.parse(json);
+}
+
+function handleFileUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const content = e.target.result;
+    try {
+      const decryptedJson = decryptJson(content);
+      if (decryptedJson.id !== 'meuApp2025') {
+        alert("Este arquivo não foi gerado pelo nosso sistema.");
+        return;
+      }
+      decryptedJson.convidados.forEach(guest => {
+        const key = guest.name.toUpperCase();
+        if (!guests[key]) {
+          guests[key] = { nome: guest.name, usado: false };
+        }
+      });
+      saveState();
+      updateGuestList();
+    } catch (err) {
+      alert("Erro ao processar o ficheiro JSON.");
+      console.error(err);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function updateGuestList() {
+  const list = document.getElementById('guestList');
+  list.innerHTML = '';
+  Object.keys(guests).forEach(key => {
+    const guest = guests[key];
+    const li = document.createElement('li');
+    li.dataset.key = key;
+    li.innerHTML = `<span class="check ${guest.usado ? 'checked' : ''}"></span><span>${guest.nome}</span>`;
+    list.appendChild(li);
+  });
+  saveState();
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(guests));
+}
+
+function loadState() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    guests = JSON.parse(saved);
+    updateGuestList();
+  }
+}
+
+function clearGuestList() {
+  guests = {};
+  localStorage.removeItem(STORAGE_KEY);
+  updateGuestList();
+  alert("Lista eliminada.");
+}
+
+function verify(code) {
+  if (!code) return;
+  try {
+    const decryptedJson = decryptJson(code);
+    if (!decryptedJson.convidados) return;
+
+    decryptedJson.convidados.forEach(guest => {
+      const key = guest.name.toUpperCase();
+      if (guests[key] && guests[key].usado) {
+        showScanStatus('USADO', guest.name, 'error');
+      } else {
+        if (!guests[key]) {
+          guests[key] = { nome: guest.name, usado: true };
+        } else {
+          guests[key].usado = true;
+        }
+        updateGuestList();
+        showScanStatus('PERMITIDO', guest.name, 'success');
+      }
     });
+  } catch (error) {
+    console.error('Erro ao verificar:', error);
+    showScanStatus('CÓDIGO INVÁLIDO', '', 'error');
+  }
+}
 
-    function setupEventListeners() {
-      const fileInput = document.getElementById('fileInput');
-      const uploadArea = document.querySelector('.upload-area');
-      const searchInput = document.getElementById('searchInput');
+function startFullscreenScanner(){
+  document.getElementById('qrFullscreen').style.display = 'flex';
+  if (!fullscreenScanner) {
+    fullscreenScanner = new Html5Qrcode('qrViewFull');
+  }
+  fullscreenScanner.start({facingMode: 'environment'}, {fps: 10, qrbox: 300},
+    txt => { if (!scannerLocked) verify(txt); },
+    () => {}
+  );
+}
 
-      // File input change
-      fileInput.addEventListener('change', handleFileSelect);
+function closeFullscreen(){
+  if(fullscreenScanner){
+    fullscreenScanner.stop().then(() => fullscreenScanner.clear()).then(() => fullscreenScanner = null);
+  }
+  document.getElementById('qrFullscreen').style.display = 'none';
+  enableNextScan();
+}
 
-      // Drag and drop
-      uploadArea.addEventListener('dragover', handleDragOver);
-      uploadArea.addEventListener('dragleave', handleDragLeave);
-      uploadArea.addEventListener('drop', handleDrop);
+function showScanStatus(status, name, type){
+  scannerLocked = true;
+  const nameElem = document.getElementById('qrGuestName');
+  const statusElem = document.getElementById('qrStatus');
 
-      // Search input
-      searchInput.addEventListener('input', handleSearchInput);
-      searchInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-          searchGuest();
-        }
-      });
+  nameElem.textContent = name;
+  nameElem.style.fontSize = '2em';
+  nameElem.style.fontWeight = 'bold';
+  nameElem.style.color = '#2d3748';
 
-      // Prevent default drag behaviors
-      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        uploadArea.addEventListener(eventName, preventDefaults, false);
-        document.body.addEventListener(eventName, preventDefaults, false);
-      });
-    }
+  statusElem.textContent = status;
+  statusElem.style.fontSize = '1.8em';
+  statusElem.style.fontWeight = 'bold';
+  statusElem.style.color = type === 'success' ? '#38a169' : '#e53e3e';
 
-    function preventDefaults(e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
+  nameElem.style.opacity = '1';
+  statusElem.style.opacity = '1';
+  document.getElementById('nextBtn').style.display = 'block';
+}
 
-    function handleDragOver(e) {
-      document.querySelector('.upload-area').classList.add('dragover');
-    }
-
-    function handleDragLeave(e) {
-      document.querySelector('.upload-area').classList.remove('dragover');
-    }
-
-    function handleDrop(e) {
-      document.querySelector('.upload-area').classList.remove('dragover');
-      const files = e.dataTransfer.files;
-      if (files.length > 0) {
-        processFile(files[0]);
-      }
-    }
-
-    function handleFileSelect(e) {
-      const file = e.target.files[0];
-      if (file) {
-        processFile(file);
-      }
-    }
-
-    function processFile(file) {
-      if (!file.name.toLowerCase().endsWith('.json')) {
-        showAlert('Por favor, selecione um arquivo JSON válido.', 'error');
-        return;
-      }
-
-      showLoading(true);
-      
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        try {
-          const content = e.target.result;
-          
-          // Try to parse as JSON first
-          try {
-            const data = JSON.parse(content);
-            loadGuestData(data);
-            isEncrypted = false;
-          } catch (parseError) {
-            // If parsing fails, assume it's encrypted
-            encryptedContent = content;
-            isEncrypted = true;
-            showDecryptionArea();
-          }
-        } catch (error) {
-          console.error('Error processing file:', error);
-          showAlert('Erro ao processar o arquivo. Verifique se é um arquivo JSON válido.', 'error');
-        } finally {
-          showLoading(false);
-        }
-      };
-      
-      reader.onerror = function() {
-        showLoading(false);
-        showAlert('Erro ao ler o arquivo.', 'error');
-      };
-      
-      reader.readAsText(file);
-    }
-
-    function showDecryptionArea() {
-      document.getElementById('decryptionArea').style.display = 'block';
-      document.getElementById('decryptionKey').focus();
-      showAlert('Arquivo criptografado detectado. Digite a chave para descriptografar.', 'warning');
-    }
-
-    function decryptAndLoad() {
-      const key = document.getElementById('decryptionKey').value;
-      if (!key) {
-        showAlert('Por favor, digite a chave de descriptografia.', 'error');
-        return;
-      }
-
-      showLoading(true);
-
-      try {
-        // Try to decrypt
-        const decrypted = CryptoJS.AES.decrypt(encryptedContent, key).toString(CryptoJS.enc.Utf8);
-        
-        if (!decrypted) {
-          throw new Error('Decryption failed');
-        }
-
-        const data = JSON.parse(decrypted);
-        loadGuestData(data);
-        
-        document.getElementById('decryptionArea').style.display = 'none';
-        showAlert('Arquivo descriptografado com sucesso!', 'success');
-        
-      } catch (error) {
-        console.error('Decryption error:', error);
-        showAlert('Chave de descriptografia incorreta ou arquivo corrompido.', 'error');
-      } finally {
-        showLoading(false);
-      }
-    }
-
-    function loadGuestData(data) {
-      try {
-        // Validate data structure
-        if (!data || !data.guests || !Array.isArray(data.guests)) {
-          throw new Error('Formato de dados inválido');
-        }
-
-        // Check version compatibility
-        if (data.version && parseFloat(data.version) > 2.0) {
-          showAlert('Este arquivo foi criado com uma versão mais recente. Algumas funcionalidades podem não funcionar corretamente.', 'warning');
-        }
-
-        guestData = data;
-        currentGuests = data.guests;
-        
-        // Check expiration
-        checkExpiration();
-        
-        // Show sections
-        showEventInfo();
-        showStats();
-        showSearchSection();
-        showGuestList();
-        
-        showAlert(`Lista carregada com sucesso! ${data.guests.length} convidados encontrados.`, 'success');
-        
-      } catch (error) {
-        console.error('Error loading guest data:', error);
-        showAlert('Erro ao carregar os dados. Verifique se o arquivo está no formato correto.', 'error');
-      }
-    }
-
-    function checkExpiration() {
-      if (!guestData.security || !guestData.security.hasExpiration) {
-        return; // No expiration set
-      }
-
-      const expirationDate = new Date(guestData.security.expirationDate);
-      const now = new Date();
-      
-      if (now > expirationDate) {
-        // Expired
-        const alertEl = document.getElementById('expirationAlert');
-        alertEl.innerHTML = `
-          <div class="alert alert-error">
-            ⚠️ <strong>Lista Expirada!</strong> Esta lista de convidados expirou em ${expirationDate.toLocaleString('pt-PT')}.
-            O uso desta lista não é mais válido.
-          </div>
-        `;
-        
-        // Disable search functionality
-        document.getElementById('searchInput').disabled = true;
-        document.querySelector('.btn-primary').disabled = true;
-        
-      } else {
-        // Check if expiring soon (within 24 hours)
-        const hoursUntilExpiration = (expirationDate - now) / (1000 * 60 * 60);
-        
-        if (hoursUntilExpiration <= 24) {
-          const alertEl = document.getElementById('expirationAlert');
-          alertEl.innerHTML = `
-            <div class="alert alert-warning">
-              ⏰ <strong>Expira em breve!</strong> Esta lista expira em ${expirationDate.toLocaleString('pt-PT')} 
-              (${Math.ceil(hoursUntilExpiration)} horas restantes).
-            </div>
-          `;
-        }
-      }
-    }
-
-    function showEventInfo() {
-      if (!guestData.event) return;
-
-      const eventInfoEl = document.getElementById('eventInfo');
-      const event = guestData.event;
-      const client = guestData.client;
-      
-      let eventHtml = `
-        <div class="event-title">${event.name || 'Evento'}</div>
-        <div class="event-details">
-      `;
-      
-      if (event.date) {
-        eventHtml += `
-          <div class="event-detail">
-            <span>📅</span>
-            <span>${new Date(event.date).toLocaleString('pt-PT')}</span>
-          </div>
-        `;
-      }
-      
-      if (event.location) {
-        eventHtml += `
-          <div class="event-detail">
-            <span>📍</span>
-            <span>${event.location}</span>
-          </div>
-        `;
-      }
-      
-      if (event.organizer) {
-        eventHtml += `
-          <div class="event-detail">
-            <span>👤</span>
-            <span>${event.organizer}</span>
-          </div>
-        `;
-      }
-      
-      if (client && client.name) {
-        eventHtml += `
-          <div class="event-detail">
-            <span>🏢</span>
-            <span>Cliente: ${client.name}</span>
-          </div>
-        `;
-      }
-      
-      if (guestData.generatedAt) {
-        eventHtml += `
-          <div class="event-detail">
-            <span>⏰</span>
-            <span>Gerado: ${new Date(guestData.generatedAt).toLocaleString('pt-PT')}</span>
-          </div>
-        `;
-      }
-      
-      eventHtml += '</div>';
-      
-      if (event.description) {
-        eventHtml += `<div style="margin-top: 15px; color: #666; font-style: italic;">${event.description}</div>`;
-      }
-      
-      eventInfoEl.innerHTML = eventHtml;
-      document.getElementById('eventInfoSection').style.display = 'block';
-    }
-
-    function showStats() {
-      document.getElementById('totalGuests').textContent = currentGuests.length;
-      document.getElementById('foundGuests').textContent = 0;
-      document.getElementById('searchCount').textContent = searchHistory.length;
-      document.getElementById('statsSection').style.display = 'block';
-    }
-
-    function showSearchSection() {
-      document.getElementById('searchSection').style.display = 'block';
-      document.getElementById('searchInput').focus();
-    }
-
-    function showGuestList() {
-      updateGuestList(currentGuests);
-      document.getElementById('guestListSection').style.display = 'block';
-    }
-
-    function handleSearchInput() {
-      const query = document.getElementById('searchInput').value.trim();
-      if (query.length >= 2) {
-        performSearch(query);
-      } else if (query.length === 0) {
-        showAllGuests();
-      }
-    }
-
-    function searchGuest() {
-      const query = document.getElementById('searchInput').value.trim();
-      if (!query) {
-        showAlert('Digite um nome ou código para pesquisar.', 'warning');
-        return;
-      }
-      
-      performSearch(query);
-      
-      // Add to search history
-      if (!searchHistory.includes(query)) {
-        searchHistory.push(query);
-        updateStats();
-      }
-    }
-
-    function performSearch(query) {
-      const results = guestData.guests.filter(guest => 
-        guest.name.toLowerCase().includes(query.toLowerCase()) ||
-        guest.code.toLowerCase().includes(query.toLowerCase())
-      );
-      
-      currentGuests = results;
-      updateGuestList(results);
-      updateFoundCount(results.length);
-      
-      if (results.length === 0) {
-        showAlert(`Nenhum convidado encontrado para "${query}".`, 'info');
-      } else {
-        showAlert(`${results.length} convidado(s) encontrado(s) para "${query}".`, 'success');
-      }
-    }
-
-    function showAllGuests() {
-      currentGuests = guestData.guests;
-      updateGuestList(guestData.guests);
-      updateFoundCount(0);
-      document.getElementById('searchInput').value = '';
-    }
-
-    function clearSearch() {
-      document.getElementById('searchInput').value = '';
-      showAllGuests();
-      clearAlerts();
-    }
-
-    function updateGuestList(guests) {
-      const listEl = document.getElementById('guestList');
-      listEl.innerHTML = '';
-      
-      guests.forEach(guest => {
-        const item = document.createElement('div');
-        item.className = 'guest-item';
-        
-        // Check if this guest was found in search
-        const searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
-        const isFound = searchQuery && (
-          guest.name.toLowerCase().includes(searchQuery) ||
-          guest.code.toLowerCase().includes(searchQuery)
-        );
-        
-        if (isFound) {
-          item.classList.add('found');
-        }
-        
-        item.innerHTML = `
-          <div class="guest-info">
-            <div class="guest-name">${highlightMatch(guest.name, searchQuery)}</div>
-            <div class="guest-code">Código: ${highlightMatch(guest.code, searchQuery)}</div>
-          </div>
-          <div class="guest-status">
-            <div class="status-badge status-valid">✓ Válido</div>
-          </div>
-        `;
-        
-        listEl.appendChild(item);
-      });
-    }
-
-    function highlightMatch(text, query) {
-      if (!query) return text;
-      
-      const regex = new RegExp(`(${query})`, 'gi');
-      return text.replace(regex, '<mark style="background: #ffeb3b; padding: 2px 4px; border-radius: 3px;">$1</mark>');
-    }
-
-    function updateFoundCount(count) {
-      document.getElementById('foundGuests').textContent = count;
-    }
-
-    function updateStats() {
-      document.getElementById('searchCount').textContent = searchHistory.length;
-    }
-
-    function showAlert(message, type) {
-      const alertContainer = document.getElementById('alertContainer');
-      
-      const alert = document.createElement('div');
-      alert.className = `alert alert-${type}`;
-      
-      const icon = type === 'success' ? '✅' : 
-                   type === 'error' ? '❌' : 
-                   type === 'warning' ? '⚠️' : 'ℹ️';
-      
-      alert.innerHTML = `${icon} ${message}`;
-      
-      alertContainer.appendChild(alert);
-      
-      // Auto remove after 5 seconds
-      setTimeout(() => {
-        if (alert.parentNode) {
-          alert.parentNode.removeChild(alert);
-        }
-      }, 5000);
-    }
-
-    function clearAlerts() {
-      document.getElementById('alertContainer').innerHTML = '';
-    }
-
-    function showLoading(show) {
-      const loadingEl = document.getElementById('loadingIndicator');
-      if (show) {
-        loadingEl.classList.add('show');
-      } else {
-        loadingEl.classList.remove('show');
-      }
-    }
-  </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'963c27e557b177dd',t:'MTc1MzI4Mzk2My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+function enableNextScan(){
+  document.getElementById('qrStatus').style.opacity = '0';
+  document.getElementById('qrGuestName').style.opacity = '0';
+  document.getElementById('nextBtn').style.display = 'none';
+  scannerLocked = false;
+}
+</script>
+</body>
 </html>
