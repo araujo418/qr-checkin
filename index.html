@@ -614,6 +614,32 @@
     // Initialize app
     document.addEventListener('DOMContentLoaded', function() {
       loadStoredData();
+      
+      // Add some test data if no data exists
+      if (Object.keys(guestData).length === 0) {
+        guestData = {
+          'test123': {
+            name: 'João Silva',
+            code: 'test123',
+            validated: false,
+            validatedAt: null
+          },
+          'test456': {
+            name: 'Maria Santos',
+            code: 'test456',
+            validated: false,
+            validatedAt: null
+          },
+          'ABC123': {
+            name: 'Pedro Costa',
+            code: 'ABC123',
+            validated: false,
+            validatedAt: null
+          }
+        };
+        saveData();
+      }
+      
       updateDisplay();
       setupDragAndDrop();
     });
@@ -868,6 +894,11 @@
       const resultEl = document.getElementById('scanResult');
       const nextBtn = document.getElementById('nextBtn');
 
+      // Debug logging
+      console.log('QR Code scanned:', decodedText);
+      console.log('Available guest codes:', Object.keys(guestData));
+      console.log('Guest data:', guestData);
+
       if (guestData[decodedText]) {
         const guest = guestData[decodedText];
         
@@ -988,5 +1019,5 @@
       }
     }
   </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'963bfb4b47d777d7',t:'MTc1MzI4MjEzNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'963c0280912c77d7',t:'MTc1MzI4MjQzMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
