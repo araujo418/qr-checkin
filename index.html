@@ -1,21 +1,105 @@
-
 <!DOCTYPE html>
 <html lang="pt">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>Invites digitais – Validação</title>
-  <script src="https://unpkg.com/html5-qrcode@latest"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.js"></script>
   <style>
+    /* Variáveis de Cores */
+    :root {
+      --primary: #6a5acd;
+      --success: #38a169;
+      --error: #e53e3e;
+      --bg: #f8f9fa;
+      --text: #2d3748;
+      --light: #edf2f7;
+    }
+    
     body, html {
       margin: 0;
       padding: 0;
       height: 100%;
       font-family: 'Segoe UI', sans-serif;
-      background: #f8f9fa;
-      color: #2d3748;
+      background: var(--bg);
+      color: var(--text);
     }
+
+    .splash-screen {
+      position: fixed;
+      inset: 0;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 99999;
+      animation: fadeOut 1s ease forwards;
+      animation-delay: 2.5s;
+    }
+
+    .loader {
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid var(--primary);
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+
+    .welcome-text {
+      font-size: 1.6em;
+      font-weight: 700;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: slideIn 1s ease forwards;
+      animation-delay: 1.2s;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes slideIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Barra de Progresso */
+    #progressContainer {
+      margin-top: 20px;
+      position: relative;
+      height: 26px;
+      background: #e2e8f0;
+      border-radius: 13px;
+      overflow: hidden;
+      display: none;
+    }
+
+    #progressBar {
+      background: var(--primary);
+      height: 100%;
+      width: 0%;
+      transition: width 0.3s;
+    }
+
+    #progressText {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9em;
+      font-weight: 600;
+      color: #fff;
+      text-shadow: 0 0 3px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Layout Geral */
     main {
       margin: 32px auto;
       max-width: 600px;
@@ -24,18 +108,54 @@
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
       padding: 20px;
     }
+
+    .tabs {
+      display: flex;
+      margin-bottom: 20px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 14px;
+      text-align: center;
+      background: var(--light);
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.3s;
+    }
+
+    .tab.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .tabcontent {
+      display: none;
+      padding: 20px;
+    }
+
+    .tabcontent.active {
+      display: block;
+    }
+
     input[type="file"], button {
       width: 100%;
       padding: 12px;
       font-size: 1em;
       border-radius: 10px;
       border: 1px solid #ccc;
-      background: #6a5acd;
+      background: var(--primary);
       color: white;
       margin-bottom: 14px;
       cursor: pointer;
       font-weight: 600;
+      transition: background 0.3s;
     }
+
+    button:hover {
+      background: #5a4ccf;
+    }
+
     .output {
       margin-top: 14px;
       padding: 14px;
@@ -43,6 +163,17 @@
       border-radius: 10px;
       font-size: 1.1em;
     }
+
+    .output.success {
+      background: var(--success);
+      color: #fff;
+    }
+
+    .output.error {
+      background: var(--error);
+      color: #fff;
+    }
+
     #guestList {
       list-style: none;
       padding: 0;
@@ -51,7 +182,9 @@
       overflow-y: auto;
       border: 1px solid #e2e8f0;
       border-radius: 10px;
+      display: none;
     }
+
     #guestList li {
       padding: 12px 16px;
       border-bottom: 1px solid #edf2f7;
@@ -59,6 +192,7 @@
       align-items: center;
       gap: 10px;
     }
+
     .check {
       width: 20px;
       height: 20px;
@@ -66,10 +200,20 @@
       border: 2px solid #cbd5e0;
       flex-shrink: 0;
     }
+
     .checked {
-      background: #38a169;
-      border-color: #38a169;
+      background: var(--success);
+      border-color: var(--success);
     }
+
+    .footer-note {
+      text-align: center;
+      font-size: 0.8em;
+      color: #a0aec0;
+      margin: 32px 0;
+    }
+
+    /* Fullscreen Scanner */
     #qrFullscreen {
       position: fixed;
       inset: 0;
@@ -80,6 +224,7 @@
       align-items: center;
       flex-direction: column;
     }
+
     #qrFullscreenClose {
       position: absolute;
       top: 10px;
@@ -92,145 +237,111 @@
       font-weight: bold;
       z-index: 10000;
     }
-    #qrViewFull { width: 100vw; height: 100vh; }
+
+    #qrViewFull {
+      width: 100vw;
+      height: 100vh;
+    }
+
     #qrStatus, #qrGuestName {
       opacity: 0;
-      transition: opacity 0.4s ease;
-    }
-    .footer-note {
-      text-align: center;
-      font-size: 0.8em;
-      color: #a0aec0;
-      margin: 32px 0;
     }
   </style>
+  <script src="https://unpkg.com/html5-qrcode@latest"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.js"></script>
 </head>
 <body>
+
+  <div class="splash-screen" id="splash">
+    <div class="loader"></div>
+    <div class="welcome-text">Bem‑vindo à Invites digitais</div>
+  </div>
 
   <div id="qrFullscreen">
     <button id="qrFullscreenClose" onclick="closeFullscreen()">Fechar</button>
     <div id="qrViewFull"></div>
-    <div id="qrGuestName"></div>
     <div id="qrStatus"></div>
+    <div id="qrGuestName"></div>
     <button id="nextBtn" onclick="enableNextScan()">Próximo</button>
   </div>
 
   <main>
-    <input type="file" id="jsonFileInput" accept=".json" onchange="handleFileUpload(event)" />
-    <button onclick="startFullscreenScanner()">📷 Escanear QR Code</button>
-    <div class="output" id="result">Nenhum código validado ainda…</div>
-    <ul id="guestList"></ul>
-    <button onclick="clearGuestList()">Eliminar Lista</button>
+    <div class="tabs">
+      <div class="tab active" onclick="openTab('cliente')">Cliente</div>
+    </div>
+    <div id="cliente" class="tabcontent active">
+      <input type="file" id="jsonFileInput" accept=".json" onchange="handleFileUpload(event)" />
+      <button onclick="startFullscreenScanner()">📷 Escanear QR Code (Tela Cheia)</button>
+      <div class="output" id="result">Nenhum código validado ainda…</div>
+      <div id="progressContainer"><div id="progressBar"></div><span id="progressText"></span></div>
+      <ul id="guestList"></ul>
+      <button onclick="clearGuestList()">Eliminar Lista</button>
+      <button onclick="uncheckAllGuests()">Desmarcar Todos</button>
+    </div>
   </main>
-
   <div class="footer-note">Invites digitais © 2025</div>
 
 <script>
-let guests = {};
-const STORAGE_KEY = 'invitesDigitaisConvidados';
-let fullscreenScanner = null;
-let scannerLocked = false;
+let guests = {}, totalGuests = 0, usedGuests = 0, override = false;
+const STORAGE_KEY = 'invitesDigitaisEventData';
+let fullscreenScanner = null, scannerLocked = false;
 
-window.onload = () => {
+window.addEventListener('load', () => {
+  setTimeout(() => document.getElementById('splash').style.display = 'none', 3500);
   loadState();
-};
+});
 
-function decryptJson(encryptedJson) {
-  const decrypted = CryptoJS.AES.decrypt(encryptedJson, 'sua-chave-secreta');
-  const json = decrypted.toString(CryptoJS.enc.Utf8);
-  return JSON.parse(json);
-}
-
-function handleFileUpload(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const content = e.target.result;
-    try {
-      const decryptedJson = decryptJson(content);
-      if (decryptedJson.id !== 'meuApp2025') {
-        alert("Este arquivo não foi gerado pelo nosso sistema.");
-        return;
-      }
-      decryptedJson.convidados.forEach(guest => {
-        const key = guest.name.toUpperCase();
-        if (!guests[key]) {
-          guests[key] = { nome: guest.name, usado: false };
-        }
-      });
-      saveState();
-      updateGuestList();
-    } catch (err) {
-      alert("Erro ao processar o ficheiro JSON.");
-      console.error(err);
-    }
-  };
-  reader.readAsText(file);
-}
-
-function updateGuestList() {
-  const list = document.getElementById('guestList');
-  list.innerHTML = '';
-  Object.keys(guests).forEach(key => {
-    const guest = guests[key];
-    const li = document.createElement('li');
-    li.dataset.key = key;
-    li.innerHTML = `<span class="check ${guest.usado ? 'checked' : ''}"></span><span>${guest.nome}</span>`;
-    list.appendChild(li);
-  });
-  saveState();
-}
-
-function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(guests));
-}
-
-function loadState() {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved) {
-    guests = JSON.parse(saved);
-    updateGuestList();
+// Função para gerar código aleatório
+function generateRandomCode() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < 8; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
   }
+  return code;
 }
 
-function clearGuestList() {
-  guests = {};
-  localStorage.removeItem(STORAGE_KEY);
-  updateGuestList();
-  alert("Lista eliminada.");
+function showScanStatus(status, name, type){
+  scannerLocked = true;
+  document.getElementById('qrStatus').textContent = status;
+  document.getElementById('qrGuestName').textContent = name;
+  document.getElementById('qrStatus').style.color = type === 'success' ? '#38a169' : '#e53e3e';
+  document.getElementById('qrStatus').style.opacity = '1';
+  document.getElementById('qrGuestName').style.opacity = '1';
+  document.getElementById('nextBtn').style.display = 'block';
+}
+
+function enableNextScan(){
+  document.getElementById('qrStatus').style.opacity = '0';
+  document.getElementById('qrGuestName').style.opacity = '0';
+  document.getElementById('nextBtn').style.display = 'none';
+  scannerLocked = false;
 }
 
 function verify(code) {
   if (!code) return;
   try {
-    const decryptedJson = decryptJson(code);
-    if (!decryptedJson.convidados) return;
+    const decryptedJson = decryptJson(code);  // Decriptografando o JSON
+    if (!decryptedJson.convidados) {
+      return showScanStatus('CÓDIGO INEXISTENTE', '', 'error');
+    }
 
+    // Processa a lista de convidados
     decryptedJson.convidados.forEach(guest => {
-      const key = guest.name.toUpperCase();
-      if (guests[key] && guests[key].usado) {
-        showScanStatus('USADO', guest.name, 'error');
-      } else {
-        if (!guests[key]) {
-          guests[key] = { nome: guest.name, usado: true };
-        } else {
-          guests[key].usado = true;
-        }
-        updateGuestList();
-        showScanStatus('PERMITIDO', guest.name, 'success');
-      }
+      addToList(generateRandomCode(), guest.name);  // Corrigido para 'name'
     });
+
+    // Exibe o status de sucesso
+    showScanStatus('CÓDIGO VALIDADO', decryptedJson.convidados[0].name, 'success');
   } catch (error) {
-    console.error('Erro ao verificar:', error);
+    console.error('Erro ao descriptografar:', error);
     showScanStatus('CÓDIGO INVÁLIDO', '', 'error');
   }
 }
 
 function startFullscreenScanner(){
   document.getElementById('qrFullscreen').style.display = 'flex';
-  if (!fullscreenScanner) {
+  if(!fullscreenScanner){
     fullscreenScanner = new Html5Qrcode('qrViewFull');
   }
   fullscreenScanner.start({facingMode: 'environment'}, {fps: 10, qrbox: 300},
@@ -247,31 +358,122 @@ function closeFullscreen(){
   enableNextScan();
 }
 
-function showScanStatus(status, name, type){
-  scannerLocked = true;
-  const nameElem = document.getElementById('qrGuestName');
-  const statusElem = document.getElementById('qrStatus');
-
-  nameElem.textContent = name;
-  nameElem.style.fontSize = '2em';
-  nameElem.style.fontWeight = 'bold';
-  nameElem.style.color = '#2d3748';
-
-  statusElem.textContent = status;
-  statusElem.style.fontSize = '1.8em';
-  statusElem.style.fontWeight = 'bold';
-  statusElem.style.color = type === 'success' ? '#38a169' : '#e53e3e';
-
-  nameElem.style.opacity = '1';
-  statusElem.style.opacity = '1';
-  document.getElementById('nextBtn').style.display = 'block';
+function openTab(id){
+  document.querySelectorAll('.tab').forEach(e => e.classList.remove('active'));
+  document.querySelectorAll('.tabcontent').forEach(e => e.classList.remove('active'));
+  document.querySelector(`.tab[onclick*="${id}"]`).classList.add('active');
+  document.getElementById(id).classList.add('active');
 }
 
-function enableNextScan(){
-  document.getElementById('qrStatus').style.opacity = '0';
-  document.getElementById('qrGuestName').style.opacity = '0';
-  document.getElementById('nextBtn').style.display = 'none';
-  scannerLocked = false;
+function saveState(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({guests, totalGuests, usedGuests}));
+}
+
+function loadState(){
+  const d = JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');
+  if(d.guests){
+    guests = d.guests; totalGuests = d.totalGuests || 0; usedGuests = d.usedGuests || 0;
+    Object.keys(guests).forEach(c => addToList(c, guests[c].nome, guests[c].usado));
+    if(totalGuests > 0) showProgress();
+  }
+}
+
+function addToList(code,nome,usado=false){
+  if(document.querySelector(`[data-code="${code}"]`)) return;
+  const li = document.createElement('li'); li.dataset.code = code;
+  li.innerHTML = `<span class="check ${usado?'checked':''}"></span><span>${nome}</span>`;
+  document.getElementById('guestList').appendChild(li);
+  guests[code] = {nome, usado};
+}
+
+function showProgress(){
+  document.getElementById('guestList').style.display = 'block';
+  document.getElementById('progressContainer').style.display = 'block';
+  updateProgress();
+}
+
+function updateProgress(){
+  const pct = Math.round((usedGuests / totalGuests) * 100);
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressText').textContent = `${usedGuests} / ${totalGuests}`;
+}
+
+// Função para descriptografar o JSON
+function decryptJson(encryptedJson) {
+  const decrypted = CryptoJS.AES.decrypt(encryptedJson, 'sua-chave-secreta');
+  const json = decrypted.toString(CryptoJS.enc.Utf8);
+  return JSON.parse(json);
+}
+
+// Função para lidar com o upload do arquivo JSON
+function handleFileUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const content = e.target.result;
+    try {
+      const decryptedJson = decryptJson(content);
+
+      console.log("JSON descriptografado:", decryptedJson); // Log da estrutura do JSON
+
+      // Verifica o ID do JSON para garantir que foi gerado pelo seu sistema
+      if (decryptedJson.id !== 'meuApp2025') {
+        alert("Este arquivo não foi gerado pelo nosso sistema.");
+        return;
+      }
+
+      // Certifique-se de que a estrutura de convidados está correta
+      if (!decryptedJson.convidados || !Array.isArray(decryptedJson.convidados)) {
+        throw new Error("A lista de convidados está ausente ou no formato incorreto.");
+      }
+
+      guests = {};
+      totalGuests = decryptedJson.convidados.length;
+      usedGuests = 0;
+
+      // Adiciona os convidados na lista
+      decryptedJson.convidados.forEach(guest => {
+        addToList(generateRandomCode(), guest.name);  // Corrigido para 'name'
+      });
+
+      showProgress();
+    } catch (error) {
+      console.error('Erro ao carregar JSON:', error);
+      alert("Erro ao carregar o arquivo JSON. Certifique-se de que o formato está correto.");
+    }
+  };
+  
+  reader.readAsText(file);
+}
+
+// Função para eliminar a lista no aplicativo
+function clearGuestList() {
+  guests = {};
+  totalGuests = 0;
+  usedGuests = 0;
+  document.getElementById('guestList').innerHTML = '';
+  document.getElementById('progressContainer').style.display = 'none';
+  alert('A lista foi apagada no aplicativo.');
+}
+
+// Função para desmarcar todos os lidos
+function uncheckAllGuests() {
+  Object.keys(guests).forEach(code => {
+    guests[code].usado = false;
+  });
+  updateGuestList();
+  showProgress();
+}
+
+// Atualiza a lista de convidados
+function updateGuestList() {
+  const guestList = document.getElementById('guestList');
+  guestList.innerHTML = ''; // Limpa a lista
+  Object.keys(guests).forEach(code => {
+    addToList(code, guests[code].nome, guests[code].usado);
+  });
 }
 </script>
 </body>
