@@ -1,1050 +1,976 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leitor QR Code - Controle de Convidados</title>
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 10px;
-        }
-        
-        .container {
-            max-width: 500px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
-            min-height: calc(100vh - 20px);
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }
-        
-        .header h1 {
-            font-size: 1.8rem;
-            margin-bottom: 5px;
-            font-weight: 700;
-        }
-        
-        .header p {
-            font-size: 0.9rem;
-            opacity: 0.9;
-        }
-        
-        .tabs {
-            display: flex;
-            background: #f8fafc;
-            border-bottom: 2px solid #e2e8f0;
-        }
-        
-        .tab {
-            flex: 1;
-            padding: 15px 10px;
-            text-align: center;
-            background: none;
-            border: none;
-            font-size: 14px;
-            font-weight: 600;
-            color: #718096;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border-bottom: 3px solid transparent;
-        }
-        
-        .tab.active {
-            color: #4facfe;
-            border-bottom-color: #4facfe;
-            background: white;
-        }
-        
-        .tab-content {
-            display: none;
-            padding: 20px;
-            min-height: 500px;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        .card {
-            background: #f8fafc;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border: 2px solid #e2e8f0;
-        }
-        
-        .card h3 {
-            color: #2d3748;
-            margin-bottom: 15px;
-            font-size: 1.2rem;
-            font-weight: 600;
-        }
-        
-        .input-group {
-            margin-bottom: 15px;
-        }
-        
-        .input-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #4a5568;
-            font-weight: 500;
-            font-size: 14px;
-        }
-        
-        textarea, input[type="text"] {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            font-size: 14px;
-            transition: border-color 0.3s ease;
-            resize: vertical;
-        }
-        
-        textarea:focus, input[type="text"]:focus {
-            outline: none;
-            border-color: #4facfe;
-            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
-        }
-        
-        .btn {
-            width: 100%;
-            padding: 15px;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-bottom: 10px;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(79, 172, 254, 0.3);
-        }
-        
-        .btn-danger {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
-            color: white;
-        }
-        
-        .btn-warning {
-            background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
-            color: white;
-        }
-        
-        .scanner-container {
-            background: #1a202c;
-            border-radius: 15px;
-            padding: 20px;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        
-        #reader {
-            width: 100%;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        
-        .scanner-status {
-            color: white;
-            margin-top: 15px;
-            font-size: 14px;
-        }
-        
-        .search-container {
-            position: relative;
-            margin-bottom: 20px;
-        }
-        
-        .search-icon {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #a0aec0;
-        }
-        
-        .search-input {
-            padding-left: 45px;
-        }
-        
-        .guest-list {
-            max-height: 300px;
-            overflow-y: auto;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            background: white;
-        }
-        
-        .guest-item {
-            padding: 15px;
-            border-bottom: 1px solid #e2e8f0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .guest-item:last-child {
-            border-bottom: none;
-        }
-        
-        .guest-item.scanned {
-            background: #f0fff4;
-            border-left: 4px solid #48bb78;
-        }
-        
-        .guest-name {
-            font-weight: 500;
-            color: #2d3748;
-            font-size: 14px;
-        }
-        
-        .guest-status {
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        
-        .status-pending {
-            background: #fed7d7;
-            color: #c53030;
-        }
-        
-        .status-scanned {
-            background: #c6f6d5;
-            color: #2f855a;
-        }
-        
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        
-        .stat-card {
-            background: white;
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            border: 2px solid #e2e8f0;
-        }
-        
-        .stat-number {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #4facfe;
-            margin-bottom: 5px;
-        }
-        
-        .stat-label {
-            color: #718096;
-            font-size: 11px;
-            text-transform: uppercase;
-            font-weight: 600;
-        }
-        
-        .progress-container {
-            background: #f8fafc;
-            border-radius: 15px;
-            padding: 20px;
-            border: 2px solid #e2e8f0;
-            margin-bottom: 20px;
-        }
-        
-        .progress-bar {
-            width: 100%;
-            height: 15px;
-            background: #e2e8f0;
-            border-radius: 10px;
-            overflow: hidden;
-            margin-bottom: 10px;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
-            width: 0%;
-            transition: width 0.5s ease;
-            border-radius: 10px;
-        }
-        
-        .progress-text {
-            text-align: center;
-            color: #4a5568;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        
-        .alert {
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            font-weight: 500;
-            font-size: 14px;
-        }
-        
-        .alert-success {
-            background: #c6f6d5;
-            color: #2f855a;
-            border: 1px solid #9ae6b4;
-        }
-        
-        .alert-error {
-            background: #fed7d7;
-            color: #c53030;
-            border: 1px solid #feb2b2;
-        }
-        
-        .empty-state {
-            padding: 40px 20px;
-            text-align: center;
-            color: #a0aec0;
-            font-size: 14px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InvitesQR - Scanner de Convidados</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --success: #10b981;
+      --error: #ef4444;
+      --warning: #f59e0b;
+      --bg-dark: #0f172a;
+      --bg-light: #1e293b;
+      --text-light: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #334155;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-light);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 20px 0;
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .card {
+      background: var(--bg-light);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      border: 1px solid var(--border);
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: var(--text-light);
+    }
+
+    .input {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--bg-dark);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-light);
+      font-size: 1rem;
+      transition: border-color 0.3s;
+    }
+
+    .input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+
+    .btn-danger {
+      background: var(--error);
+      color: white;
+    }
+
+    .btn-secondary {
+      background: var(--bg-dark);
+      color: var(--text-light);
+      border: 2px solid var(--border);
+    }
+
+    .tabs {
+      display: flex;
+      background: var(--bg-light);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 20px;
+      border: 1px solid var(--border);
+    }
+
+    .tab {
+      flex: 1;
+      padding: 12px 16px;
+      text-align: center;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: 500;
+    }
+
+    .tab.active {
+      background: var(--primary);
+      color: white;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .guest-item {
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .guest-info h4 {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .guest-info p {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .status {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .status-presente {
+      background: var(--success);
+      color: white;
+    }
+
+    .status-pendente {
+      background: var(--warning);
+      color: white;
+    }
+
+    .scanner-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.95);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .scanner-container {
+      width: 90%;
+      max-width: 400px;
+      position: relative;
+    }
+
+    #reader {
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .scanner-controls {
+      margin-top: 20px;
+      display: flex;
+      gap: 12px;
+    }
+
+    .alert {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-weight: 500;
+    }
+
+    .alert-success {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid var(--success);
+      color: var(--success);
+    }
+
+    .alert-error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid var(--error);
+      color: var(--error);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: var(--bg-dark);
+      padding: 16px;
+      border-radius: 12px;
+      text-align: center;
+      border: 1px solid var(--border);
+    }
+
+    .stat-number {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .stat-label {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-top: 4px;
+    }
+
+    .progress-container {
+      margin: 20px 0;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 12px;
+      background: var(--bg-dark);
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--success));
+      border-radius: 6px;
+      transition: width 0.5s ease;
+      width: 0%;
+    }
+
+    .progress-text {
+      text-align: center;
+      margin-top: 8px;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .scan-feedback {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(16, 185, 129, 0.95);
+      color: white;
+      padding: 20px 30px;
+      border-radius: 12px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      z-index: 3000;
+      display: none;
+      text-align: center;
+    }
+
+    .scan-feedback.error {
+      background: rgba(239, 68, 68, 0.95);
+    }
+
+    .camera-permission {
+      text-align: center;
+      padding: 20px;
+      color: var(--text-muted);
+    }
+
+
+
+    .loading {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .loading.show {
+      display: flex;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid var(--border);
+      border-top: 4px solid var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 16px;
+      }
+      
+      .header h1 {
+        font-size: 1.5rem;
+      }
+      
+      .card {
+        padding: 20px;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🎫 Leitor QR Code</h1>
-            <p>Sistema de Controle de Convidados</p>
-        </div>
-        
-        <div class="tabs">
-            <button class="tab active" onclick="switchTab('scanner')">📱 Scanner</button>
-            <button class="tab" onclick="switchTab('management')">⚙️ Gestão</button>
-        </div>
-        
-        <!-- ABA 1: SCANNER -->
-        <div id="scanner-tab" class="tab-content active">
-            <!-- Scanner -->
-            <div class="scanner-container">
-                <div id="reader"></div>
-                <div class="scanner-status" id="scannerStatus">📱 Carregue primeiro uma lista de convidados</div>
-            </div>
-            <button class="btn btn-primary" id="scanBtn" onclick="toggleScanner()" disabled>📱 Iniciar Scanner</button>
-            
-            <!-- Carregar Lista -->
-            <div class="card">
-                <h3>📋 Carregar Lista de Convidados</h3>
-                <div class="input-group">
-                    <label for="fileInput">Selecione o arquivo da lista:</label>
-                    <input type="file" id="fileInput" accept=".json" style="display: none;" onchange="handleFileSelect()">
-                    <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">📁 Escolher Arquivo</button>
-                    <button class="btn btn-warning" id="updateBtn" onclick="updateGuestList()" style="display: none;">🔄 Atualizar Lista</button>
-                </div>
-                <div id="fileStatus" style="margin-top: 10px; padding: 10px; border-radius: 8px; font-size: 14px; display: none;"></div>
-            </div>
-            
-            <!-- Pesquisa -->
-            <div class="search-container">
-                <span class="search-icon">🔍</span>
-                <input type="text" class="search-input" id="searchInput" placeholder="Pesquisar convidado..." oninput="searchGuests()">
-            </div>
-            
-            <!-- Lista de Convidados -->
-            <div class="guest-list" id="guestList">
-                <div class="empty-state">
-                    Carregue uma lista de convidados para começar
-                </div>
-            </div>
-        </div>
-        
-        <!-- ABA 2: GESTÃO -->
-        <div id="management-tab" class="tab-content">
-            <!-- Estatísticas -->
-            <div class="stats">
-                <div class="stat-card">
-                    <div class="stat-number" id="totalGuests">0</div>
-                    <div class="stat-label">Total</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="scannedGuests">0</div>
-                    <div class="stat-label">Escaneados</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="pendingGuests">0</div>
-                    <div class="stat-label">Pendentes</div>
-                </div>
-            </div>
-            
-            <!-- Barra de Progresso -->
-            <div class="progress-container">
-                <h3>📊 Progresso do Evento</h3>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
-                </div>
-                <div class="progress-text" id="progressText">0% concluído</div>
-            </div>
-            
-            <!-- Controles -->
-            <div class="card">
-                <h3>⚙️ Controles</h3>
-                <button class="btn btn-danger" onclick="clearList()">🗑️ Eliminar Lista</button>
-                <button class="btn btn-warning" onclick="resetScanned()">↩️ Desmarcar Todos</button>
-            </div>
-        </div>
+  <div class="container">
+    <div class="header">
+      <h1>📱 InvitesQR</h1>
+      <p>Sistema de controlo de convidados</p>
     </div>
-    
-    <div id="alerts"></div>
 
-    <script>
-        let guests = [];
-        let scannedGuests = new Set();
-        let html5QrCode = null;
-        let isScanning = false;
-        let eventMetadata = null;
+    <!-- Login Screen -->
+    <div id="loginScreen">
+      <div class="card">
+        <div class="input-group">
+          <label for="tokenInput">Token do Cliente</label>
+          <input type="text" id="tokenInput" class="input" placeholder="Digite o token fornecido">
+        </div>
+        <button onclick="login()" class="btn btn-primary">
+          🔑 Entrar
+        </button>
+        <div id="loginAlert"></div>
+      </div>
+
+
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" class="hidden">
+      <div class="card">
+        <div id="clientInfo">
+          <h3 id="clientName">Cliente</h3>
+          
+          <div class="progress-container">
+            <div class="progress-bar">
+              <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">0% dos convidados presentes</div>
+          </div>
+          
+          <div class="stats">
+            <div class="stat-card">
+              <div class="stat-number" id="presentCount">0</div>
+              <div class="stat-label">Presentes</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number" id="totalCount">0</div>
+              <div class="stat-label">Total</div>
+            </div>
+          </div>
+        </div>
+        <button onclick="logout()" class="btn btn-danger">
+          🚪 Sair
+        </button>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('scanner')">📷 Scanner</div>
+        <div class="tab" onclick="switchTab('guests')">👥 Lista</div>
+      </div>
+
+      <!-- Scanner Tab -->
+      <div id="scannerTab" class="tab-content active">
+        <div class="card">
+          <button onclick="openScanner()" class="btn btn-success">
+            📱 Abrir Scanner QR
+          </button>
+        </div>
+      </div>
+
+      <!-- Guests Tab -->
+      <div id="guestsTab" class="tab-content">
+        <div class="card">
+          <div class="input-group">
+            <input type="text" id="searchInput" class="input" placeholder="🔍 Pesquisar convidado..." oninput="searchGuests()">
+          </div>
+          <div id="guestsList"></div>
+        </div>
+      </div>
+    </div>
+
+
+  </div>
+
+  <!-- Scanner Overlay -->
+  <div id="scannerOverlay" class="scanner-overlay">
+    <div class="scanner-container">
+      <div id="reader"></div>
+      <div class="scanner-controls">
+        <button onclick="closeScanner()" class="btn btn-danger">❌ Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading" class="loading">
+    <div>
+      <div class="spinner"></div>
+      <p style="margin-top: 16px; color: var(--text-light);">Carregando...</p>
+    </div>
+  </div>
+
+  <!-- Scan Feedback -->
+  <div id="scanFeedback" class="scan-feedback">
+    <div id="feedbackMessage">✅ Sucesso!</div>
+  </div>
+
+  <script>
+    // Supabase Configuration
+    const SUPABASE_URL = 'https://rnvunprjvppbjavkaoek.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJudnVucHJqdnBwYmphdmthb2VrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2NjYzOTksImV4cCI6MjA2NzI0MjM5OX0.5E37Qm-KMmyGtGKbOINbDqMQlZlfgcQx91RQ01qslT8';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // Global State
+    let currentClient = null;
+    let currentGuests = [];
+    let filteredGuests = [];
+    let scanner = null;
+    let isScanning = false;
+    let scannedGuestIds = new Set(); // Track scanned guests to prevent duplicates
+
+    // Audio Context for sounds
+    let audioContext = null;
+
+    // Initialize audio context
+    function initAudio() {
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+
+    // Play success sound
+    function playSuccessSound() {
+      initAudio();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+      oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.1);
+      
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.3);
+    }
+
+    // Play error sound
+    function playErrorSound() {
+      initAudio();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+      oscillator.frequency.setValueAtTime(300, audioContext.currentTime + 0.1);
+      
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.4);
+    }
+
+    // Vibrate device
+    function vibrate(pattern = [200]) {
+      if (navigator.vibrate) {
+        navigator.vibrate(pattern);
+      }
+    }
+
+    // Show scan feedback
+    function showScanFeedback(message, isError = false) {
+      const feedback = document.getElementById('scanFeedback');
+      const messageEl = document.getElementById('feedbackMessage');
+      
+      messageEl.textContent = message;
+      feedback.classList.toggle('error', isError);
+      feedback.style.display = 'block';
+      
+      setTimeout(() => {
+        feedback.style.display = 'none';
+      }, 2000);
+      
+      if (isError) {
+        playErrorSound();
+        vibrate([100, 50, 100]);
+      } else {
+        playSuccessSound();
+        vibrate([200]);
+      }
+    }
+
+
+
+
+    // Utility Functions
+    function showLoading(show = true) {
+      document.getElementById('loading').classList.toggle('show', show);
+    }
+
+    function showAlert(elementId, message, type = 'error') {
+      const alertEl = document.getElementById(elementId);
+      alertEl.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+      setTimeout(() => alertEl.innerHTML = '', 5000);
+    }
+
+    function hideAllScreens() {
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('mainApp').classList.add('hidden');
+    }
+
+    // Login Functions
+    async function login() {
+      const token = document.getElementById('tokenInput').value.trim();
+      if (!token) {
+        showAlert('loginAlert', '❌ Por favor, digite um token válido');
+        return;
+      }
+
+      showLoading(true);
+
+      try {
+        const { data, error } = await supabase
+          .from('clientes')
+          .select('*')
+          .eq('token', token)
+          .single();
+
+        if (error || !data) {
+          throw new Error('Token inválido ou expirado');
+        }
+
+        // Check if token is still valid
+        const now = Date.now() / 1000;
+        if (data.validade < now) {
+          throw new Error('Token expirado. Contacte o organizador.');
+        }
+
+        currentClient = data;
         
-        // Chave de descriptografia
-        const SECRET_KEY = 'Invites2025@!!QR';
+        await loadGuests();
+        showMainApp();
         
-        // Sistema de armazenamento offline
-        const OfflineStorage = {
-            save: function(key, data) {
-                try {
-                    localStorage.setItem('inviteApp_' + key, JSON.stringify(data));
-                    return true;
-                } catch (e) {
-                    console.error('Erro ao salvar offline:', e);
-                    return false;
-                }
-            },
-            
-            load: function(key) {
-                try {
-                    const data = localStorage.getItem('inviteApp_' + key);
-                    return data ? JSON.parse(data) : null;
-                } catch (e) {
-                    console.error('Erro ao carregar offline:', e);
-                    return null;
-                }
-            },
-            
-            remove: function(key) {
-                try {
-                    localStorage.removeItem('inviteApp_' + key);
-                    return true;
-                } catch (e) {
-                    console.error('Erro ao remover offline:', e);
-                    return false;
-                }
-            },
-            
-            clear: function() {
-                try {
-                    const keys = Object.keys(localStorage).filter(key => key.startsWith('inviteApp_'));
-                    keys.forEach(key => localStorage.removeItem(key));
-                    return true;
-                } catch (e) {
-                    console.error('Erro ao limpar offline:', e);
-                    return false;
-                }
-            }
+        showAlert('loginAlert', `✅ Bem-vindo, ${data.nome}!`, 'success');
+
+      } catch (error) {
+        showAlert('loginAlert', `❌ ${error.message}`);
+      }
+
+      showLoading(false);
+    }
+
+    async function loadGuests() {
+      try {
+        const { data, error } = await supabase
+          .from('convidados')
+          .select('*')
+          .eq('token_cliente', currentClient.token)
+          .order('nome');
+
+        if (error) throw error;
+
+        currentGuests = data || [];
+        filteredGuests = [...currentGuests];
+        
+        updateStats();
+        renderGuests();
+
+      } catch (error) {
+        console.error('Error loading guests:', error);
+      }
+    }
+
+    function showMainApp() {
+      hideAllScreens();
+      document.getElementById('mainApp').classList.remove('hidden');
+      
+      document.getElementById('clientName').textContent = currentClient.nome;
+      updateStats();
+    }
+
+    function updateStats() {
+      const presentCount = currentGuests.filter(g => g.status === 'presente').length;
+      const totalCount = currentGuests.length;
+      const percentage = totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 0;
+      
+      document.getElementById('presentCount').textContent = presentCount;
+      document.getElementById('totalCount').textContent = totalCount;
+      
+      // Update progress bar
+      const progressFill = document.getElementById('progressFill');
+      const progressText = document.getElementById('progressText');
+      
+      if (progressFill && progressText) {
+        progressFill.style.width = `${percentage}%`;
+        progressText.textContent = `${percentage}% dos convidados presentes (${presentCount}/${totalCount})`;
+      }
+    }
+
+    // Tab Management
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      
+      event.target.classList.add('active');
+      document.getElementById(tabName + 'Tab').classList.add('active');
+    }
+
+    // Guest Management
+    function renderGuests() {
+      const container = document.getElementById('guestsList');
+      
+      if (filteredGuests.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Nenhum convidado encontrado</p>';
+        return;
+      }
+
+      container.innerHTML = filteredGuests.map(guest => `
+        <div class="guest-item">
+          <div class="guest-info">
+            <h4>${guest.nome}</h4>
+            <p>ID: ${guest.id}</p>
+          </div>
+          <div>
+            <span class="status status-${guest.status}">
+              ${guest.status === 'presente' ? '✅ Presente' : '⏳ Pendente'}
+            </span>
+            ${guest.status !== 'presente' ? `
+              <button onclick="markAsPresent(${guest.id}, '${guest.nome}')" 
+                      style="margin-left: 8px; padding: 6px 12px; background: var(--success); color: white; border: none; border-radius: 6px; cursor: pointer;">
+                Marcar
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function searchGuests() {
+      const query = document.getElementById('searchInput').value.toLowerCase().trim();
+      
+      if (!query) {
+        filteredGuests = [...currentGuests];
+      } else {
+        filteredGuests = currentGuests.filter(guest => 
+          guest.nome.toLowerCase().includes(query) ||
+          guest.id.toString().includes(query)
+        );
+      }
+      
+      renderGuests();
+    }
+
+    async function markAsPresent(guestId, guestName) {
+      showLoading(true);
+      
+      try {
+        const { error } = await supabase
+          .from('convidados')
+          .update({ status: 'presente' })
+          .eq('id', guestId);
+
+        if (error) throw error;
+
+        // Log the scan
+        await supabase.from('logs').insert([{
+          token: currentClient.token,
+          status: 'sucesso',
+          dispositivos: navigator.userAgent
+        }]);
+
+        // Update local data
+        const guestIndex = currentGuests.findIndex(g => g.id === guestId);
+        if (guestIndex !== -1) {
+          currentGuests[guestIndex].status = 'presente';
+        }
+        
+        const filteredIndex = filteredGuests.findIndex(g => g.id === guestId);
+        if (filteredIndex !== -1) {
+          filteredGuests[filteredIndex].status = 'presente';
+        }
+
+        updateStats();
+        renderGuests();
+        
+        alert(`✅ ${guestName} marcado como presente!`);
+
+      } catch (error) {
+        alert(`❌ Erro ao marcar presença: ${error.message}`);
+      }
+      
+      showLoading(false);
+    }
+
+    // Scanner Functions
+    function openScanner() {
+      startScanner();
+    }
+
+
+
+    async function startScanner() {
+      document.getElementById('scannerOverlay').style.display = 'flex';
+      
+      try {
+        // Request camera permission first
+        await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        
+        if (!scanner) {
+          scanner = new Html5Qrcode('reader');
+        }
+
+        // Try different camera configurations
+        const cameraConfig = { facingMode: 'environment' };
+        const scanConfig = { 
+          fps: 10, 
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.0
         };
+
+        await scanner.start(cameraConfig, scanConfig, onScanSuccess, onScanError);
+        isScanning = true;
         
-        // Função para mostrar alertas
-        function showAlert(message, type = 'success') {
-            const alertsContainer = document.getElementById('alerts');
-            const alert = document.createElement('div');
-            alert.className = `alert alert-${type}`;
-            alert.textContent = message;
-            alert.style.position = 'fixed';
-            alert.style.top = '20px';
-            alert.style.left = '50%';
-            alert.style.transform = 'translateX(-50%)';
-            alert.style.zIndex = '1000';
-            alert.style.maxWidth = '90%';
-            
-            alertsContainer.appendChild(alert);
-            
-            setTimeout(() => {
-                alert.remove();
-            }, 3000);
+      } catch (error) {
+        console.error('Camera error:', error);
+        
+        // Try fallback camera access
+        try {
+          if (!scanner) {
+            scanner = new Html5Qrcode('reader');
+          }
+          
+          // Try without specific facing mode
+          await scanner.start(
+            { video: true },
+            { fps: 10, qrbox: 250 },
+            onScanSuccess,
+            onScanError
+          );
+          isScanning = true;
+          
+        } catch (fallbackError) {
+          console.error('Fallback camera error:', fallbackError);
+          
+          // Show error message
+          document.getElementById('reader').innerHTML = `
+            <div class="camera-permission">
+              <h3>❌ Erro de Câmera</h3>
+              <p>Não foi possível aceder à câmera.</p>
+              <p>Verifique se:</p>
+              <ul style="text-align: left; margin: 10px 0;">
+                <li>Deu permissão para usar a câmera</li>
+                <li>Está a usar HTTPS</li>
+                <li>A câmera não está a ser usada por outra app</li>
+              </ul>
+              <button onclick="closeScanner()" class="btn btn-danger" style="margin-top: 15px;">
+                Fechar
+              </button>
+            </div>
+          `;
+        }
+      }
+    }
+
+    function onScanSuccess(decodedText) {
+      processClientQR(decodedText);
+    }
+
+    function onScanError(error) {
+      // Ignore scan errors (they're frequent)
+    }
+
+    async function processClientQR(qrData) {
+      try {
+        const data = JSON.parse(qrData);
+        
+        if (!data.guest_id || !data.guest_name || !data.client_token) {
+          throw new Error('QR Code inválido');
         }
         
-        // Alternar entre abas
-        function switchTab(tabName) {
-            // Remover classe active de todas as abas
-            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            
-            // Ativar aba selecionada
-            event.target.classList.add('active');
-            document.getElementById(tabName + '-tab').classList.add('active');
+        if (data.client_token !== currentClient.token) {
+          throw new Error('Este QR Code não pertence a este evento');
         }
         
-        // Função para descriptografar dados
-        function decryptData(encryptedData) {
-            try {
-                const decrypted = CryptoJS.AES.decrypt(encryptedData, SECRET_KEY);
-                const jsonString = decrypted.toString(CryptoJS.enc.Utf8);
-                if (!jsonString) {
-                    throw new Error('Arquivo não foi gerado pelo painel oficial');
-                }
-                
-                const data = JSON.parse(jsonString);
-                
-                // Validação rigorosa - só aceita arquivos do painel
-                if (!validatePanelFile(data)) {
-                    throw new Error('Arquivo inválido. Use apenas arquivos gerados pelo painel oficial');
-                }
-                
-                return data;
-            } catch (error) {
-                if (error.message === 'EXPIRED_TOKEN') {
-                    throw new Error('⏰ Token expirado! Por favor entre em contacto com a Invites para obter uma nova lista atualizada.');
-                }
-                if (error.message.includes('painel')) {
-                    throw error;
-                }
-                throw new Error('Arquivo corrompido ou não autorizado');
-            }
+        const guest = currentGuests.find(g => g.nome === data.guest_name);
+        if (!guest) {
+          throw new Error('Convidado não encontrado na lista');
         }
         
-        // Validação rigorosa do arquivo do painel
-        function validatePanelFile(data) {
-            // Verificar estrutura obrigatória
-            if (!data || typeof data !== 'object') return false;
-            if (!data.guests || !Array.isArray(data.guests)) return false;
-            if (!data.metadata || typeof data.metadata !== 'object') return false;
-            
-            // Verificar assinatura do painel
-            if (data.metadata.source !== 'InvitePanel2025') return false;
-            if (!data.metadata.version || !data.metadata.generated) return false;
-            if (!data.metadata.signature) return false;
-            if (!data.metadata.clientToken) return false;
-            if (!data.metadata.expiresAt) return false;
-            
-            // Verificar se o token não expirou
-            const expirationDate = new Date(data.metadata.expiresAt);
-            const currentDate = new Date();
-            if (currentDate > expirationDate) {
-                throw new Error('EXPIRED_TOKEN');
-            }
-            
-            // Verificar estrutura dos convidados
-            for (let guest of data.guests) {
-                if (!guest.id || !guest.name) return false;
-                if (typeof guest.id !== 'string' || typeof guest.name !== 'string') return false;
-            }
-            
-            // Verificar assinatura de integridade (incluindo token)
-            const expectedSignature = CryptoJS.SHA256(
-                data.metadata.version + 
-                data.metadata.generated + 
-                data.metadata.clientToken +
-                data.metadata.expiresAt +
-                data.guests.length + 
-                SECRET_KEY
-            ).toString();
-            
-            return data.metadata.signature === expectedSignature;
+        if (guest.status === 'presente') {
+          throw new Error('Este convidado já foi registado como presente');
         }
         
-        // Manipular seleção de arquivo
-        function handleFileSelect(isUpdate = false) {
-            const fileInput = document.getElementById('fileInput');
-            const fileStatus = document.getElementById('fileStatus');
-            const file = fileInput.files[0];
-            
-            if (!file) {
-                return;
-            }
-            
-            // Mostrar status de carregamento
-            fileStatus.style.display = 'block';
-            fileStatus.style.background = '#e6f3ff';
-            fileStatus.style.color = '#0066cc';
-            fileStatus.innerHTML = isUpdate ? '🔄 Atualizando lista...' : '⏳ Carregando arquivo...';
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const encryptedData = e.target.result;
-                    loadGuestList(encryptedData, file.name, isUpdate);
-                } catch (error) {
-                    showFileError('Erro ao ler o arquivo. Verifique se é um arquivo válido.');
-                }
-            };
-            
-            reader.onerror = function() {
-                showFileError('Erro ao ler o arquivo. Tente novamente.');
-            };
-            
-            reader.readAsText(file);
-            
-            // Resetar o handler para carregamento normal
-            if (isUpdate) {
-                fileInput.onchange = function() {
-                    handleFileSelect(false);
-                };
-            }
+        // Check for duplicate scan in current session
+        if (scannedGuestIds.has(guest.id)) {
+          throw new Error('QR Code já foi escaneado nesta sessão');
         }
         
-        // Carregar lista de convidados
-        function loadGuestList(encryptedData, fileName, isUpdate = false) {
-            const fileStatus = document.getElementById('fileStatus');
-            
-            try {
-                const data = decryptData(encryptedData);
-                
-                if (!data.guests || !Array.isArray(data.guests)) {
-                    throw new Error('Arquivo não contém uma lista válida de convidados');
-                }
-                
-                // Verificar se é o mesmo cliente (mesmo token) ou cliente diferente
-                const currentToken = eventMetadata ? eventMetadata.clientToken : null;
-                const newToken = data.metadata.clientToken;
-                const isSameClient = currentToken === newToken;
-                
-                let addedGuests = 0;
-                let preservedScans = 0;
-                let isTokenUpdate = false;
-                
-                if (isUpdate && isSameClient) {
-                    // ATUALIZAÇÃO DO MESMO CLIENTE - Preservar check-ins
-                    isTokenUpdate = true;
-                    const oldScannedGuests = new Set(scannedGuests);
-                    const oldGuestCount = guests.length;
-                    
-                    guests = data.guests;
-                    eventMetadata = data.metadata;
-                    
-                    // Recontar convidados que já fizeram check-in
-                    scannedGuests.clear();
-                    guests.forEach(guest => {
-                        if (oldScannedGuests.has(guest.id)) {
-                            scannedGuests.add(guest.id);
-                            preservedScans++;
-                        }
-                    });
-                    
-                    addedGuests = guests.length - oldGuestCount;
-                } else {
-                    // NOVO CLIENTE OU CARREGAMENTO INICIAL - Limpar check-ins
-                    if (isUpdate && !isSameClient) {
-                        // Avisar que é um cliente diferente
-                        if (currentToken) {
-                            showAlert('🔄 Novo cliente detectado! Lista será substituída completamente', 'error');
-                        }
-                    }
-                    
-                    guests = data.guests;
-                    eventMetadata = data.metadata;
-                    scannedGuests.clear();
-                }
-                
-                // Salvar offline para funcionamento sem internet
-                OfflineStorage.save('guests', guests);
-                OfflineStorage.save('metadata', eventMetadata);
-                OfflineStorage.save('scannedGuests', Array.from(scannedGuests));
-                OfflineStorage.save('loadTime', new Date().toISOString());
-                
-                updateStats();
-                renderGuestList();
-                
-                // Habilitar scanner e botão de atualização
-                const scanBtn = document.getElementById('scanBtn');
-                const scannerStatus = document.getElementById('scannerStatus');
-                const updateBtn = document.getElementById('updateBtn');
-                
-                scanBtn.disabled = false;
-                updateBtn.style.display = 'block';
-                scannerStatus.textContent = '✅ Pronto para escanear QR Codes';
-                
-                // Mostrar sucesso com info do evento
-                fileStatus.style.background = '#d4edda';
-                fileStatus.style.color = '#155724';
-                
-                if (isTokenUpdate) {
-                    // Atualização do mesmo cliente
-                    fileStatus.innerHTML = `🔄 Lista atualizada! ${guests.length} convidados total<br>
-                        <small>✅ ${preservedScans} check-ins preservados${addedGuests > 0 ? ` | 🆕 ${addedGuests} novos convidados` : addedGuests < 0 ? ` | ➖ ${Math.abs(addedGuests)} convidados removidos` : ''}</small><br>
-                        <small>🔑 Token: ${newToken.substring(0, 8)}... | 📅 ${new Date(eventMetadata.generated).toLocaleString('pt-BR')}</small>`;
-                    
-                    showAlert(`🔄 Lista atualizada! ${preservedScans} check-ins preservados${addedGuests > 0 ? `, ${addedGuests} novos convidados` : addedGuests < 0 ? `, ${Math.abs(addedGuests)} removidos` : ''}`);
-                } else if (isUpdate && !isSameClient) {
-                    // Novo cliente durante atualização
-                    fileStatus.innerHTML = `🔄 Novo cliente carregado! ${guests.length} convidados<br>
-                        <small>🔑 Token: ${newToken.substring(0, 8)}... | 📅 ${new Date(eventMetadata.generated).toLocaleString('pt-BR')}</small><br>
-                        <small>⚠️ Check-ins anteriores foram limpos (cliente diferente)</small>`;
-                    
-                    showAlert(`🔄 Novo cliente! ${guests.length} convidados carregados (check-ins anteriores limpos)`);
-                } else {
-                    // Carregamento inicial
-                    fileStatus.innerHTML = `✅ ${guests.length} convidados carregados de "${fileName}"<br>
-                        <small>🔑 Token: ${newToken.substring(0, 8)}... | 📅 ${new Date(eventMetadata.generated).toLocaleString('pt-BR')}</small><br>
-                        <small>⏰ Expira em: ${new Date(eventMetadata.expiresAt).toLocaleString('pt-BR')}</small>`;
-                    
-                    showAlert(`🎉 Lista carregada! ${guests.length} convidados prontos para check-in`);
-                }
-                
-            } catch (error) {
-                showFileError(error.message);
-            }
+        // Add to scanned set to prevent duplicates
+        scannedGuestIds.add(guest.id);
+        
+        closeScanner();
+        await markAsPresent(guest.id, guest.nome);
+        
+        // Show success feedback
+        showScanFeedback(`✅ ${guest.nome} registado com sucesso!`);
+        
+      } catch (error) {
+        showScanFeedback(`❌ ${error.message}`, true);
+        
+        // Remove from scanned set if it was an error
+        if (error.message.includes('já foi escaneado')) {
+          // Keep in set to prevent re-scanning
+        } else {
+          // Remove from set so they can try again
+          const data = JSON.parse(qrData);
+          const guest = currentGuests.find(g => g.nome === data.guest_name);
+          if (guest) {
+            scannedGuestIds.delete(guest.id);
+          }
+        }
+      }
+    }
+
+    function closeScanner() {
+      document.getElementById('scannerOverlay').style.display = 'none';
+      
+      if (scanner && isScanning) {
+        scanner.stop();
+        isScanning = false;
+      }
+    }
+
+    // Logout
+    function logout() {
+      if (confirm('Tem certeza que deseja sair?')) {
+        // Stop scanner if running
+        if (scanner && isScanning) {
+          scanner.stop().then(() => {
+            scanner.clear();
+            scanner = null;
+          }).catch(() => {
+            scanner = null;
+          });
+          isScanning = false;
         }
         
-        // Atualizar lista de convidados
-        function updateGuestList() {
-            if (guests.length === 0) {
-                showAlert('📋 Carregue uma lista primeiro antes de atualizar', 'error');
-                return;
-            }
-            
-            if (!confirm(`🔄 Atualizar a lista de convidados?\n\n✅ Todos os check-ins já realizados serão preservados\n🆕 Novos convidados serão adicionados se houver`)) {
-                return;
-            }
-            
-            // Simular clique no input de arquivo para atualização
-            const fileInput = document.getElementById('fileInput');
-            fileInput.onchange = function() {
-                handleFileSelect(true); // Passar flag de atualização
-            };
-            fileInput.click();
-        }
+        // Clear scanner overlay
+        document.getElementById('scannerOverlay').style.display = 'none';
         
-        // Mostrar erro no arquivo
-        function showFileError(message) {
-            const fileStatus = document.getElementById('fileStatus');
-            fileStatus.style.display = 'block';
-            fileStatus.style.background = '#f8d7da';
-            fileStatus.style.color = '#721c24';
-            fileStatus.innerHTML = `❌ ${message}`;
-            showAlert(`Erro: ${message}`, 'error');
-        }
+        // Reset state
+        currentClient = null;
+        currentGuests = [];
+        filteredGuests = [];
+        scannedGuestIds.clear();
         
-        // Alternar scanner
-        function toggleScanner() {
-            if (!isScanning) {
-                startScanner();
-            } else {
-                stopScanner();
-            }
-        }
+        // Clear search input
+        document.getElementById('searchInput').value = '';
         
-        // Iniciar scanner
-        function startScanner() {
-            if (guests.length === 0) {
-                showAlert('🚫 Carregue uma lista de convidados primeiro!', 'error');
-                return;
-            }
-            
-            const scanBtn = document.getElementById('scanBtn');
-            const scannerStatus = document.getElementById('scannerStatus');
-            
-            // Mostrar status de inicialização
-            scannerStatus.textContent = '🔄 Iniciando câmera...';
-            scanBtn.disabled = true;
-            
-            html5QrCode = new Html5Qrcode("reader");
-            
-            const config = {
-                fps: 10,
-                qrbox: { width: 200, height: 200 },
-                aspectRatio: 1.0
-            };
-            
-            html5QrCode.start(
-                { facingMode: "environment" },
-                config,
-                (decodedText, decodedResult) => {
-                    handleQRCodeScan(decodedText);
-                },
-                (errorMessage) => {
-                    // Ignora erros de scan contínuo
-                }
-            ).then(() => {
-                isScanning = true;
-                scanBtn.disabled = false;
-                scanBtn.textContent = '⏹️ Parar Scanner';
-                scanBtn.className = 'btn btn-danger';
-                scannerStatus.textContent = '📱 Aponte a câmera para o QR Code do convidado';
-                showAlert('📷 Scanner ativo! Aponte para os QR Codes');
-            }).catch((err) => {
-                scanBtn.disabled = false;
-                scannerStatus.textContent = '❌ Erro ao acessar câmera. Verifique as permissões.';
-                showAlert(`Erro: Não foi possível acessar a câmera. ${err}`, 'error');
-            });
-        }
+        // Show login screen
+        hideAllScreens();
+        document.getElementById('loginScreen').classList.remove('hidden');
+        document.getElementById('tokenInput').value = '';
         
-        // Parar scanner
-        function stopScanner() {
-            const scanBtn = document.getElementById('scanBtn');
-            const scannerStatus = document.getElementById('scannerStatus');
-            
-            if (html5QrCode) {
-                html5QrCode.stop().then(() => {
-                    isScanning = false;
-                    scanBtn.textContent = '📱 Iniciar Scanner';
-                    scanBtn.className = 'btn btn-primary';
-                    scannerStatus.textContent = 'Scanner desativado';
-                    showAlert('Scanner parado');
-                }).catch((err) => {
-                    showAlert(`Erro ao parar scanner: ${err}`, 'error');
-                });
-            }
-        }
+        // Clear any alerts
+        document.getElementById('loginAlert').innerHTML = '';
         
-        // Processar QR Code escaneado
-        function handleQRCodeScan(qrData) {
-            const guest = guests.find(g => g.id === qrData || g.name === qrData);
-            
-            if (guest) {
-                if (scannedGuests.has(guest.id)) {
-                    showAlert(`⚠️ ${guest.name} já fez check-in anteriormente!`, 'error');
-                    // Vibrar se disponível
-                    if (navigator.vibrate) {
-                        navigator.vibrate([100, 50, 100]);
-                    }
-                } else {
-                    scannedGuests.add(guest.id);
-                    
-                    // Salvar scan offline imediatamente
-                    const scannedArray = Array.from(scannedGuests);
-                    OfflineStorage.save('scannedGuests', scannedArray);
-                    OfflineStorage.save('lastScan', {
-                        guestId: guest.id,
-                        guestName: guest.name,
-                        timestamp: new Date().toISOString()
-                    });
-                    
-                    updateStats();
-                    renderGuestList();
-                    showAlert(`🎉 ${guest.name} - Check-in realizado com sucesso!`);
-                    // Vibrar sucesso
-                    if (navigator.vibrate) {
-                        navigator.vibrate(200);
-                    }
-                    
-                    // Atualizar status do scanner
-                    const scannerStatus = document.getElementById('scannerStatus');
-                    const remaining = guests.length - scannedGuests.size;
-                    if (remaining > 0) {
-                        scannerStatus.textContent = `✅ Check-in OK! ${remaining} convidados restantes`;
-                    } else {
-                        scannerStatus.textContent = '🎊 Todos os convidados fizeram check-in!';
-                    }
-                }
-            } else {
-                showAlert(`❌ QR Code não reconhecido. Verifique se é um convidado válido.`, 'error');
-                // Vibrar erro
-                if (navigator.vibrate) {
-                    navigator.vibrate([50, 50, 50, 50, 50]);
-                }
-            }
-        }
-        
-        // Limpar lista
-        function clearList() {
-            if (guests.length === 0) {
-                showAlert('📋 Não há lista para eliminar', 'error');
-                return;
-            }
-            
-            if (confirm(`🗑️ Tem certeza que deseja eliminar toda a lista de convidados?\n\n⚠️ Esta ação não pode ser desfeita!\n📊 ${guests.length} convidados serão removidos\n✅ ${scannedGuests.size} check-ins serão perdidos`)) {
-                const totalGuests = guests.length;
-                const totalScanned = scannedGuests.size;
-                guests = [];
-                scannedGuests.clear();
-                
-                // Limpar dados offline
-                clearOfflineData();
-                eventMetadata = null;
-                
-                // Resetar interface
-                const scanBtn = document.getElementById('scanBtn');
-                const scannerStatus = document.getElementById('scannerStatus');
-                const fileStatus = document.getElementById('fileStatus');
-                const updateBtn = document.getElementById('updateBtn');
-                
-                scanBtn.disabled = true;
-                scanBtn.textContent = '📱 Iniciar Scanner';
-                scanBtn.className = 'btn btn-primary';
-                scannerStatus.textContent = '📱 Carregue primeiro uma lista de convidados';
-                fileStatus.style.display = 'none';
-                updateBtn.style.display = 'none';
-                
-                // Parar scanner se estiver ativo
-                if (isScanning) {
-                    stopScanner();
-                }
-                
-                updateStats();
-                renderGuestList();
-                showAlert(`🗑️ Lista eliminada: ${totalGuests} convidados e ${totalScanned} check-ins removidos`);
-            }
-        }
-        
-        // Desmarcar todos os escaneados
-        function resetScanned() {
-            if (scannedGuests.size === 0) {
-                showAlert('📋 Não há check-ins para desmarcar', 'error');
-                return;
-            }
-            
-            if (confirm(`↩️ Tem certeza que deseja desmarcar todos os check-ins?\n\n📊 ${scannedGuests.size} check-ins realizados serão desmarcados\n📋 A lista de ${guests.length} convidados será mantida\n\n⚠️ Esta ação não pode ser desfeita!`)) {
-                const totalScanned = scannedGuests.size;
-                scannedGuests.clear();
-                
-                // Atualizar dados offline
-                OfflineStorage.save('scannedGuests', []);
-                OfflineStorage.remove('lastScan');
-                
-                updateStats();
-                renderGuestList();
-                
-                // Atualizar status do scanner
-                const scannerStatus = document.getElementById('scannerStatus');
-                if (isScanning) {
-                    scannerStatus.textContent = '📱 Aponte a câmera para o QR Code do convidado';
-                } else if (guests.length > 0) {
-                    scannerStatus.textContent = '✅ Pronto para escanear QR Codes';
-                }
-                
-                showAlert(`↩️ ${totalScanned} check-ins foram desmarcados`);
-            }
-        }
-        
-        // Pesquisar convidados
-        function searchGuests() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            renderGuestList(searchTerm);
-        }
-        
-        // Atualizar estatísticas
-        function updateStats() {
-            const total = guests.length;
-            const scanned = scannedGuests.size;
-            const pending = total - scanned;
-            const percentage = total > 0 ? Math.round((scanned / total) * 100) : 0;
-            
-            document.getElementById('totalGuests').textContent = total;
-            document.getElementById('scannedGuests').textContent = scanned;
-            document.getElementById('pendingGuests').textContent = pending;
-            
-            document.getElementById('progressFill').style.width = percentage + '%';
-            document.getElementById('progressText').textContent = `${percentage}% concluído (${scanned}/${total})`;
-        }
-        
-        // Renderizar lista de convidados
-        function renderGuestList(searchTerm = '') {
-            const guestList = document.getElementById('guestList');
-            
-            if (guests.length === 0) {
-                guestList.innerHTML = '<div class="empty-state">📁 Carregue um arquivo com a lista de convidados para começar</div>';
-                return;
-            }
-            
-            const filteredGuests = guests.filter(guest => 
-                guest.name.toLowerCase().includes(searchTerm)
-            );
-            
-            if (filteredGuests.length === 0) {
-                if (searchTerm) {
-                    guestList.innerHTML = '<div class="empty-state">🔍 Nenhum convidado encontrado com esse nome</div>';
-                } else {
-                    guestList.innerHTML = '<div class="empty-state">📋 Lista vazia</div>';
-                }
-                return;
-            }
-            
-            guestList.innerHTML = filteredGuests.map(guest => {
-                const isScanned = scannedGuests.has(guest.id);
-                return `
-                    <div class="guest-item ${isScanned ? 'scanned' : ''}">
-                        <div class="guest-name">${guest.name}</div>
-                        <div class="guest-status ${isScanned ? 'status-scanned' : 'status-pending'}">
-                            ${isScanned ? '✅ Check-in OK' : '⏳ Aguardando'}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-        
-        // Função para recuperar dados offline
-        function loadOfflineData() {
-            const offlineGuests = OfflineStorage.load('guests');
-            const offlineMetadata = OfflineStorage.load('metadata');
-            const offlineScanned = OfflineStorage.load('scannedGuests');
-            const loadTime = OfflineStorage.load('loadTime');
-            
-            if (offlineGuests && offlineMetadata) {
-                guests = offlineGuests;
-                eventMetadata = offlineMetadata;
-                
-                if (offlineScanned && Array.isArray(offlineScanned)) {
-                    scannedGuests = new Set(offlineScanned);
-                }
-                
-                // Habilitar scanner e botão de atualização
-                const scanBtn = document.getElementById('scanBtn');
-                const scannerStatus = document.getElementById('scannerStatus');
-                const fileStatus = document.getElementById('fileStatus');
-                const updateBtn = document.getElementById('updateBtn');
-                
-                scanBtn.disabled = false;
-                updateBtn.style.display = 'block';
-                scannerStatus.textContent = '✅ Dados recuperados - Pronto para escanear';
-                
-                // Mostrar status de recuperação
-                fileStatus.style.display = 'block';
-                fileStatus.style.background = '#fff3cd';
-                fileStatus.style.color = '#856404';
-                fileStatus.innerHTML = `🔄 ${guests.length} convidados recuperados do armazenamento offline<br>
-                    <small>✅ ${scannedGuests.size} check-ins preservados</small><br>
-                    <small>🔑 Token: ${eventMetadata.clientToken.substring(0, 8)}... | 📅 ${new Date(loadTime).toLocaleString('pt-BR')}</small><br>
-                    <small>⏰ Expira em: ${new Date(eventMetadata.expiresAt).toLocaleString('pt-BR')}</small>`;
-                
-                updateStats();
-                renderGuestList();
-                
-                showAlert(`🔄 Dados recuperados! ${guests.length} convidados e ${scannedGuests.size} check-ins`);
-                return true;
-            }
-            return false;
-        }
-        
-        // Limpar dados offline
-        function clearOfflineData() {
-            OfflineStorage.clear();
-        }
-        
-        // Inicializar - tentar recuperar dados offline primeiro
-        if (!loadOfflineData()) {
-            updateStats();
-            renderGuestList();
-        }
-    </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'964428d580f477d7',t:'MTc1MzM2Nzg4OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+        // Reset reader content
+        document.getElementById('reader').innerHTML = '';
+      }
+    }
+
+    // Auto-refresh guests every 30 seconds
+    setInterval(() => {
+      if (currentClient) {
+        loadGuests();
+      }
+    }, 30000);
+  </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'965bc487a3ae77d9',t:'MTc1MzYxNTQzOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
