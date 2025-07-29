@@ -14,6 +14,8 @@
             -webkit-user-select: none;
             -webkit-touch-callout: none;
             -webkit-tap-highlight-color: transparent;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         }
         
         /* Tab system */
@@ -25,20 +27,51 @@
         }
         
         .tab-button {
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .tab-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        .tab-button:hover::before {
+            left: 100%;
         }
         .tab-button.active {
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
             color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
+            border-radius: 20px 20px 0 0;
+        }
+        
+        /* Modern card design */
+        .modern-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        .modern-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
         }
         
         /* Scanner styles */
         #qr-reader {
-            border-radius: 16px;
+            border-radius: 24px;
             overflow: hidden;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            border: 3px solid rgba(99, 102, 241, 0.2);
         }
         
         #qr-reader__dashboard_section_csr {
@@ -47,23 +80,149 @@
         
         /* Progress bar */
         .progress-bar {
-            background: linear-gradient(90deg, #10b981, #059669);
-            transition: width 0.5s ease;
-            border-radius: 8px;
+            background: linear-gradient(90deg, #10b981, #059669, #34d399);
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
         }
         
         /* Guest list */
         .guest-item {
-            transition: all 0.3s ease;
-            border-left: 4px solid transparent;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-left: 5px solid transparent;
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+        .guest-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.5s;
+        }
+        .guest-item:hover::before {
+            left: 100%;
         }
         .guest-item.scanned {
-            background: #f0fdf4;
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
             border-left-color: #10b981;
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.15);
         }
         .guest-item.duplicate {
-            background: #fef3c7;
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
             border-left-color: #f59e0b;
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.15);
+        }
+        
+        /* Modern buttons */
+        .modern-btn {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            border: none;
+            border-radius: 16px;
+            color: white;
+            font-weight: 600;
+            padding: 16px 24px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+        }
+        .modern-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        .modern-btn:hover::before {
+            left: 100%;
+        }
+        .modern-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(99, 102, 241, 0.4);
+        }
+        .modern-btn:active {
+            transform: translateY(-1px);
+        }
+        
+        .modern-btn.success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+        }
+        .modern-btn.success:hover {
+            box-shadow: 0 15px 35px rgba(16, 185, 129, 0.4);
+        }
+        
+        .modern-btn.danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
+        }
+        .modern-btn.danger:hover {
+            box-shadow: 0 15px 35px rgba(239, 68, 68, 0.4);
+        }
+        
+        .modern-btn.warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
+        }
+        .modern-btn.warning:hover {
+            box-shadow: 0 15px 35px rgba(245, 158, 11, 0.4);
+        }
+        
+        .modern-btn.purple {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+        }
+        .modern-btn.purple:hover {
+            box-shadow: 0 15px 35px rgba(139, 92, 246, 0.4);
+        }
+        
+        /* Statistics cards */
+        .stat-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7));
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.3);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
+        }
+        .stat-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
         }
         
         /* Animations */
@@ -77,8 +236,14 @@
             50% { transform: scale(1.05); }
         }
         
-        .animate-slide-in { animation: slideIn 0.3s ease-out; }
-        .animate-pulse-success { animation: pulse 0.6s ease-in-out; }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .animate-slide-in { animation: slideIn 0.5s ease-out; }
+        .animate-pulse-success { animation: pulse 0.8s ease-in-out; }
+        .animate-float { animation: float 3s ease-in-out infinite; }
         
         /* Toast notifications */
         .toast {
@@ -87,51 +252,90 @@
             left: 50%;
             transform: translateX(-50%) translateY(-100px);
             z-index: 1000;
-            padding: 12px 20px;
-            border-radius: 25px;
+            padding: 16px 24px;
+            border-radius: 30px;
             color: white;
-            font-weight: 500;
-            transition: transform 0.3s ease;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            font-weight: 600;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
             max-width: 90vw;
             text-align: center;
+            backdrop-filter: blur(20px);
         }
-        .toast.show { transform: translateX(-50%) translateY(0); }
-        .toast.success { background: linear-gradient(135deg, #10b981, #059669); }
-        .toast.error { background: linear-gradient(135deg, #ef4444, #dc2626); }
-        .toast.warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
-        .toast.info { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .toast.show { 
+            transform: translateX(-50%) translateY(0);
+            animation: float 2s ease-in-out infinite;
+        }
+        .toast.success { 
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 0 15px 35px rgba(16, 185, 129, 0.3);
+        }
+        .toast.error { 
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            box-shadow: 0 15px 35px rgba(239, 68, 68, 0.3);
+        }
+        .toast.warning { 
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            box-shadow: 0 15px 35px rgba(245, 158, 11, 0.3);
+        }
+        .toast.info { 
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            box-shadow: 0 15px 35px rgba(59, 130, 246, 0.3);
+        }
         
         /* Login screen */
         .login-container {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
             min-height: 100vh;
+            position: relative;
+        }
+        .login-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.3;
+        }
+        
+        .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 32px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
         
         /* Floating action button */
         .fab {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 60px;
-            height: 60px;
+            bottom: 30px;
+            right: 30px;
+            width: 70px;
+            height: 70px;
             border-radius: 50%;
             background: linear-gradient(135deg, #10b981, #059669);
             color: white;
             border: none;
-            font-size: 24px;
-            box-shadow: 0 8px 32px rgba(16, 185, 129, 0.4);
-            transition: all 0.3s ease;
+            font-size: 28px;
+            box-shadow: 0 15px 35px rgba(16, 185, 129, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 100;
         }
+        .fab:hover {
+            transform: translateY(-5px) scale(1.1);
+            box-shadow: 0 20px 40px rgba(16, 185, 129, 0.5);
+        }
         .fab:active {
-            transform: scale(0.95);
+            transform: translateY(-2px) scale(1.05);
         }
         
         /* Loading spinner */
         .spinner {
-            border: 3px solid #f3f4f6;
-            border-top: 3px solid #3b82f6;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid #6366f1;
             border-radius: 50%;
             width: 24px;
             height: 24px;
@@ -142,34 +346,72 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        /* Header gradient */
+        .header-gradient {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.2);
+        }
+        
+        /* Input styles */
+        .modern-input {
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid rgba(99, 102, 241, 0.2);
+            border-radius: 16px;
+            padding: 16px 20px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        .modern-input:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+            background: rgba(255, 255, 255, 1);
+        }
+        
+        /* Status indicator */
+        .status-indicator {
+            position: relative;
+        }
+        .status-indicator.active::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -8px;
+            width: 4px;
+            height: 4px;
+            background: #10b981;
+            border-radius: 50%;
+            transform: translateY(-50%);
+            animation: pulse 2s infinite;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
     <!-- Login Screen -->
-    <div id="loginScreen" class="login-container flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
-            <div class="text-center mb-8">
-                <div class="text-6xl mb-4">📱</div>
-                <h1 class="text-2xl font-bold text-gray-800 mb-2">InvitesQR</h1>
-                <p class="text-gray-600">Leitor Mobile</p>
+    <div id="loginScreen" class="login-container flex items-center justify-center p-6">
+        <div class="login-card p-10 w-full max-w-md animate-float">
+            <div class="text-center mb-10">
+                <div class="text-7xl mb-6 animate-float">📱</div>
+                <h1 class="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-3">InvitesQR</h1>
+                <p class="text-gray-600 font-medium">Leitor Mobile Premium</p>
             </div>
             
-            <div class="space-y-4">
+            <div class="space-y-6">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Token do Cliente</label>
+                    <label class="block text-sm font-semibold text-gray-700 mb-3">Token do Cliente</label>
                     <input type="text" id="tokenInput" placeholder="Digite seu token..." 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center font-mono">
+                           class="modern-input w-full text-center font-mono text-lg">
                 </div>
                 
                 <button onclick="autenticar()" id="btnLogin" 
-                        class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2">
+                        class="modern-btn w-full flex items-center justify-center gap-3 text-lg">
                     <span>🔑</span>
                     <span>Entrar</span>
                 </button>
             </div>
             
-            <div class="mt-6 text-center text-sm text-gray-500">
-                <p>Digite o token fornecido pelo administrador</p>
+            <div class="mt-8 text-center text-sm text-gray-500">
+                <p class="font-medium">Digite o token fornecido pelo administrador</p>
             </div>
         </div>
     </div>
@@ -177,119 +419,119 @@
     <!-- Main App -->
     <div id="mainApp" class="hidden">
         <!-- Header -->
-        <div class="bg-white shadow-lg sticky top-0 z-50">
-            <div class="px-4 py-4">
+        <div class="header-gradient shadow-2xl sticky top-0 z-50">
+            <div class="px-6 py-6">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h1 class="text-lg font-bold text-gray-800">InvitesQR</h1>
-                        <p class="text-sm text-blue-600" id="clienteNome">Cliente</p>
+                        <h1 class="text-xl font-bold text-white">InvitesQR</h1>
+                        <p class="text-sm text-indigo-200 font-medium" id="clienteNome">Cliente</p>
                     </div>
-                    <button onclick="logout()" class="p-2 text-gray-500 hover:text-red-500 transition-colors">
-                        <span class="text-xl">🚪</span>
+                    <button onclick="logout()" class="p-3 text-white hover:text-red-300 transition-all duration-300 hover:scale-110 rounded-full hover:bg-white/10">
+                        <span class="text-2xl">🚪</span>
                     </button>
                 </div>
             </div>
             
             <!-- Tabs -->
-            <div class="flex border-t border-gray-200">
+            <div class="flex px-4 pb-2">
                 <button onclick="switchTab('scanner')" id="tabScanner" 
-                        class="tab-button active flex-1 py-3 px-4 text-sm font-medium text-center">
+                        class="tab-button active flex-1 py-4 px-6 text-sm font-semibold text-center mx-1">
                     📷 Scanner
                 </button>
                 <button onclick="switchTab('relatorio')" id="tabRelatorio" 
-                        class="tab-button flex-1 py-3 px-4 text-sm font-medium text-center text-gray-500">
+                        class="tab-button flex-1 py-4 px-6 text-sm font-semibold text-center text-white/70 mx-1">
                     📊 Relatório
                 </button>
             </div>
         </div>
 
         <!-- Tab 1: Scanner -->
-        <div id="scannerTab" class="tab-content active p-4">
+        <div id="scannerTab" class="tab-content active p-6">
             <!-- Progress Bar -->
-            <div class="bg-white rounded-xl shadow-lg p-4 mb-4">
-                <div class="flex justify-between items-center mb-2">
-                    <span class="text-sm font-medium text-gray-700">Progresso</span>
-                    <span class="text-sm text-blue-600" id="progressoTexto">0/0</span>
+            <div class="modern-card p-6 mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-lg font-semibold text-gray-800">Progresso</span>
+                    <span class="text-lg font-bold text-indigo-600" id="progressoTexto">0/0</span>
                 </div>
-                <div class="w-full bg-gray-200 rounded-full h-3">
-                    <div class="progress-bar h-3 rounded-full" id="progressBar" style="width: 0%"></div>
+                <div class="w-full bg-gray-200 rounded-full h-4 mb-3">
+                    <div class="progress-bar h-4 rounded-full" id="progressBar" style="width: 0%"></div>
                 </div>
-                <div class="text-xs text-gray-500 mt-1" id="progressoDetalhes">Aguardando...</div>
+                <div class="text-sm text-gray-600 font-medium" id="progressoDetalhes">Aguardando...</div>
             </div>
             
             <!-- Scanner Area -->
-            <div class="bg-white rounded-xl shadow-lg p-4 mb-4">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-semibold text-gray-800">Scanner</h2>
-                    <div id="scannerStatus" class="flex items-center gap-2 text-sm">
-                        <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+            <div class="modern-card p-6 mb-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-gray-800">Scanner QR</h2>
+                    <div id="scannerStatus" class="status-indicator flex items-center gap-3 text-sm font-medium">
+                        <span class="w-3 h-3 bg-red-500 rounded-full"></span>
                         <span>Parado</span>
                     </div>
                 </div>
                 
-                <div id="qr-reader" class="w-full mb-4" style="min-height: 250px;"></div>
+                <div id="qr-reader" class="w-full mb-6" style="min-height: 280px;"></div>
                 
                 <button onclick="toggleScanner()" id="btnToggleScanner" 
-                        class="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2">
+                        class="modern-btn success w-full flex items-center justify-center gap-3 text-lg">
                     <span>▶️</span>
                     <span>Iniciar Scanner</span>
                 </button>
             </div>
             
             <!-- Guest List -->
-            <div class="bg-white rounded-xl shadow-lg p-4">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-semibold text-gray-800">Lista de Convidados</h2>
-                    <div class="text-sm text-gray-500" id="totalConvidados">0 convidados</div>
+            <div class="modern-card p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-gray-800">Lista de Convidados</h2>
+                    <div class="text-sm text-gray-600 font-medium px-3 py-1 bg-gray-100 rounded-full" id="totalConvidados">0 convidados</div>
                 </div>
                 
-                <div id="listaConvidados" class="space-y-2 max-h-64 overflow-y-auto">
+                <div id="listaConvidados" class="space-y-3 max-h-80 overflow-y-auto">
                     <!-- Lista será preenchida dinamicamente -->
                 </div>
             </div>
         </div>
 
         <!-- Tab 2: Relatório -->
-        <div id="relatorioTab" class="tab-content p-4">
+        <div id="relatorioTab" class="tab-content p-6">
             <!-- Statistics Cards -->
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div class="bg-white rounded-xl shadow-lg p-4 text-center">
-                    <div class="text-2xl font-bold text-green-600" id="estatEscaneados">0</div>
-                    <div class="text-sm text-gray-600">Escaneados</div>
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="stat-card p-6 text-center">
+                    <div class="text-3xl font-bold text-green-600 mb-2" id="estatEscaneados">0</div>
+                    <div class="text-sm text-gray-700 font-semibold">Escaneados</div>
                 </div>
-                <div class="bg-white rounded-xl shadow-lg p-4 text-center">
-                    <div class="text-2xl font-bold text-blue-600" id="estatRestantes">0</div>
-                    <div class="text-sm text-gray-600">Restantes</div>
+                <div class="stat-card p-6 text-center">
+                    <div class="text-3xl font-bold text-blue-600 mb-2" id="estatRestantes">0</div>
+                    <div class="text-sm text-gray-700 font-semibold">Restantes</div>
                 </div>
-                <div class="bg-white rounded-xl shadow-lg p-4 text-center">
-                    <div class="text-2xl font-bold text-orange-600" id="estatDuplicados">0</div>
-                    <div class="text-sm text-gray-600">Duplicados</div>
+                <div class="stat-card p-6 text-center">
+                    <div class="text-3xl font-bold text-orange-600 mb-2" id="estatDuplicados">0</div>
+                    <div class="text-sm text-gray-700 font-semibold">Duplicados</div>
                 </div>
-                <div class="bg-white rounded-xl shadow-lg p-4 text-center">
-                    <div class="text-2xl font-bold text-purple-600" id="estatTotal">0</div>
-                    <div class="text-sm text-gray-600">Total</div>
+                <div class="stat-card p-6 text-center">
+                    <div class="text-3xl font-bold text-purple-600 mb-2" id="estatTotal">0</div>
+                    <div class="text-sm text-gray-700 font-semibold">Total</div>
                 </div>
             </div>
             
             <!-- Actions -->
-            <div class="space-y-3">
+            <div class="space-y-4 mb-6">
                 <button onclick="desmarcarTodos()" 
-                        class="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2">
+                        class="modern-btn warning w-full flex items-center justify-center gap-3 text-lg">
                     <span>🔄</span>
                     <span>Desmarcar Todos os Lidos</span>
                 </button>
                 
                 <button onclick="exportarPDF()" 
-                        class="w-full bg-purple-500 hover:bg-purple-600 text-white py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2">
+                        class="modern-btn purple w-full flex items-center justify-center gap-3 text-lg">
                     <span>📄</span>
                     <span>Exportar Relatório PDF</span>
                 </button>
             </div>
             
             <!-- Detailed List -->
-            <div class="bg-white rounded-xl shadow-lg p-4 mt-4">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4">Detalhes dos Scans</h3>
-                <div id="detalhesScans" class="space-y-2 max-h-64 overflow-y-auto">
+            <div class="modern-card p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-6">Detalhes dos Scans</h3>
+                <div id="detalhesScans" class="space-y-3 max-h-80 overflow-y-auto">
                     <!-- Lista será preenchida dinamicamente -->
                 </div>
             </div>
@@ -666,19 +908,21 @@
             
             if (scannerAtivo) {
                 status.innerHTML = `
-                    <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                    <span class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
                     <span>Ativo</span>
                 `;
+                status.classList.add('active');
                 btnToggle.innerHTML = '<span>⏹️</span><span>Parar Scanner</span>';
-                btnToggle.className = 'w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2';
+                btnToggle.className = 'modern-btn danger w-full flex items-center justify-center gap-3 text-lg';
                 fabIcon.textContent = '⏹️';
             } else {
                 status.innerHTML = `
-                    <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                    <span class="w-3 h-3 bg-red-500 rounded-full"></span>
                     <span>Parado</span>
                 `;
+                status.classList.remove('active');
                 btnToggle.innerHTML = '<span>▶️</span><span>Iniciar Scanner</span>';
-                btnToggle.className = 'w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2';
+                btnToggle.className = 'modern-btn success w-full flex items-center justify-center gap-3 text-lg';
                 fabIcon.textContent = '▶️';
             }
         }
@@ -721,17 +965,17 @@
                 }
 
                 return `
-                    <div class="guest-item ${statusClass} bg-white border rounded-lg p-3">
+                    <div class="guest-item ${statusClass} bg-white border rounded-2xl p-4 shadow-sm">
                         <div class="flex items-center justify-between">
                             <div class="flex-1">
-                                <div class="font-medium text-gray-800">${convidado.nome}</div>
-                                ${isScanned ? `<div class="text-xs text-gray-500 mt-1">
+                                <div class="font-semibold text-gray-800 text-lg">${convidado.nome}</div>
+                                ${isScanned ? `<div class="text-sm text-gray-500 mt-2 font-medium">
                                     ${new Date(scanData.firstScan).toLocaleString('pt-BR')}
                                 </div>` : ''}
                             </div>
-                            <div class="flex items-center gap-2 text-sm">
-                                <span>${statusIcon}</span>
-                                <span class="text-gray-600">${statusText}</span>
+                            <div class="flex items-center gap-3 text-sm">
+                                <span class="text-xl">${statusIcon}</span>
+                                <span class="text-gray-700 font-medium">${statusText}</span>
                             </div>
                         </div>
                     </div>
@@ -780,16 +1024,16 @@
             detalhesContainer.innerHTML = scansArray.map(([nome, data]) => {
                 const isDuplicate = data.count > 1;
                 return `
-                    <div class="bg-gray-50 border rounded-lg p-3">
+                    <div class="bg-gradient-to-r from-gray-50 to-gray-100 border rounded-2xl p-4 shadow-sm">
                         <div class="flex items-center justify-between">
                             <div class="flex-1">
-                                <div class="font-medium text-gray-800">${nome}</div>
-                                <div class="text-xs text-gray-500 mt-1">
+                                <div class="font-semibold text-gray-800 text-lg">${nome}</div>
+                                <div class="text-sm text-gray-600 mt-2 font-medium">
                                     Primeiro scan: ${new Date(data.firstScan).toLocaleString('pt-BR')}
                                 </div>
                             </div>
                             <div class="text-right">
-                                <div class="text-sm ${isDuplicate ? 'text-orange-600' : 'text-green-600'}">
+                                <div class="text-lg font-bold ${isDuplicate ? 'text-orange-600' : 'text-green-600'}">
                                     ${isDuplicate ? '⚠️' : '✅'} ${data.count}x
                                 </div>
                             </div>
@@ -923,5 +1167,5 @@
             lastTouchEnd = now;
         }, false);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'966a2e04f58d77d7',t:'MTc1Mzc2NjU1OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'966a34c9e14277d7',t:'MTc1Mzc2NjgzNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
