@@ -2,13 +2,20 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InvitesQR - Leitor de QR Codes</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>InvitesQR - Leitor Mobile</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
     <style>
+        body { 
+            overflow-x: hidden; 
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         .tab-button.active { 
@@ -22,9 +29,9 @@
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
+            width: 100vw;
+            height: 100vh;
+            background: black;
             z-index: 1000;
         }
         .scanner-frame {
@@ -32,29 +39,42 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 300px;
-            height: 300px;
+            width: 250px;
+            height: 250px;
             border: 3px solid #667eea;
             border-radius: 20px;
-            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
+        }
+        .scanner-controls {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            z-index: 1002;
+            padding: 0 20px;
         }
         .result-display {
             position: absolute;
-            top: 20%;
-            left: 50%;
-            transform: translateX(-50%);
+            bottom: 100px;
+            left: 20px;
+            right: 20px;
             text-align: center;
             z-index: 1001;
         }
         .status-permitido { color: #10b981; }
         .status-usado { color: #ef4444; }
         .status-invalido { color: #ef4444; }
-        .pulse-animation {
-            animation: pulse 2s infinite;
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
         }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
         }
         #video {
             width: 100%;
@@ -65,123 +85,126 @@
 </head>
 <body class="bg-gray-50 min-h-screen">
     <!-- Login Screen -->
-    <div id="login-screen" class="min-h-screen flex items-center justify-center">
-        <div class="bg-white rounded-xl shadow-lg p-8 max-w-md w-full mx-4">
-            <div class="text-center mb-8">
-                <div class="w-16 h-16 gradient-bg rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span class="text-2xl text-white">📱</span>
+    <div id="login-screen" class="min-h-screen flex items-center justify-center px-4">
+        <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm">
+            <div class="text-center mb-6">
+                <div class="w-12 h-12 gradient-bg rounded-full flex items-center justify-center mx-auto mb-3">
+                    <span class="text-xl text-white">📱</span>
                 </div>
-                <h1 class="text-2xl font-bold text-gray-800">InvitesQR</h1>
-                <p class="text-gray-600">Leitor de QR Codes</p>
+                <h1 class="text-xl font-bold text-gray-800">InvitesQR</h1>
+                <p class="text-sm text-gray-600">Leitor Mobile</p>
             </div>
             
-            <form id="login-form" class="space-y-6">
+            <form id="login-form" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Token do Cliente</label>
-                    <input type="text" id="token-input" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Digite o token do evento..." required>
+                    <input type="text" id="token-input" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center" placeholder="Token do evento" required>
                 </div>
                 
-                <button type="submit" class="w-full gradient-bg text-white py-3 rounded-lg hover:opacity-90 transition-opacity font-medium">
-                    Acessar Sistema
+                <button type="submit" class="w-full gradient-bg text-white py-3 rounded-lg font-medium">
+                    Entrar
                 </button>
             </form>
             
-            <div id="login-status" class="mt-4 text-center text-sm"></div>
+            <div id="login-status" class="mt-3 text-center text-sm"></div>
         </div>
     </div>
 
     <!-- Main App -->
     <div id="main-app" class="hidden">
         <!-- Header -->
-        <header class="gradient-bg text-white shadow-lg">
-            <div class="container mx-auto px-6 py-4">
+        <header class="gradient-bg text-white">
+            <div class="px-4 py-3">
                 <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                            <span class="text-xl">📱</span>
-                        </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-lg">📱</span>
                         <div>
-                            <h1 class="text-xl font-bold">Leitor QR</h1>
-                            <p id="evento-nome" class="text-sm opacity-90">Carregando evento...</p>
+                            <h1 class="text-lg font-bold">Leitor QR</h1>
+                            <p id="evento-nome" class="text-xs opacity-90">Carregando...</p>
                         </div>
                     </div>
-                    <div class="text-right">
-                        <p class="text-sm opacity-90">Status</p>
-                        <p id="connection-status" class="font-semibold">🔄 Conectando...</p>
-                    </div>
+                    <div id="connection-status" class="text-xs">🔄</div>
                 </div>
             </div>
         </header>
 
         <!-- Navigation Tabs -->
-        <nav class="bg-white shadow-sm border-b">
-            <div class="container mx-auto px-6">
-                <div class="flex space-x-1">
-                    <button class="tab-button px-6 py-4 text-sm font-medium rounded-t-lg transition-all duration-200 active" onclick="showTab('scanner')">
-                        📷 Iniciar Scanner
-                    </button>
-                    <button class="tab-button px-6 py-4 text-sm font-medium rounded-t-lg transition-all duration-200" onclick="showTab('gestao')">
-                        👥 Gestão de Convidados
-                    </button>
-                </div>
+        <nav class="bg-white border-b">
+            <div class="flex">
+                <button class="tab-button flex-1 py-3 text-sm font-medium transition-all duration-200 active" onclick="showTab('scanner')">
+                    📷 Scanner
+                </button>
+                <button class="tab-button flex-1 py-3 text-sm font-medium transition-all duration-200" onclick="showTab('gestao')">
+                    📊 Estatísticas
+                </button>
             </div>
         </nav>
 
         <!-- Main Content -->
-        <main class="container mx-auto px-6 py-8">
+        <main class="px-4 py-4">
             <!-- Scanner Tab -->
             <div id="scanner" class="tab-content active">
-                <div class="text-center">
-                    <div class="bg-white rounded-xl shadow-sm p-8 mb-6">
-                        <div class="text-6xl mb-4">📷</div>
-                        <h2 class="text-2xl font-bold mb-4">Scanner de QR Codes</h2>
-                        <p class="text-gray-600 mb-6">Clique no botão abaixo para iniciar o scanner</p>
-                        
-                        <button id="start-scanner" class="gradient-bg text-white px-8 py-4 rounded-lg hover:opacity-90 transition-opacity text-lg font-medium">
-                            Iniciar Scanner
-                        </button>
+                <div class="space-y-4">
+                    <!-- Progress Bar -->
+                    <div class="bg-white rounded-lg p-4">
+                        <div class="flex justify-between text-sm mb-2">
+                            <span>Progresso do Evento</span>
+                            <span id="progress-text">0/0</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+                        </div>
                     </div>
                     
-                    <!-- Stats -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="bg-white rounded-xl shadow-sm p-6">
-                            <div class="text-3xl mb-2">✅</div>
-                            <p class="text-2xl font-bold text-green-600" id="total-permitidos">0</p>
-                            <p class="text-sm text-gray-600">Permitidos</p>
-                        </div>
-                        <div class="bg-white rounded-xl shadow-sm p-6">
-                            <div class="text-3xl mb-2">🔴</div>
-                            <p class="text-2xl font-bold text-red-600" id="total-usados">0</p>
-                            <p class="text-sm text-gray-600">Já Usados</p>
-                        </div>
-                        <div class="bg-white rounded-xl shadow-sm p-6">
-                            <div class="text-3xl mb-2">❌</div>
-                            <p class="text-2xl font-bold text-red-600" id="total-invalidos">0</p>
-                            <p class="text-sm text-gray-600">Inválidos</p>
-                        </div>
+                    <!-- Scanner Button -->
+                    <div class="bg-white rounded-lg p-6 text-center">
+                        <div class="text-4xl mb-3">📷</div>
+                        <h2 class="text-lg font-bold mb-3">Scanner QR</h2>
+                        <button id="start-scanner" class="gradient-bg text-white px-6 py-3 rounded-lg font-medium w-full">
+                            Iniciar Scanner
+                        </button>
                     </div>
                 </div>
             </div>
 
             <!-- Gestão Tab -->
             <div id="gestao" class="tab-content">
-                <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold">👥 Lista de Convidados</h3>
-                        <button onclick="desmarcarTodos()" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors">
+                <div class="space-y-4">
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="bg-white rounded-lg p-4 text-center">
+                            <div class="text-2xl mb-1">✅</div>
+                            <p class="text-xl font-bold text-green-600" id="total-permitidos">0</p>
+                            <p class="text-xs text-gray-600">Permitidos</p>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 text-center">
+                            <div class="text-2xl mb-1">🔴</div>
+                            <p class="text-xl font-bold text-red-600" id="total-usados">0</p>
+                            <p class="text-xs text-gray-600">Usados</p>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 text-center">
+                            <div class="text-2xl mb-1">❌</div>
+                            <p class="text-xl font-bold text-red-600" id="total-invalidos">0</p>
+                            <p class="text-xs text-gray-600">Inválidos</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Controls -->
+                    <div class="bg-white rounded-lg p-4">
+                        <button onclick="desmarcarTodos()" class="w-full bg-red-500 text-white py-3 rounded-lg font-medium mb-3">
                             Desmarcar Todos os Scaneados
                         </button>
+                        <input type="text" id="search-convidados" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="🔍 Pesquisar convidados...">
                     </div>
                     
-                    <div class="mb-4">
-                        <input type="text" id="search-convidados" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="🔍 Pesquisar convidados...">
-                    </div>
-                    
-                    <div id="lista-convidados-gestao" class="space-y-3 max-h-96 overflow-y-auto">
-                        <div class="flex items-center justify-center py-8 text-gray-500">
-                            <div class="text-center">
-                                <div class="text-4xl mb-2">👥</div>
-                                <p>Carregando convidados...</p>
+                    <!-- Guest List -->
+                    <div class="bg-white rounded-lg p-4">
+                        <h3 class="font-semibold mb-3">👥 Convidados</h3>
+                        <div id="lista-convidados-gestao" class="space-y-2 max-h-64 overflow-y-auto">
+                            <div class="flex items-center justify-center py-8 text-gray-500">
+                                <div class="text-center">
+                                    <div class="text-3xl mb-2">👥</div>
+                                    <p class="text-sm">Carregando...</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -195,18 +218,22 @@
         <video id="video" autoplay playsinline></video>
         <canvas id="canvas" style="display: none;"></canvas>
         
+        <!-- Top Controls -->
+        <div class="scanner-controls">
+            <button id="close-scanner" class="bg-red-500 text-white px-4 py-2 rounded-lg font-medium">
+                ✕ Fechar
+            </button>
+        </div>
+        
         <div class="scanner-frame"></div>
         
         <div class="result-display" id="result-display">
-            <div class="bg-white rounded-xl p-6 shadow-lg max-w-sm">
-                <div id="scan-status" class="text-6xl font-bold mb-4">📷</div>
-                <div id="scan-message" class="text-lg text-gray-600 mb-4">Posicione o QR code na área destacada</div>
-                <div id="guest-name" class="text-xl font-semibold mb-4 hidden"></div>
-                <button id="next-scan" class="gradient-bg text-white px-6 py-3 rounded-lg hover:opacity-90 transition-opacity hidden">
+            <div class="bg-white rounded-lg p-4 shadow-lg">
+                <div id="scan-status" class="text-4xl font-bold mb-2">📷</div>
+                <div id="scan-message" class="text-sm text-gray-600 mb-3">Posicione o QR code na área destacada</div>
+                <div id="guest-name" class="text-lg font-semibold mb-3 hidden"></div>
+                <button id="next-scan" class="gradient-bg text-white px-4 py-2 rounded-lg font-medium w-full hidden">
                     Próximo Scan
-                </button>
-                <button id="close-scanner" class="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition-colors ml-2">
-                    Fechar Scanner
                 </button>
             </div>
         </div>
@@ -230,6 +257,19 @@
         let video, canvas, context;
         let scanCounts = { permitidos: 0, usados: 0, invalidos: 0 };
 
+        // Carregar contadores do localStorage
+        function loadScanCounts() {
+            const saved = localStorage.getItem('invitesqr_scan_counts');
+            if (saved) {
+                scanCounts = JSON.parse(saved);
+            }
+        }
+
+        // Salvar contadores no localStorage
+        function saveScanCounts() {
+            localStorage.setItem('invitesqr_scan_counts', JSON.stringify(scanCounts));
+        }
+
         // Funções de desencriptação
         function decrypt(encryptedText) {
             try {
@@ -244,7 +284,21 @@
         // Inicialização
         document.addEventListener('DOMContentLoaded', function() {
             setupEventListeners();
+            loadScanCounts();
+            checkAutoLogin();
         });
+
+        // Verificar login automático
+        function checkAutoLogin() {
+            const savedToken = localStorage.getItem('invitesqr_token');
+            if (savedToken) {
+                document.getElementById('token-input').value = savedToken;
+                // Auto-login após 500ms
+                setTimeout(() => {
+                    document.getElementById('login-form').dispatchEvent(new Event('submit'));
+                }, 500);
+            }
+        }
 
         function setupEventListeners() {
             // Login form
@@ -295,6 +349,9 @@
                 // Login bem-sucedido
                 currentToken = token;
                 currentCliente = cliente;
+                
+                // Salvar token no localStorage
+                localStorage.setItem('invitesqr_token', token);
                 
                 // Registrar log de acesso
                 await registrarLog(token, 'login', navigator.userAgent);
@@ -372,9 +429,9 @@
             
             if (!lista || lista.length === 0) {
                 container.innerHTML = `
-                    <div class="text-center py-8 text-gray-500">
-                        <div class="text-4xl mb-2">👥</div>
-                        <p>Nenhum convidado encontrado</p>
+                    <div class="text-center py-6 text-gray-500">
+                        <div class="text-3xl mb-2">👥</div>
+                        <p class="text-sm">Nenhum convidado encontrado</p>
                     </div>
                 `;
                 return;
@@ -382,25 +439,21 @@
             
             container.innerHTML = lista.map(convidado => {
                 const isUsed = convidado.status === 'usado';
-                const statusClass = isUsed ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200';
                 const statusIcon = isUsed ? '🔴' : '✅';
-                const statusText = isUsed ? 'USADO' : 'DISPONÍVEL';
                 const statusColor = isUsed ? 'text-red-600' : 'text-green-600';
                 
                 return `
-                    <div class="border rounded-lg p-4 ${statusClass}">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center space-x-3">
-                                <span class="text-2xl">${statusIcon}</span>
-                                <div>
-                                    <h4 class="font-semibold">${convidado.nome}</h4>
-                                    <p class="text-sm text-gray-600">Código: ${convidado.codigo}</p>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <span class="text-sm font-medium ${statusColor}">${statusText}</span>
+                    <div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-lg">${statusIcon}</span>
+                            <div>
+                                <p class="font-medium text-sm">${convidado.nome}</p>
+                                <p class="text-xs text-gray-500">${convidado.codigo}</p>
                             </div>
                         </div>
+                        <span class="text-xs font-medium ${statusColor}">
+                            ${isUsed ? 'USADO' : 'OK'}
+                        </span>
                     </div>
                 `;
             }).join('');
@@ -418,10 +471,23 @@
         function atualizarEstatisticas() {
             const usados = convidados.filter(c => c.status === 'usado').length;
             const disponiveis = convidados.filter(c => c.status === 'ativo').length;
+            const total = convidados.length;
             
-            document.getElementById('total-permitidos').textContent = disponiveis;
-            document.getElementById('total-usados').textContent = usados;
-            document.getElementById('total-invalidos').textContent = scanCounts.invalidos;
+            // Atualizar contadores
+            document.querySelectorAll('#total-permitidos').forEach(el => {
+                el.textContent = disponiveis;
+            });
+            document.querySelectorAll('#total-usados').forEach(el => {
+                el.textContent = usados;
+            });
+            document.querySelectorAll('#total-invalidos').forEach(el => {
+                el.textContent = scanCounts.invalidos;
+            });
+            
+            // Atualizar barra de progresso
+            const progressPercent = total > 0 ? (usados / total) * 100 : 0;
+            document.getElementById('progress-fill').style.width = progressPercent + '%';
+            document.getElementById('progress-text').textContent = `${usados}/${total}`;
         }
 
         // Scanner
@@ -480,20 +546,37 @@
             scannerActive = false;
             
             try {
-                // Tentar desencriptar o QR code
+                console.log('QR Data recebido:', qrData);
+                
+                // Todos os QR codes são encriptados, então sempre desencriptar primeiro
                 const decryptedData = decrypt(qrData);
                 
                 if (!decryptedData) {
+                    console.log('Falha na desencriptação - QR inválido');
                     showScanResult('INVÁLIDO', '', 'invalido');
                     scanCounts.invalidos++;
+                    saveScanCounts();
                     return;
                 }
                 
-                // Parse dos dados
+                console.log('QR desencriptado:', decryptedData);
+                
+                // Parse dos dados desencriptados
                 let guestData;
                 try {
                     guestData = JSON.parse(decryptedData);
-                } catch (error) {
+                    console.log('Dados parseados:', guestData);
+                } catch (parseError) {
+                    console.log('Falha no parse após desencriptação:', parseError);
+                    showScanResult('INVÁLIDO', '', 'invalido');
+                    scanCounts.invalidos++;
+                    saveScanCounts();
+                    return;
+                }
+                
+                // Verificar se tem os campos necessários
+                if (!guestData.codigo || !guestData.nome) {
+                    console.log('Dados incompletos no QR:', guestData);
                     showScanResult('INVÁLIDO', '', 'invalido');
                     scanCounts.invalidos++;
                     return;
@@ -503,6 +586,8 @@
                 const convidado = convidados.find(c => 
                     c.codigo === guestData.codigo && c.nome === guestData.nome
                 );
+                
+                console.log('Convidado encontrado:', convidado);
                 
                 if (!convidado) {
                     showScanResult('INVÁLIDO', '', 'invalido');
@@ -514,6 +599,7 @@
                 if (convidado.status === 'usado') {
                     showScanResult('USADO', convidado.nome, 'usado');
                     scanCounts.usados++;
+                    saveScanCounts();
                     return;
                 }
                 
@@ -521,6 +607,7 @@
                 await marcarComoUsado(convidado.id);
                 showScanResult('PERMITIDO', convidado.nome, 'permitido');
                 scanCounts.permitidos++;
+                saveScanCounts();
                 
                 // Registrar log
                 await registrarLog(currentToken, 'scan', `${convidado.codigo}:${convidado.nome}`);
@@ -531,6 +618,7 @@
             } catch (error) {
                 console.error('Erro ao processar QR code:', error);
                 showScanResult('ERRO', '', 'invalido');
+                scanCounts.invalidos++;
             }
         }
 
@@ -634,5 +722,5 @@
             }
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'966b2091633077d7',t:'MTc1Mzc3NjQ5NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'966b38b4361477dd',t:'MTc1Mzc3NzQ4My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
