@@ -541,37 +541,99 @@
         // Scanner Callbacks
         async function onScanSuccess(decodedText, decodedResult) {
             try {
-                // Parse QR data
-                const dadosQR = JSON.parse(decodedText);
+                // Parse QR data - formato texto simples
+                const linhas = decodedText.trim().split('\n');
                 
-                // Validar estrutura
-                if (!dadosQR.nome || !dadosQR.token_cliente || dadosQR.token_cliente !== clienteAtual.token) {
-                    showToast('❌ QR Code inválido ou de outro cliente', 'error');
+                if (linhas.length < 2) {
+                    showToast('❌ Inválido', 'error');
                     return;
                 }
 
-                // Verificar se convidado existe
-                const convidado = convidados.find(c => c.nome === dadosQR.nome);
-                if (!convidado) {
-                    showToast('❌ Convidado não encontrado na lista', 'error');
+                // Primeira linha deve conter a validade
+                const primeiraLinha = linhas[0];
+                if (!primeiraLinha.startsWith('#validade:')) {
+                    showToast('❌ Inválido', 'error');
                     return;
                 }
+
+                // Extrair e verificar validade
+                const validadeStr = primeiraLinha.replace('#validade:', '');
+                const validadeQR = new Date(validadeStr);
+                const hoje = new Date();
+                
+                if (validadeQR < hoje) {
+                    showToast('❌ Inválido', 'error');
+                    return;
+                }
+
+                // Processar lista de convidados do QR
+                const convidadosQR = [];
+                for (let i = 1; i < linhas.length; i++) {
+                    const linha = linhas[i].trim();
+                    if (linha) {
+                        const partes = linha.split(',');
+                        if (partes.length >= 2) {
+                            const codigo = partes[0].trim();
+                            const nome = partes.slice(1).join(',').trim();
+                            convidadosQR.push({ codigo, nome });
+                        }
+                    }
+                }
+
+                if (convidadosQR.length === 0) {
+                    showToast('❌ Inválido', 'error');
+                    return;
+                }
+
+                // VALIDAÇÃO DE SEGURANÇA: Verificar se TODOS os convidados do QR existem na nossa lista do Supabase
+                // Isso impede que alguém crie QRs falsos com nomes inventados
+                let convidadosValidados = [];
+                let nomesInvalidos = [];
+                
+                for (const convidadoQR of convidadosQR) {
+                    const convidado = convidados.find(c => 
+                        c.nome.toLowerCase().trim() === convidadoQR.nome.toLowerCase().trim()
+                    );
+                    if (convidado) {
+                        convidadosValidados.push(convidado);
+                    } else {
+                        nomesInvalidos.push(convidadoQR.nome);
+                    }
+                }
+
+                // Se algum nome do QR não existe no Supabase, rejeitar completamente
+                if (nomesInvalidos.length > 0) {
+                    showToast('❌ Inválido', 'error');
+                    console.log('Tentativa de acesso com nomes não autorizados:', nomesInvalidos);
+                    return;
+                }
+
+                // Se não há convidados validados, rejeitar
+                if (convidadosValidados.length === 0) {
+                    showToast('❌ Inválido', 'error');
+                    return;
+                }
+
+                // Usar o primeiro convidado validado para o scan
+                const convidadoEncontrado = convidadosValidados[0];
 
                 // Registrar scan
                 const agora = new Date();
-                if (!scansRealizados.has(dadosQR.nome)) {
-                    scansRealizados.set(dadosQR.nome, {
+                const nomeConvidado = convidadoEncontrado.nome;
+                
+                if (!scansRealizados.has(nomeConvidado)) {
+                    scansRealizados.set(nomeConvidado, {
                         count: 1,
                         timestamps: [agora.toISOString()],
                         firstScan: agora.toISOString()
                     });
-                    showToast(`✅ ${dadosQR.nome} - Entrada autorizada!`, 'success');
+                    showToast(`✅ Permitido - ${nomeConvidado}`, 'success');
                 } else {
-                    const scanData = scansRealizados.get(dadosQR.nome);
+                    const scanData = scansRealizados.get(nomeConvidado);
                     scanData.count++;
                     scanData.timestamps.push(agora.toISOString());
-                    scansRealizados.set(dadosQR.nome, scanData);
-                    showToast(`⚠️ ${dadosQR.nome} - Já escaneado (${scanData.count}x)`, 'warning');
+                    scansRealizados.set(nomeConvidado, scanData);
+                    showToast(`⚠️ Usado - ${nomeConvidado}`, 'warning');
                 }
 
                 // Salvar dados
@@ -588,7 +650,7 @@
 
             } catch (error) {
                 console.error('Erro ao processar QR:', error);
-                showToast('❌ QR Code inválido', 'error');
+                showToast('❌ Inválido', 'error');
             }
         }
 
@@ -861,5 +923,5 @@
             lastTouchEnd = now;
         }, false);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'966a1f01262b77d7',t:'MTc1Mzc2NTk0NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'966a2e04f58d77d7',t:'MTc1Mzc2NjU1OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
