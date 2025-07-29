@@ -1327,93 +1327,199 @@
       scannerLocked = true;
       console.log('🔍 QR Code detectado:', decodedText);
       console.log('🔍 Tamanho do QR:', decodedText.length);
+      console.log('🔍 Primeiros 200 caracteres:', decodedText.substring(0, 200));
       
       try {
         let qrInfo;
+        let processMethod = '';
         
-        // Tenta múltiplas abordagens para processar o QR
-        
-        // 1. Primeiro tenta como JSON direto
+        // === MÉTODO 1: JSON DIRETO ===
         try {
           qrInfo = JSON.parse(decodedText);
-          console.log('📄 QR JSON direto processado:', qrInfo);
+          processMethod = 'JSON Direto';
+          console.log('✅ Método 1 - JSON direto funcionou:', qrInfo);
         } catch (jsonError) {
-          console.log('❌ Não é JSON direto, tentando descriptografar...');
+          console.log('❌ Método 1 falhou - Não é JSON direto');
           
-          // 2. Tenta descriptografar com diferentes encodings
+          // === MÉTODO 2: DESCRIPTOGRAFIA AES ===
           try {
-            // Tenta descriptografar normalmente
-            let decryptedData;
-            try {
-              const decryptedBytes = CryptoJS.AES.decrypt(decodedText, SECRET_KEY);
-              decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
-            } catch (e) {
-              console.log('❌ Descriptografia UTF8 falhou, tentando Base64...');
-              // Tenta como Base64 primeiro
-              try {
-                const base64Decoded = atob(decodedText);
-                const decryptedBytes = CryptoJS.AES.decrypt(base64Decoded, SECRET_KEY);
-                decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
-              } catch (e2) {
-                console.log('❌ Base64 falhou, tentando URL decode...');
-                // Tenta URL decode
-                const urlDecoded = decodeURIComponent(decodedText);
-                const decryptedBytes = CryptoJS.AES.decrypt(urlDecoded, SECRET_KEY);
-                decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
-              }
-            }
+            console.log('🔐 Tentando descriptografar com AES...');
+            const decryptedBytes = CryptoJS.AES.decrypt(decodedText, SECRET_KEY);
+            const decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
             
-            console.log('🔓 Dados descriptografados:', decryptedData);
+            console.log('🔓 Dados descriptografados (primeiros 100):', decryptedData.substring(0, 100));
             
-            if (!decryptedData || decryptedData.trim() === '') {
+            if (decryptedData && decryptedData.trim() !== '') {
+              qrInfo = JSON.parse(decryptedData);
+              processMethod = 'AES Descriptografado';
+              console.log('✅ Método 2 - AES funcionou:', qrInfo);
+            } else {
               throw new Error('Descriptografia resultou em dados vazios');
             }
             
-            // Tenta parsear como JSON
-            qrInfo = JSON.parse(decryptedData);
-            console.log('✅ QR descriptografado e parseado:', qrInfo);
+          } catch (aesError) {
+            console.log('❌ Método 2 falhou - AES não funcionou:', aesError.message);
             
-          } catch (decryptError) {
-            console.error('❌ Erro na descriptografia:', decryptError);
-            
-            // 3. Última tentativa: verifica se é um formato conhecido
-            if (decodedText.includes('{') && decodedText.includes('}')) {
-              // Parece JSON mas pode estar mal formatado
-              try {
-                // Remove caracteres especiais e tenta novamente
-                const cleanedText = decodedText.replace(/[\x00-\x1F\x7F-\x9F]/g, '');
-                qrInfo = JSON.parse(cleanedText);
-                console.log('✅ QR limpo e parseado:', qrInfo);
-              } catch (e) {
-                throw new Error(`QR inválido - formato não reconhecido. Conteúdo: ${decodedText.substring(0, 100)}...`);
+            // === MÉTODO 3: BASE64 + AES ===
+            try {
+              console.log('🔐 Tentando Base64 + AES...');
+              const base64Decoded = atob(decodedText);
+              const decryptedBytes = CryptoJS.AES.decrypt(base64Decoded, SECRET_KEY);
+              const decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
+              
+              if (decryptedData && decryptedData.trim() !== '') {
+                qrInfo = JSON.parse(decryptedData);
+                processMethod = 'Base64 + AES';
+                console.log('✅ Método 3 - Base64+AES funcionou:', qrInfo);
+              } else {
+                throw new Error('Base64+AES resultou em dados vazios');
               }
-            } else {
-              throw new Error(`QR inválido - não é JSON nem criptografado. Conteúdo: ${decodedText.substring(0, 100)}...`);
+              
+            } catch (base64Error) {
+              console.log('❌ Método 3 falhou - Base64+AES não funcionou:', base64Error.message);
+              
+              // === MÉTODO 4: URL DECODE + AES ===
+              try {
+                console.log('🔐 Tentando URL decode + AES...');
+                const urlDecoded = decodeURIComponent(decodedText);
+                const decryptedBytes = CryptoJS.AES.decrypt(urlDecoded, SECRET_KEY);
+                const decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
+                
+                if (decryptedData && decryptedData.trim() !== '') {
+                  qrInfo = JSON.parse(decryptedData);
+                  processMethod = 'URL + AES';
+                  console.log('✅ Método 4 - URL+AES funcionou:', qrInfo);
+                } else {
+                  throw new Error('URL+AES resultou em dados vazios');
+                }
+                
+              } catch (urlError) {
+                console.log('❌ Método 4 falhou - URL+AES não funcionou:', urlError.message);
+                
+                // === MÉTODO 5: FORMATO SIMPLES (codigo:nome) ===
+                try {
+                  console.log('🔍 Tentando formato simples codigo:nome...');
+                  
+                  // Verifica se tem formato codigo:nome
+                  if (decodedText.includes(':')) {
+                    const parts = decodedText.split(':');
+                    if (parts.length >= 2) {
+                      qrInfo = {
+                        codigo: parts[0].trim(),
+                        nome: parts.slice(1).join(':').trim()
+                      };
+                      processMethod = 'Formato Simples';
+                      console.log('✅ Método 5 - Formato simples funcionou:', qrInfo);
+                    } else {
+                      throw new Error('Formato simples inválido');
+                    }
+                  } else {
+                    throw new Error('Não contém separador :');
+                  }
+                  
+                } catch (simpleError) {
+                  console.log('❌ Método 5 falhou - Formato simples não funcionou:', simpleError.message);
+                  
+                  // === MÉTODO 6: LIMPEZA E JSON ===
+                  try {
+                    console.log('🧹 Tentando limpar caracteres especiais...');
+                    
+                    if (decodedText.includes('{') && decodedText.includes('}')) {
+                      // Remove caracteres de controle e invisíveis
+                      let cleanedText = decodedText.replace(/[\x00-\x1F\x7F-\x9F]/g, '');
+                      // Remove quebras de linha extras
+                      cleanedText = cleanedText.replace(/\r?\n|\r/g, '');
+                      // Remove espaços extras
+                      cleanedText = cleanedText.trim();
+                      
+                      console.log('🧹 Texto limpo:', cleanedText.substring(0, 100));
+                      
+                      qrInfo = JSON.parse(cleanedText);
+                      processMethod = 'JSON Limpo';
+                      console.log('✅ Método 6 - JSON limpo funcionou:', qrInfo);
+                    } else {
+                      throw new Error('Não parece ser JSON');
+                    }
+                    
+                  } catch (cleanError) {
+                    console.log('❌ Método 6 falhou - JSON limpo não funcionou:', cleanError.message);
+                    
+                    // === ANÁLISE DETALHADA PARA DEBUG ===
+                    console.log('🔍 ANÁLISE DETALHADA DO QR:');
+                    console.log('- Tamanho:', decodedText.length);
+                    console.log('- Primeiro char code:', decodedText.charCodeAt(0));
+                    console.log('- Último char code:', decodedText.charCodeAt(decodedText.length - 1));
+                    console.log('- Contém {:', decodedText.includes('{'));
+                    console.log('- Contém }:', decodedText.includes('}'));
+                    console.log('- Contém ::', decodedText.includes(':'));
+                    console.log('- Contém ":', decodedText.includes('"'));
+                    console.log('- Hex primeiros 20 bytes:', Array.from(decodedText.substring(0, 20)).map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join(' '));
+                    
+                    // Tenta encontrar padrões conhecidos
+                    const patterns = [
+                      /\{"codigo":"([^"]+)","nome":"([^"]+)"\}/,
+                      /\{codigo:"([^"]+)",nome:"([^"]+)"\}/,
+                      /codigo:([^,]+),nome:(.+)/,
+                      /([A-Z0-9]+):(.+)/i
+                    ];
+                    
+                    for (let i = 0; i < patterns.length; i++) {
+                      const match = decodedText.match(patterns[i]);
+                      if (match) {
+                        qrInfo = {
+                          codigo: match[1].trim(),
+                          nome: match[2].trim()
+                        };
+                        processMethod = `Regex Pattern ${i + 1}`;
+                        console.log(`✅ Método Regex ${i + 1} funcionou:`, qrInfo);
+                        break;
+                      }
+                    }
+                    
+                    if (!qrInfo) {
+                      throw new Error(`Todos os métodos falharam. QR: "${decodedText.substring(0, 200)}..."`);
+                    }
+                  }
+                }
+              }
             }
           }
         }
         
-        // Valida se tem os campos necessários
+        // Valida se conseguiu extrair os dados
         if (!qrInfo || typeof qrInfo !== 'object') {
-          throw new Error('QR não contém objeto válido');
+          throw new Error('QR não resultou em objeto válido');
         }
         
         const { codigo, nome } = qrInfo;
         
         if (!codigo || !nome) {
-          console.error('❌ Campos faltando:', { codigo, nome, qrInfo });
-          throw new Error(`QR incompleto - Código: ${codigo || 'FALTA'}, Nome: ${nome || 'FALTA'}`);
+          console.error('❌ Campos faltando após processamento:', { codigo, nome, qrInfo });
+          throw new Error(`QR incompleto - Código: "${codigo || 'FALTA'}", Nome: "${nome || 'FALTA'}"`);
         }
         
-        console.log(`✅ QR válido processado: ${codigo} - ${nome}`);
+        console.log(`✅ QR processado com sucesso via ${processMethod}:`);
+        console.log(`   Código: ${codigo}`);
+        console.log(`   Nome: ${nome}`);
+        
         await processGuest(codigo, nome);
         
       } catch (error) {
-        console.error('❌ Erro completo ao processar QR:', error);
-        console.error('❌ QR original:', decodedText);
+        console.error('❌ ERRO FINAL ao processar QR:', error);
+        console.error('❌ QR completo:', decodedText);
+        
         scanStats.invalid++;
         localStorage.setItem('invitesqr_stats', JSON.stringify(scanStats));
-        showScanStatus('ERRO', error.message || 'QR Code inválido', 'error');
+        
+        // Mostra erro mais específico
+        let errorMsg = 'QR Code inválido';
+        if (error.message.includes('Todos os métodos falharam')) {
+          errorMsg = 'Formato de QR não reconhecido';
+        } else if (error.message.includes('incompleto')) {
+          errorMsg = error.message;
+        }
+        
+        showScanStatus('ERRO', errorMsg, 'error');
         updateStatistics();
       }
     }
@@ -1837,5 +1943,5 @@
     console.log('📱 Versão: 2.0.0');
     console.log('🔧 Funcionalidades: Login, Scanner QR, Supabase, Offline Support');
   </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'966bda3a33ac77d9',t:'MTc1Mzc4NDA5OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'966be0a5703177d9',t:'MTc1Mzc4NDM2Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
