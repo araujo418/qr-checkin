@@ -54,15 +54,17 @@
         }
         .scanner-result {
             position: absolute;
-            bottom: 100px;
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%);
-            padding: 20px 40px;
-            border-radius: 10px;
-            font-size: 24px;
+            transform: translate(-50%, -50%);
+            padding: 30px 50px;
+            border-radius: 15px;
+            font-size: 32px;
             font-weight: bold;
             text-align: center;
-            min-width: 200px;
+            min-width: 300px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            z-index: 10001;
         }
         .result-allowed {
             background: #10b981;
@@ -549,15 +551,19 @@
 
         async function startFullscreenScanner() {
             try {
+                console.log('Starting scanner...');
+                
                 // Request camera permission
                 scannerStream = await navigator.mediaDevices.getUserMedia({
                     video: {
                         facingMode: 'environment',
-                        width: { ideal: 1920 },
-                        height: { ideal: 1080 }
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
                     }
                 });
 
+                console.log('Camera stream obtained');
+                
                 const video = document.getElementById('scannerVideo');
                 video.srcObject = scannerStream;
                 
@@ -570,6 +576,13 @@
                 }
 
                 isScanning = true;
+                
+                // Show debug info
+                showScanResult('SCANNER ATIVO', 'allowed');
+                setTimeout(() => {
+                    document.getElementById('scanResult').classList.add('hidden');
+                }, 2000);
+                
                 startQRScanning();
                 
             } catch (error) {
@@ -587,23 +600,43 @@
                 if (!isScanning) return;
 
                 if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                    // Set canvas size to match video
                     canvas.width = video.videoWidth;
                     canvas.height = video.videoHeight;
+                    
+                    // Draw video frame to canvas
                     context.drawImage(video, 0, 0, canvas.width, canvas.height);
                     
+                    // Get image data for QR scanning
                     const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-                    const code = jsQR(imageData.data, imageData.width, imageData.height);
                     
-                    if (code) {
+                    // Scan for QR code with enhanced options
+                    const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                        inversionAttempts: "dontInvert",
+                    });
+                    
+                    if (code && code.data) {
+                        console.log('QR Code detected:', code.data);
                         processQRCode(code.data);
                         return; // Stop scanning after successful read
                     }
                 }
                 
+                // Continue scanning
                 requestAnimationFrame(scanFrame);
             }
             
-            scanFrame();
+            // Wait for video to be ready
+            video.addEventListener('loadedmetadata', () => {
+                console.log('Video ready, starting scan loop');
+                scanFrame();
+            });
+            
+            // Start immediately if video is already ready
+            if (video.readyState >= 2) {
+                console.log('Video already ready, starting scan loop');
+                scanFrame();
+            }
         }
 
         async function processQRCode(qrData) {
@@ -689,13 +722,13 @@
             resultDiv.className = `scanner-result result-${type}`;
             resultDiv.classList.remove('hidden');
             
-            // Hide after 2 seconds and resume scanning
+            // Hide after 3 seconds and resume scanning
             setTimeout(() => {
                 resultDiv.classList.add('hidden');
                 if (isScanning) {
                     startQRScanning();
                 }
-            }, 2000);
+            }, 3000);
         }
 
         async function logScan(codigo, status) {
@@ -936,5 +969,5 @@
             }
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'966ea54496d477dd',t:'MTc1MzgxMzM4Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'966ebad521e877da',t:'MTc1MzgxNDI3MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
