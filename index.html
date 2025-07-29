@@ -10,6 +10,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <style>
         .gradient-bg {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -186,6 +187,15 @@
                         <button id="startScanBtn" class="gradient-bg text-white px-8 py-4 rounded-lg text-lg font-semibold hover:opacity-90 mb-6">
                             🎯 Iniciar Scanner
                         </button>
+                        
+                        <div class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                            <h3 class="font-semibold text-yellow-800 mb-2">🧪 Teste do Scanner</h3>
+                            <p class="text-sm text-yellow-700 mb-3">Use este QR code para testar o scanner:</p>
+                            <div id="testQR" class="flex justify-center mb-3"></div>
+                            <button id="generateTestQR" class="bg-yellow-600 text-white px-4 py-2 rounded text-sm hover:bg-yellow-700">
+                                Gerar QR de Teste
+                            </button>
+                        </div>
 
                         <!-- Progress Ring -->
                         <div class="flex justify-center mb-6">
@@ -290,14 +300,23 @@
     <!-- Fullscreen Scanner -->
     <div id="fullscreenScanner" class="fullscreen-scanner hidden">
         <div class="scanner-controls">
-            <button id="closeScannerBtn" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">
+            <button id="closeScannerBtn" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 mr-2">
                 ❌ Fechar
+            </button>
+            <button id="toggleDebugBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                🔍 Debug
             </button>
         </div>
         <video id="scannerVideo" class="scanner-video" autoplay playsinline></video>
         <div class="scanner-overlay"></div>
         <canvas id="scannerCanvas" style="display: none;"></canvas>
         <div id="scanResult" class="scanner-result hidden"></div>
+        <div id="debugInfo" style="position: absolute; top: 80px; left: 20px; background: rgba(0,0,0,0.7); color: white; padding: 10px; border-radius: 5px; font-size: 12px; z-index: 10002; display: none;">
+            <div>Status: <span id="debugStatus">Iniciando...</span></div>
+            <div>Video: <span id="debugVideo">-</span></div>
+            <div>Canvas: <span id="debugCanvas">-</span></div>
+            <div>Scans: <span id="debugScans">0</span></div>
+        </div>
     </div>
 
     <script>
@@ -421,6 +440,8 @@
             // Scanner controls
             document.getElementById('startScanBtn').addEventListener('click', startFullscreenScanner);
             document.getElementById('closeScannerBtn').addEventListener('click', stopScanner);
+            document.getElementById('toggleDebugBtn').addEventListener('click', toggleDebugInfo);
+            document.getElementById('generateTestQR').addEventListener('click', generateTestQR);
 
             // Guest filters
             document.getElementById('guestSearch').addEventListener('input', filterGuests);
@@ -553,12 +574,12 @@
             try {
                 console.log('Starting scanner...');
                 
-                // Request camera permission
+                // Request camera permission with better constraints
                 scannerStream = await navigator.mediaDevices.getUserMedia({
                     video: {
                         facingMode: 'environment',
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
+                        width: { min: 640, ideal: 1280, max: 1920 },
+                        height: { min: 480, ideal: 720, max: 1080 }
                     }
                 });
 
@@ -577,66 +598,134 @@
 
                 isScanning = true;
                 
-                // Show debug info
-                showScanResult('SCANNER ATIVO', 'allowed');
-                setTimeout(() => {
-                    document.getElementById('scanResult').classList.add('hidden');
-                }, 2000);
+                // Wait for video to load and start scanning
+                video.addEventListener('loadeddata', () => {
+                    console.log('Video loaded, starting QR scanning');
+                    startQRScanning();
+                });
                 
-                startQRScanning();
+                // Fallback if video is already loaded
+                if (video.readyState >= 2) {
+                    console.log('Video already loaded, starting QR scanning immediately');
+                    startQRScanning();
+                }
                 
             } catch (error) {
                 console.error('Error starting scanner:', error);
-                showNotification('Erro ao acessar câmera', 'error');
+                showNotification('Erro ao acessar câmera. Verifique as permissões.', 'error');
             }
         }
 
+        let scanCount = 0;
+        
         function startQRScanning() {
             const video = document.getElementById('scannerVideo');
             const canvas = document.getElementById('scannerCanvas');
             const context = canvas.getContext('2d');
+            let scanInterval;
+            scanCount = 0;
+
+            updateDebugInfo('Scanning iniciado', `${video.videoWidth}x${video.videoHeight}`, `${canvas.width}x${canvas.height}`, scanCount);
 
             function scanFrame() {
-                if (!isScanning) return;
+                if (!isScanning) {
+                    if (scanInterval) clearInterval(scanInterval);
+                    return;
+                }
 
-                if (video.readyState === video.HAVE_ENOUGH_DATA) {
-                    // Set canvas size to match video
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
+                try {
+                    scanCount++;
                     
-                    // Draw video frame to canvas
-                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    
-                    // Get image data for QR scanning
-                    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-                    
-                    // Scan for QR code with enhanced options
-                    const code = jsQR(imageData.data, imageData.width, imageData.height, {
-                        inversionAttempts: "dontInvert",
-                    });
-                    
-                    if (code && code.data) {
-                        console.log('QR Code detected:', code.data);
-                        processQRCode(code.data);
-                        return; // Stop scanning after successful read
+                    if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0 && video.videoHeight > 0) {
+                        // Set canvas size to match video dimensions
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        
+                        // Clear canvas and draw current video frame
+                        context.clearRect(0, 0, canvas.width, canvas.height);
+                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        
+                        // Get image data for QR scanning
+                        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                        
+                        // Update debug info every 10 scans
+                        if (scanCount % 10 === 0) {
+                            updateDebugInfo('Scanning ativo', `${video.videoWidth}x${video.videoHeight}`, `${canvas.width}x${canvas.height}`, scanCount);
+                        }
+                        
+                        // Scan for QR code with multiple inversion attempts
+                        const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                            inversionAttempts: "attemptBoth",
+                        });
+                        
+                        if (code && code.data && code.data.trim()) {
+                            console.log('QR Code detected:', code.data);
+                            updateDebugInfo('QR Code encontrado!', `${video.videoWidth}x${video.videoHeight}`, `${canvas.width}x${canvas.height}`, scanCount);
+                            if (scanInterval) clearInterval(scanInterval);
+                            processQRCode(code.data.trim());
+                            return;
+                        }
+                    } else {
+                        updateDebugInfo('Video não pronto', `${video.videoWidth || 0}x${video.videoHeight || 0}`, `${canvas.width}x${canvas.height}`, scanCount);
                     }
+                } catch (error) {
+                    console.error('Error in scan frame:', error);
+                    updateDebugInfo('Erro no scan', 'Erro', 'Erro', scanCount);
+                }
+            }
+            
+            // Use interval for consistent scanning
+            scanInterval = setInterval(scanFrame, 150); // Scan every 150ms
+        }
+
+        function updateDebugInfo(status, video, canvas, scans) {
+            const debugStatus = document.getElementById('debugStatus');
+            const debugVideo = document.getElementById('debugVideo');
+            const debugCanvas = document.getElementById('debugCanvas');
+            const debugScans = document.getElementById('debugScans');
+            
+            if (debugStatus) debugStatus.textContent = status;
+            if (debugVideo) debugVideo.textContent = video;
+            if (debugCanvas) debugCanvas.textContent = canvas;
+            if (debugScans) debugScans.textContent = scans;
+        }
+
+        function toggleDebugInfo() {
+            const debugInfo = document.getElementById('debugInfo');
+            if (debugInfo.style.display === 'none') {
+                debugInfo.style.display = 'block';
+            } else {
+                debugInfo.style.display = 'none';
+            }
+        }
+
+        function generateTestQR() {
+            const testCodes = ['TEST001', 'TEST002', 'GUEST123', 'INVITE456'];
+            const randomCode = testCodes[Math.floor(Math.random() * testCodes.length)];
+            
+            const canvas = document.createElement('canvas');
+            QRCode.toCanvas(canvas, randomCode, {
+                width: 200,
+                margin: 2,
+                color: {
+                    dark: '#000000',
+                    light: '#FFFFFF'
+                }
+            }, function (error) {
+                if (error) {
+                    console.error('Error generating QR code:', error);
+                    return;
                 }
                 
-                // Continue scanning
-                requestAnimationFrame(scanFrame);
-            }
-            
-            // Wait for video to be ready
-            video.addEventListener('loadedmetadata', () => {
-                console.log('Video ready, starting scan loop');
-                scanFrame();
+                const container = document.getElementById('testQR');
+                container.innerHTML = '';
+                container.appendChild(canvas);
+                
+                const codeLabel = document.createElement('p');
+                codeLabel.textContent = `Código: ${randomCode}`;
+                codeLabel.className = 'text-sm text-yellow-700 mt-2 text-center';
+                container.appendChild(codeLabel);
             });
-            
-            // Start immediately if video is already ready
-            if (video.readyState >= 2) {
-                console.log('Video already ready, starting scan loop');
-                scanFrame();
-            }
         }
 
         async function processQRCode(qrData) {
@@ -969,5 +1058,5 @@
             }
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'966ebad521e877da',t:'MTc1MzgxNDI3MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'966ec677a6ec77dd',t:'MTc1MzgxNDc0Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
