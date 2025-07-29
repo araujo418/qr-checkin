@@ -4,18 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>InvitesQR - Leitor Mobile</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.0/dist/umd/supabase.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        /* Mobile-first design */
+        /* Responsive design for mobile and desktop */
         body {
             -webkit-user-select: none;
             -webkit-touch-callout: none;
             -webkit-tap-highlight-color: transparent;
             background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        
+        /* Desktop adaptations */
+        @media (min-width: 768px) {
+            body {
+                -webkit-user-select: text;
+            }
+            
+            .login-card {
+                max-width: 500px;
+            }
+            
+            .modern-card {
+                max-width: none;
+            }
+            
+            .fab {
+                display: none; /* Hide FAB on desktop */
+            }
         }
         
         /* Tab system */
@@ -463,19 +482,67 @@
             <div class="modern-card p-6 mb-6">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-xl font-bold text-gray-800">Scanner QR</h2>
-                    <div id="scannerStatus" class="status-indicator flex items-center gap-3 text-sm font-medium">
-                        <span class="w-3 h-3 bg-red-500 rounded-full"></span>
-                        <span>Parado</span>
+                    <div class="flex items-center gap-4">
+                        <!-- Help tooltip for PC users -->
+                        <div class="hidden md:block relative group">
+                            <button class="text-gray-400 hover:text-gray-600 transition-colors">
+                                <span class="text-lg">❓</span>
+                            </button>
+                            <div class="absolute right-0 top-8 bg-gray-800 text-white text-xs rounded-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 w-48">
+                                <div class="font-semibold mb-2">Atalhos do PC:</div>
+                                <div>• S - Iniciar/Parar scanner</div>
+                                <div>• U - Carregar imagem</div>
+                                <div>• Ctrl+V - Colar imagem</div>
+                                <div>• 1/2 - Trocar abas</div>
+                            </div>
+                        </div>
+                        
+                        <div id="scannerStatus" class="status-indicator flex items-center gap-3 text-sm font-medium">
+                            <span class="w-3 h-3 bg-red-500 rounded-full"></span>
+                            <span>Parado</span>
+                        </div>
                     </div>
                 </div>
                 
                 <div id="qr-reader" class="w-full mb-6" style="min-height: 280px;"></div>
                 
-                <button onclick="toggleScanner()" id="btnToggleScanner" 
-                        class="modern-btn success w-full flex items-center justify-center gap-3 text-lg">
-                    <span>▶️</span>
-                    <span>Iniciar Scanner</span>
-                </button>
+                <!-- Scanner Controls -->
+                <div class="space-y-4">
+                    <button onclick="toggleScanner()" id="btnToggleScanner" 
+                            class="modern-btn success w-full flex items-center justify-center gap-3 text-lg">
+                        <span>▶️</span>
+                        <span>Iniciar Scanner</span>
+                    </button>
+                    
+                    <!-- Image Upload Option -->
+                    <div class="border-t pt-4">
+                        <div class="text-center mb-4">
+                            <span class="text-sm text-gray-600 font-medium">ou</span>
+                        </div>
+                        
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <input type="file" id="imageUpload" accept="image/*" 
+                                   class="hidden" onchange="processImageUpload(event)">
+                            
+                            <button onclick="document.getElementById('imageUpload').click()" 
+                                    class="modern-btn w-full flex items-center justify-center gap-3 text-lg">
+                                <span>📷</span>
+                                <span>Carregar Imagem</span>
+                            </button>
+                            
+                            <button onclick="pasteFromClipboard()" 
+                                    class="modern-btn w-full flex items-center justify-center gap-3 text-lg">
+                                <span>📋</span>
+                                <span>Colar Imagem</span>
+                            </button>
+                        </div>
+                        
+                        <div id="imagePreview" class="mt-4 hidden">
+                            <div class="text-sm text-gray-600 mb-2 font-medium">Imagem carregada:</div>
+                            <img id="previewImg" class="w-full max-w-xs mx-auto rounded-lg shadow-md" alt="Preview">
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <!-- Guest List -->
@@ -719,6 +786,142 @@
             }
         }
 
+        // Image Upload Functions
+        async function processImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                showToast('📷 Processando imagem...', 'info');
+                
+                // Show preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('previewImg').src = e.target.result;
+                    document.getElementById('imagePreview').classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+
+                // Create a temporary HTML5QrCode instance for file scanning
+                const tempDiv = document.createElement('div');
+                tempDiv.id = 'temp-qr-reader';
+                tempDiv.style.display = 'none';
+                document.body.appendChild(tempDiv);
+
+                const html5QrCode = new Html5Qrcode("temp-qr-reader");
+                
+                // Try multiple scan configurations for better detection
+                const configs = [
+                    { verbose: true },
+                    { verbose: true, experimentalFeatures: { useBarCodeDetectorIfSupported: true } },
+                    { verbose: true, rememberLastUsedCamera: false }
+                ];
+
+                let result = null;
+                let lastError = null;
+
+                for (const config of configs) {
+                    try {
+                        result = await html5QrCode.scanFile(file, config);
+                        if (result) break;
+                    } catch (error) {
+                        lastError = error;
+                        console.log('Tentativa de scan falhou:', error.message);
+                    }
+                }
+
+                // Clean up
+                document.body.removeChild(tempDiv);
+
+                if (result) {
+                    await onScanSuccess(result, null);
+                } else {
+                    throw lastError || new Error('QR Code não detectado');
+                }
+                
+            } catch (error) {
+                console.error('Erro ao processar imagem:', error);
+                showToast('❌ Nenhum QR Code encontrado na imagem. Tente uma imagem mais nítida ou com melhor iluminação.', 'error', 4000);
+            }
+        }
+
+        async function pasteFromClipboard() {
+            try {
+                if (!navigator.clipboard || !navigator.clipboard.read) {
+                    showToast('❌ Clipboard não suportado neste navegador', 'error');
+                    return;
+                }
+
+                showToast('📋 Verificando clipboard...', 'info');
+                
+                const clipboardItems = await navigator.clipboard.read();
+                
+                for (const clipboardItem of clipboardItems) {
+                    for (const type of clipboardItem.types) {
+                        if (type.startsWith('image/')) {
+                            const blob = await clipboardItem.getType(type);
+                            
+                            // Show preview
+                            const url = URL.createObjectURL(blob);
+                            document.getElementById('previewImg').src = url;
+                            document.getElementById('imagePreview').classList.remove('hidden');
+                            
+                            // Convert blob to file
+                            const file = new File([blob], 'clipboard-image.png', { type: blob.type });
+                            
+                            // Create a temporary HTML5QrCode instance for file scanning
+                            const tempDiv = document.createElement('div');
+                            tempDiv.id = 'temp-qr-reader-clipboard';
+                            tempDiv.style.display = 'none';
+                            document.body.appendChild(tempDiv);
+
+                            const html5QrCode = new Html5Qrcode("temp-qr-reader-clipboard");
+                            
+                            // Try multiple scan configurations
+                            const configs = [
+                                { verbose: true },
+                                { verbose: true, experimentalFeatures: { useBarCodeDetectorIfSupported: true } },
+                                { verbose: true, rememberLastUsedCamera: false }
+                            ];
+
+                            let result = null;
+                            let lastError = null;
+
+                            for (const config of configs) {
+                                try {
+                                    result = await html5QrCode.scanFile(file, config);
+                                    if (result) break;
+                                } catch (error) {
+                                    lastError = error;
+                                    console.log('Tentativa de scan falhou:', error.message);
+                                }
+                            }
+
+                            // Clean up
+                            document.body.removeChild(tempDiv);
+
+                            if (result) {
+                                await onScanSuccess(result, null);
+                                return;
+                            } else {
+                                throw lastError || new Error('QR Code não detectado');
+                            }
+                        }
+                    }
+                }
+                
+                showToast('❌ Nenhuma imagem encontrada no clipboard', 'error');
+                
+            } catch (error) {
+                console.error('Erro ao colar imagem:', error);
+                if (error.name === 'NotAllowedError') {
+                    showToast('❌ Permissão negada para acessar clipboard', 'error');
+                } else {
+                    showToast('❌ Nenhum QR Code encontrado na imagem. Tente uma imagem mais nítida ou com melhor iluminação.', 'error', 4000);
+                }
+            }
+        }
+
         async function iniciarScanner() {
             try {
                 if (scannerAtivo) return;
@@ -783,65 +986,86 @@
         // Scanner Callbacks
         async function onScanSuccess(decodedText, decodedResult) {
             try {
-                // O QR code contém apenas o código do convidado (ex: "assd0001")
+                // O QR code contém apenas o código do convidado (ex: "ABC001")
                 const codigoQR = decodedText.trim();
                 
                 if (!codigoQR) {
-                    showToast('❌ Inválido', 'error');
+                    showToast('❌ QR Code vazio', 'error');
                     return;
                 }
 
-                // 🐛 DEBUG: Vamos ver o que está acontecendo
-                console.log('=== DEBUG SCAN ===');
-                console.log('QR Code lido:', codigoQR);
-                console.log('Total de convidados carregados:', convidados.length);
-                console.log('Primeiros 3 convidados:', convidados.slice(0, 3));
+                // 🐛 DEBUG: Informações detalhadas para descobrir o problema
+                console.log('=== DEBUG SCAN COMPLETO ===');
+                console.log('1. QR Code lido:', `"${codigoQR}"`);
+                console.log('2. Tamanho do código:', codigoQR.length);
+                console.log('3. Total de convidados carregados:', convidados.length);
                 
-                // Verificar se existe campo 'codigo' nos dados
                 if (convidados.length > 0) {
-                    console.log('Campos disponíveis no primeiro convidado:', Object.keys(convidados[0]));
+                    console.log('4. Campos disponíveis no primeiro convidado:', Object.keys(convidados[0]));
+                    console.log('5. Exemplo do primeiro convidado:', convidados[0]);
+                    
+                    // Mostrar todos os possíveis campos que podem conter o código
+                    const primeiroConvidado = convidados[0];
+                    Object.keys(primeiroConvidado).forEach(campo => {
+                        console.log(`   Campo "${campo}":`, primeiroConvidado[campo]);
+                    });
                 }
 
-                // VALIDAÇÃO DE SEGURANÇA: Verificar se o código existe na nossa lista do Supabase
-                // Isso impede que alguém crie QRs falsos com códigos inventados
-                const convidadoEncontrado = convidados.find(c => 
-                    c.codigo && c.codigo.toLowerCase().trim() === codigoQR.toLowerCase().trim()
-                );
-
-                // 🐛 DEBUG: Mostrar resultado da busca
-                console.log('Convidado encontrado:', convidadoEncontrado);
-
-                // Se o código não existe no Supabase, rejeitar
-                if (!convidadoEncontrado) {
-                    showToast('❌ Inválido', 'error');
-                    console.log('❌ Tentativa de acesso com código não autorizado:', codigoQR);
+                // VALIDAÇÃO INTELIGENTE: Tentar diferentes campos possíveis
+                let convidadoEncontrado = null;
+                let campoEncontrado = '';
+                
+                // Lista de possíveis campos onde o código pode estar
+                const camposPossiveis = ['codigo', 'code', 'id', 'qr_code', 'convite_id', 'guest_code'];
+                
+                for (const campo of camposPossiveis) {
+                    convidadoEncontrado = convidados.find(c => 
+                        c[campo] && c[campo].toString().toLowerCase().trim() === codigoQR.toLowerCase().trim()
+                    );
                     
-                    // 🐛 DEBUG: Mostrar todos os códigos disponíveis para comparação
-                    console.log('Códigos disponíveis no banco:');
+                    if (convidadoEncontrado) {
+                        campoEncontrado = campo;
+                        console.log(`6. ✅ Convidado encontrado no campo "${campo}":`, convidadoEncontrado);
+                        break;
+                    }
+                }
+
+                // Se não encontrou, tentar busca mais flexível (por nome ou outros campos)
+                if (!convidadoEncontrado) {
+                    console.log('7. ❌ Não encontrado nos campos padrão. Tentando busca flexível...');
+                    
+                    // Mostrar todos os códigos disponíveis para comparação
+                    console.log('8. Códigos disponíveis no banco:');
                     convidados.forEach((c, index) => {
-                        console.log(`${index + 1}. Nome: "${c.nome}" | Código: "${c.codigo}"`);
+                        const todosValores = Object.values(c).join(' | ');
+                        console.log(`   ${index + 1}. ${todosValores}`);
                     });
+                    
+                    showToast(`❌ Código "${codigoQR}" não encontrado`, 'error');
                     return;
                 }
 
                 // Registrar scan usando o nome do convidado encontrado
                 const agora = new Date();
-                const nomeConvidado = convidadoEncontrado.nome;
+                const nomeConvidado = convidadoEncontrado.nome || convidadoEncontrado.name || 'Convidado';
+                
+                console.log(`9. ✅ Processando scan para: "${nomeConvidado}"`);
                 
                 if (!scansRealizados.has(nomeConvidado)) {
                     scansRealizados.set(nomeConvidado, {
                         count: 1,
                         timestamps: [agora.toISOString()],
                         firstScan: agora.toISOString(),
-                        codigo: convidadoEncontrado.codigo
+                        codigo: codigoQR,
+                        campo: campoEncontrado
                     });
-                    showToast(`✅ Permitido - ${nomeConvidado}`, 'success');
+                    showToast(`✅ Entrada Permitida\n${nomeConvidado}`, 'success');
                 } else {
                     const scanData = scansRealizados.get(nomeConvidado);
                     scanData.count++;
                     scanData.timestamps.push(agora.toISOString());
                     scansRealizados.set(nomeConvidado, scanData);
-                    showToast(`⚠️ Usado - ${nomeConvidado}`, 'warning');
+                    showToast(`⚠️ Já Utilizado (${scanData.count}x)\n${nomeConvidado}`, 'warning');
                 }
 
                 // Salvar dados
@@ -858,7 +1082,7 @@
 
             } catch (error) {
                 console.error('Erro ao processar QR:', error);
-                showToast('❌ Inválido', 'error');
+                showToast('❌ Erro interno', 'error');
             }
         }
 
@@ -1100,6 +1324,52 @@
                 e.preventDefault();
                 autenticar();
             }
+            
+            // PC Shortcuts (only when not typing in inputs)
+            if (!e.target.matches('input, textarea')) {
+                switch(e.key.toLowerCase()) {
+                    case 's':
+                        e.preventDefault();
+                        if (tabAtiva === 'scanner') {
+                            toggleScanner();
+                        }
+                        break;
+                    case 'u':
+                        e.preventDefault();
+                        if (tabAtiva === 'scanner') {
+                            document.getElementById('imageUpload').click();
+                        }
+                        break;
+                    case 'v':
+                        e.preventDefault();
+                        if (tabAtiva === 'scanner' && (e.ctrlKey || e.metaKey)) {
+                            pasteFromClipboard();
+                        }
+                        break;
+                    case '1':
+                        e.preventDefault();
+                        switchTab('scanner');
+                        break;
+                    case '2':
+                        e.preventDefault();
+                        switchTab('relatorio');
+                        break;
+                }
+            }
+        });
+
+        // Paste event listener for images
+        document.addEventListener('paste', function(e) {
+            if (tabAtiva === 'scanner') {
+                const items = e.clipboardData.items;
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf('image') !== -1) {
+                        e.preventDefault();
+                        pasteFromClipboard();
+                        break;
+                    }
+                }
+            }
         });
 
         // Auto-login if token exists
@@ -1129,5 +1399,5 @@
             lastTouchEnd = now;
         }, false);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'966a4077174b77da',t:'MTc1Mzc2NzMxNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'966a6162518677dd',t:'MTc1Mzc2ODY2My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
