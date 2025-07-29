@@ -316,6 +316,8 @@
             <div>Video: <span id="debugVideo">-</span></div>
             <div>Canvas: <span id="debugCanvas">-</span></div>
             <div>Scans: <span id="debugScans">0</span></div>
+            <div>Último QR: <span id="debugLastQR">Nenhum</span></div>
+            <div>QRs Detectados: <span id="debugQRCount">0</span></div>
         </div>
     </div>
 
@@ -617,6 +619,7 @@
         }
 
         let scanCount = 0;
+        let qrDetectedCount = 0;
         
         function startQRScanning() {
             const video = document.getElementById('scannerVideo');
@@ -645,26 +648,56 @@
                         context.clearRect(0, 0, canvas.width, canvas.height);
                         context.drawImage(video, 0, 0, canvas.width, canvas.height);
                         
-                        // Get image data for QR scanning
-                        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                        // Try multiple scanning approaches for better recognition
+                        const results = [];
+                        
+                        // 1. Full image scan
+                        let imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                        let code = jsQR(imageData.data, imageData.width, imageData.height, {
+                            inversionAttempts: "attemptBoth",
+                        });
+                        if (code && code.data) results.push(code.data);
+                        
+                        // 2. Center crop scan (focus on QR overlay area)
+                        const centerX = canvas.width / 2;
+                        const centerY = canvas.height / 2;
+                        const cropSize = Math.min(canvas.width, canvas.height) * 0.6;
+                        const cropX = centerX - cropSize / 2;
+                        const cropY = centerY - cropSize / 2;
+                        
+                        imageData = context.getImageData(cropX, cropY, cropSize, cropSize);
+                        code = jsQR(imageData.data, imageData.width, imageData.height, {
+                            inversionAttempts: "attemptBoth",
+                        });
+                        if (code && code.data) results.push(code.data);
+                        
+                        // 3. Enhanced contrast scan
+                        context.filter = 'contrast(150%) brightness(110%)';
+                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                        code = jsQR(imageData.data, imageData.width, imageData.height, {
+                            inversionAttempts: "attemptBoth",
+                        });
+                        if (code && code.data) results.push(code.data);
+                        context.filter = 'none'; // Reset filter
                         
                         // Update debug info every 10 scans
                         if (scanCount % 10 === 0) {
                             updateDebugInfo('Scanning ativo', `${video.videoWidth}x${video.videoHeight}`, `${canvas.width}x${canvas.height}`, scanCount);
                         }
                         
-                        // Scan for QR code with multiple inversion attempts
-                        const code = jsQR(imageData.data, imageData.width, imageData.height, {
-                            inversionAttempts: "attemptBoth",
-                        });
-                        
-                        if (code && code.data && code.data.trim()) {
-                            console.log('QR Code detected:', code.data);
-                            updateDebugInfo('QR Code encontrado!', `${video.videoWidth}x${video.videoHeight}`, `${canvas.width}x${canvas.height}`, scanCount);
-                            if (scanInterval) clearInterval(scanInterval);
-                            processQRCode(code.data.trim());
-                            return;
+                        // Process first valid result
+                        for (const result of results) {
+                            const cleanResult = result.trim();
+                            if (cleanResult && cleanResult.length >= 3) {
+                                console.log('QR Code detected:', cleanResult);
+                                updateDebugInfo('QR Code encontrado!', `${video.videoWidth}x${video.videoHeight}`, `${canvas.width}x${canvas.height}`, scanCount, cleanResult);
+                                if (scanInterval) clearInterval(scanInterval);
+                                processQRCode(cleanResult);
+                                return;
+                            }
                         }
+                        
                     } else {
                         updateDebugInfo('Video não pronto', `${video.videoWidth || 0}x${video.videoHeight || 0}`, `${canvas.width}x${canvas.height}`, scanCount);
                     }
@@ -675,19 +708,26 @@
             }
             
             // Use interval for consistent scanning
-            scanInterval = setInterval(scanFrame, 150); // Scan every 150ms
+            scanInterval = setInterval(scanFrame, 100); // Faster scanning at 100ms
         }
 
-        function updateDebugInfo(status, video, canvas, scans) {
+        function updateDebugInfo(status, video, canvas, scans, lastQR = null) {
             const debugStatus = document.getElementById('debugStatus');
             const debugVideo = document.getElementById('debugVideo');
             const debugCanvas = document.getElementById('debugCanvas');
             const debugScans = document.getElementById('debugScans');
+            const debugLastQR = document.getElementById('debugLastQR');
+            const debugQRCount = document.getElementById('debugQRCount');
             
             if (debugStatus) debugStatus.textContent = status;
             if (debugVideo) debugVideo.textContent = video;
             if (debugCanvas) debugCanvas.textContent = canvas;
             if (debugScans) debugScans.textContent = scans;
+            if (lastQR && debugLastQR) {
+                debugLastQR.textContent = lastQR.substring(0, 20) + (lastQR.length > 20 ? '...' : '');
+                qrDetectedCount++;
+                if (debugQRCount) debugQRCount.textContent = qrDetectedCount;
+            }
         }
 
         function toggleDebugInfo() {
@@ -700,17 +740,39 @@
         }
 
         function generateTestQR() {
-            const testCodes = ['TEST001', 'TEST002', 'GUEST123', 'INVITE456'];
-            const randomCode = testCodes[Math.floor(Math.random() * testCodes.length)];
+            // Generate test QR in your specific format
+            const testGuests = [
+                { codigo: 'EVT001', nome: 'Maria João' },
+                { codigo: 'EVT002', nome: 'Carlos Alberto' },
+                { codigo: 'EVT003', nome: 'Ana Silva' },
+                { codigo: 'TEST001', nome: 'Pedro Santos' }
+            ];
+            
+            // Add real guests if available
+            if (guests.length > 0) {
+                testGuests.push(...guests.slice(0, 2));
+            }
+            
+            const randomGuest = testGuests[Math.floor(Math.random() * testGuests.length)];
+            
+            // Create QR data in your format
+            const futureDate = new Date();
+            futureDate.setFullYear(futureDate.getFullYear() + 1);
+            const validadeStr = futureDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+            
+            const qrData = `#validade:${validadeStr}\n${randomGuest.codigo},${randomGuest.nome}`;
+            
+            console.log('Generated test QR data:', qrData);
             
             const canvas = document.createElement('canvas');
-            QRCode.toCanvas(canvas, randomCode, {
+            QRCode.toCanvas(canvas, qrData, {
                 width: 200,
                 margin: 2,
                 color: {
                     dark: '#000000',
                     light: '#FFFFFF'
-                }
+                },
+                errorCorrectionLevel: 'M'
             }, function (error) {
                 if (error) {
                     console.error('Error generating QR code:', error);
@@ -722,36 +784,82 @@
                 container.appendChild(canvas);
                 
                 const codeLabel = document.createElement('p');
-                codeLabel.textContent = `Código: ${randomCode}`;
-                codeLabel.className = 'text-sm text-yellow-700 mt-2 text-center';
+                codeLabel.textContent = `Código: ${randomGuest.codigo}`;
+                codeLabel.className = 'text-sm text-yellow-700 mt-2 text-center font-semibold';
                 container.appendChild(codeLabel);
+                
+                const nameLabel = document.createElement('p');
+                nameLabel.textContent = `Nome: ${randomGuest.nome}`;
+                nameLabel.className = 'text-xs text-yellow-700 text-center';
+                container.appendChild(nameLabel);
+                
+                const validityLabel = document.createElement('p');
+                validityLabel.textContent = `Válido até: ${validadeStr}`;
+                validityLabel.className = 'text-xs text-yellow-600 text-center';
+                container.appendChild(validityLabel);
+                
+                // Show if this code exists in guest list
+                const guestExists = guests.find(g => g.codigo === randomGuest.codigo);
+                const statusLabel = document.createElement('p');
+                if (guestExists) {
+                    statusLabel.textContent = `✅ Convidado cadastrado no sistema`;
+                    statusLabel.className = 'text-xs text-green-700 text-center mt-1';
+                } else {
+                    statusLabel.textContent = `🆕 Convidado será criado automaticamente`;
+                    statusLabel.className = 'text-xs text-blue-700 text-center mt-1';
+                }
+                container.appendChild(statusLabel);
             });
         }
 
         async function processQRCode(qrData) {
             try {
-                // Security: Validate QR data format
-                const cleanCode = qrData.trim();
-                if (!cleanCode || cleanCode.length < 3) {
-                    showScanResult('INVÁLIDO', 'invalid');
+                console.log('Processing QR data:', qrData);
+                
+                // Parse QR code data (handle your specific format)
+                const parsedData = parseQRData(qrData);
+                
+                if (!parsedData) {
+                    showScanResult('FORMATO INVÁLIDO', 'invalid');
                     scanStats.invalid++;
-                    await logScan(qrData, 'invalid');
+                    await logScan(qrData, 'invalid_format');
                     return;
                 }
 
-                // Find guest by code
-                const guest = guests.find(g => g.codigo === cleanCode);
+                const { validade, codigo, nome } = parsedData;
+                
+                // Check validity date
+                if (validade && new Date(validade) < new Date()) {
+                    showScanResult('QR EXPIRADO', 'invalid');
+                    scanStats.invalid++;
+                    await logScan(codigo, 'expired');
+                    return;
+                }
+
+                // Find guest by code (either in database or from QR data)
+                let guest = guests.find(g => g.codigo === codigo);
+                
+                // If not found in database but has valid format, create temporary guest
+                if (!guest && codigo && nome) {
+                    guest = {
+                        codigo: codigo,
+                        nome: nome,
+                        status: 'ativo',
+                        source: 'qr' // Mark as coming from QR code
+                    };
+                    console.log('Created temporary guest from QR:', guest);
+                }
                 
                 if (!guest) {
-                    showScanResult('INVÁLIDO', 'invalid');
+                    showScanResult('CÓDIGO INVÁLIDO', 'invalid');
                     scanStats.invalid++;
-                    await logScan(cleanCode, 'invalid');
+                    await logScan(codigo || qrData, 'invalid');
                     return;
                 }
 
                 // Security: Check if guest is active
                 if (guest.status !== 'ativo') {
-                    showScanResult('INVÁLIDO', 'invalid');
+                    showScanResult('CONVIDADO INATIVO', 'invalid');
                     scanStats.invalid++;
                     await logScan(guest.codigo, 'inactive');
                     return;
@@ -777,18 +885,24 @@
                 scanHistory[guest.codigo] = {
                     nome: guest.nome,
                     timestamp: Date.now(),
-                    validated: true // Security flag
+                    validated: true,
+                    source: guest.source || 'database',
+                    validade: validade
                 };
                 
-                showScanResult('PERMITIDO', 'allowed');
+                showScanResult(`PERMITIDO\n${guest.nome}`, 'allowed');
                 scanStats.allowed++;
                 
                 // Save to localStorage with validation
                 localStorage.setItem('invitesqr_scan_history', JSON.stringify(scanHistory));
                 localStorage.setItem('invitesqr_scan_stats', JSON.stringify(scanStats));
                 
-                // Log scan
-                await logScan(guest.codigo, 'scan');
+                // Log scan with additional info
+                await logScan(guest.codigo, 'scan', {
+                    nome: guest.nome,
+                    validade: validade,
+                    source: guest.source || 'database'
+                });
                 
                 // Update UI
                 updateScannerStats();
@@ -802,6 +916,89 @@
                 console.error('Error processing QR code:', error);
                 showScanResult('ERRO', 'invalid');
                 scanStats.invalid++;
+            }
+        }
+
+        function parseQRData(qrData) {
+            try {
+                const cleanData = qrData.trim();
+                console.log('Parsing QR data:', cleanData);
+                
+                // Handle different QR formats
+                
+                // Format 1: Your specific format with validity and guest info
+                // Example: "#validade:2025-12-31\nEVT001,Maria João"
+                if (cleanData.includes('#validade:') || cleanData.includes('validade:')) {
+                    const lines = cleanData.split('\n').filter(line => line.trim());
+                    let validade = null;
+                    let guestInfo = null;
+                    
+                    for (const line of lines) {
+                        if (line.includes('validade:')) {
+                            validade = line.split('validade:')[1].trim().replace('#', '');
+                        } else if (line.includes(',')) {
+                            // Guest line: "EVT001,Maria João"
+                            const parts = line.split(',');
+                            if (parts.length >= 2) {
+                                guestInfo = {
+                                    codigo: parts[0].trim(),
+                                    nome: parts.slice(1).join(',').trim()
+                                };
+                            }
+                        }
+                    }
+                    
+                    if (guestInfo) {
+                        console.log('Parsed format 1:', { validade, ...guestInfo });
+                        return { validade, ...guestInfo };
+                    }
+                }
+                
+                // Format 2: JSON format
+                if (cleanData.startsWith('{') && cleanData.endsWith('}')) {
+                    try {
+                        const jsonData = JSON.parse(cleanData);
+                        if (jsonData.codigo) {
+                            console.log('Parsed JSON format:', jsonData);
+                            return {
+                                codigo: jsonData.codigo,
+                                nome: jsonData.nome || jsonData.name || 'Convidado',
+                                validade: jsonData.validade || jsonData.validity
+                            };
+                        }
+                    } catch (e) {
+                        console.log('Not valid JSON');
+                    }
+                }
+                
+                // Format 3: Simple code format (existing guests)
+                if (cleanData.length >= 3 && cleanData.length <= 20 && !cleanData.includes('\n')) {
+                    const guest = guests.find(g => g.codigo === cleanData);
+                    if (guest) {
+                        console.log('Parsed simple format:', { codigo: cleanData, nome: guest.nome });
+                        return { codigo: cleanData, nome: guest.nome };
+                    }
+                }
+                
+                // Format 4: Code with name "CODE,Name"
+                if (cleanData.includes(',') && !cleanData.includes('\n')) {
+                    const parts = cleanData.split(',');
+                    if (parts.length >= 2) {
+                        const result = {
+                            codigo: parts[0].trim(),
+                            nome: parts.slice(1).join(',').trim()
+                        };
+                        console.log('Parsed code,name format:', result);
+                        return result;
+                    }
+                }
+                
+                console.log('No valid format found for:', cleanData);
+                return null;
+                
+            } catch (error) {
+                console.error('Error parsing QR data:', error);
+                return null;
             }
         }
 
@@ -820,13 +1017,14 @@
             }, 3000);
         }
 
-        async function logScan(codigo, status) {
+        async function logScan(codigo, status, extraData = {}) {
             try {
                 await supabase.from('logs').insert([{
                     token: currentToken,
                     status: status,
                     data: new Date().toISOString(),
-                    codigo: codigo
+                    codigo: codigo,
+                    extra_info: JSON.stringify(extraData)
                 }]);
             } catch (error) {
                 console.error('Error logging scan:', error);
@@ -1058,5 +1256,5 @@
             }
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'966ec677a6ec77dd',t:'MTc1MzgxNDc0Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'966ed4eb345577e0',t:'MTc1MzgxNTMzOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
