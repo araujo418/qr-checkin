@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InvitesQR - Leitor Mobile</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        /* Mobile-first design */
+        body {
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* Tab system */
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+        
+        /* Scanner styles */
+        #qr-reader {
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        #qr-reader__dashboard_section_csr {
+            display: none !important;
+        }
+        
+        /* Progress bar */
+        .progress-bar {
+            background: linear-gradient(90deg, #10b981, #059669);
+            transition: width 0.5s ease;
+            border-radius: 8px;
+        }
+        
+        /* Guest list */
+        .guest-item {
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+        .guest-item.scanned {
+            background: #f0fdf4;
+            border-left-color: #10b981;
+        }
+        .guest-item.duplicate {
+            background: #fef3c7;
+            border-left-color: #f59e0b;
+        }
+        
+        /* Animations */
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .animate-slide-in { animation: slideIn 0.3s ease-out; }
+        .animate-pulse-success { animation: pulse 0.6s ease-in-out; }
+        
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            z-index: 1000;
+            padding: 12px 20px;
+            border-radius: 25px;
+            color: white;
+            font-weight: 500;
+            transition: transform 0.3s ease;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            max-width: 90vw;
+            text-align: center;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.success { background: linear-gradient(135deg, #10b981, #059669); }
+        .toast.error { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .toast.warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .toast.info { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        
+        /* Login screen */
+        .login-container {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        /* Floating action button */
+        .fab {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            font-size: 24px;
+            box-shadow: 0 8px 32px rgba(16, 185, 129, 0.4);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+        .fab:active {
+            transform: scale(0.95);
+        }
+        
+        /* Loading spinner */
+        .spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-container flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
+            <div class="text-center mb-8">
+                <div class="text-6xl mb-4">📱</div>
+                <h1 class="text-2xl font-bold text-gray-800 mb-2">InvitesQR</h1>
+                <p class="text-gray-600">Leitor Mobile</p>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Token do Cliente</label>
+                    <input type="text" id="tokenInput" placeholder="Digite seu token..." 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center font-mono">
+                </div>
+                
+                <button onclick="autenticar()" id="btnLogin" 
+                        class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2">
+                    <span>🔑</span>
+                    <span>Entrar</span>
+                </button>
+            </div>
+            
+            <div class="mt-6 text-center text-sm text-gray-500">
+                <p>Digite o token fornecido pelo administrador</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" class="hidden">
+        <!-- Header -->
+        <div class="bg-white shadow-lg sticky top-0 z-50">
+            <div class="px-4 py-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-lg font-bold text-gray-800">InvitesQR</h1>
+                        <p class="text-sm text-blue-600" id="clienteNome">Cliente</p>
+                    </div>
+                    <button onclick="logout()" class="p-2 text-gray-500 hover:text-red-500 transition-colors">
+                        <span class="text-xl">🚪</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Tabs -->
+            <div class="flex border-t border-gray-200">
+                <button onclick="switchTab('scanner')" id="tabScanner" 
+                        class="tab-button active flex-1 py-3 px-4 text-sm font-medium text-center">
+                    📷 Scanner
+                </button>
+                <button onclick="switchTab('relatorio')" id="tabRelatorio" 
+                        class="tab-button flex-1 py-3 px-4 text-sm font-medium text-center text-gray-500">
+                    📊 Relatório
+                </button>
+            </div>
+        </div>
+
+        <!-- Tab 1: Scanner -->
+        <div id="scannerTab" class="tab-content active p-4">
+            <!-- Progress Bar -->
+            <div class="bg-white rounded-xl shadow-lg p-4 mb-4">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-sm font-medium text-gray-700">Progresso</span>
+                    <span class="text-sm text-blue-600" id="progressoTexto">0/0</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-3">
+                    <div class="progress-bar h-3 rounded-full" id="progressBar" style="width: 0%"></div>
+                </div>
+                <div class="text-xs text-gray-500 mt-1" id="progressoDetalhes">Aguardando...</div>
+            </div>
+            
+            <!-- Scanner Area -->
+            <div class="bg-white rounded-xl shadow-lg p-4 mb-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold text-gray-800">Scanner</h2>
+                    <div id="scannerStatus" class="flex items-center gap-2 text-sm">
+                        <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                        <span>Parado</span>
+                    </div>
+                </div>
+                
+                <div id="qr-reader" class="w-full mb-4" style="min-height: 250px;"></div>
+                
+                <button onclick="toggleScanner()" id="btnToggleScanner" 
+                        class="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2">
+                    <span>▶️</span>
+                    <span>Iniciar Scanner</span>
+                </button>
+            </div>
+            
+            <!-- Guest List -->
+            <div class="bg-white rounded-xl shadow-lg p-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold text-gray-800">Lista de Convidados</h2>
+                    <div class="text-sm text-gray-500" id="totalConvidados">0 convidados</div>
+                </div>
+                
+                <div id="listaConvidados" class="space-y-2 max-h-64 overflow-y-auto">
+                    <!-- Lista será preenchida dinamicamente -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Relatório -->
+        <div id="relatorioTab" class="tab-content p-4">
+            <!-- Statistics Cards -->
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="bg-white rounded-xl shadow-lg p-4 text-center">
+                    <div class="text-2xl font-bold text-green-600" id="estatEscaneados">0</div>
+                    <div class="text-sm text-gray-600">Escaneados</div>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-4 text-center">
+                    <div class="text-2xl font-bold text-blue-600" id="estatRestantes">0</div>
+                    <div class="text-sm text-gray-600">Restantes</div>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-4 text-center">
+                    <div class="text-2xl font-bold text-orange-600" id="estatDuplicados">0</div>
+                    <div class="text-sm text-gray-600">Duplicados</div>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-4 text-center">
+                    <div class="text-2xl font-bold text-purple-600" id="estatTotal">0</div>
+                    <div class="text-sm text-gray-600">Total</div>
+                </div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="space-y-3">
+                <button onclick="desmarcarTodos()" 
+                        class="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2">
+                    <span>🔄</span>
+                    <span>Desmarcar Todos os Lidos</span>
+                </button>
+                
+                <button onclick="exportarPDF()" 
+                        class="w-full bg-purple-500 hover:bg-purple-600 text-white py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2">
+                    <span>📄</span>
+                    <span>Exportar Relatório PDF</span>
+                </button>
+            </div>
+            
+            <!-- Detailed List -->
+            <div class="bg-white rounded-xl shadow-lg p-4 mt-4">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Detalhes dos Scans</h3>
+                <div id="detalhesScans" class="space-y-2 max-h-64 overflow-y-auto">
+                    <!-- Lista será preenchida dinamicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Action Button (only on scanner tab) -->
+    <button id="fabScanner" onclick="toggleScanner()" class="fab hidden">
+        <span id="fabIcon">▶️</span>
+    </button>
+
+    <script>
+        // Conectar ao Supabase
+        const supabase = window.supabase.createClient(
+            'https://rnvunprjvppbjavkaoek.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJudnVucHJqdnBwYmphdmthb2VrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2NjYzOTksImV4cCI6MjA2NzI0MjM5OX0.5E37Qm-KMmyGtGKbOINbDqMQlZlfgcQx91RQ01qslT8'
+        );
+
+        // Variáveis globais
+        let clienteAtual = null;
+        let convidados = [];
+        let scansRealizados = new Map(); // nome -> {count, timestamps}
+        let html5QrCode = null;
+        let scannerAtivo = false;
+        let tabAtiva = 'scanner';
+
+        // Toast Notifications
+        function showToast(message, type = 'info', duration = 3000) {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+        // Authentication
+        async function autenticar() {
+            const token = document.getElementById('tokenInput').value.trim();
+            const btnLogin = document.getElementById('btnLogin');
+            
+            if (!token) {
+                showToast('❌ Digite o token!', 'error');
+                return;
+            }
+
+            // Loading state
+            btnLogin.innerHTML = '<div class="spinner"></div><span>Verificando...</span>';
+            btnLogin.disabled = true;
+
+            try {
+                // Buscar cliente pelo token
+                const { data: cliente, error } = await supabase
+                    .from('clientes')
+                    .select('*')
+                    .eq('token', token)
+                    .single();
+
+                if (error || !cliente) {
+                    throw new Error('Token inválido ou cliente não encontrado');
+                }
+
+                // Verificar validade
+                if (new Date(cliente.validade) < new Date()) {
+                    throw new Error('Token expirado');
+                }
+
+                // Carregar convidados do cliente
+                const { data: convidadosData, error: errorConvidados } = await supabase
+                    .from('convidados')
+                    .select('*')
+                    .eq('token_cliente', token)
+                    .eq('status', 'ativo');
+
+                if (errorConvidados) {
+                    throw new Error('Erro ao carregar convidados');
+                }
+
+                // Sucesso na autenticação
+                clienteAtual = cliente;
+                convidados = convidadosData || [];
+                
+                // Salvar no localStorage
+                localStorage.setItem('clienteToken', token);
+                localStorage.setItem('clienteData', JSON.stringify(cliente));
+                
+                // Mostrar app principal
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                document.getElementById('clienteNome').textContent = cliente.nome;
+                
+                // Inicializar dados
+                inicializarApp();
+                
+                showToast(`✅ Bem-vindo, ${cliente.nome}!`, 'success');
+
+            } catch (error) {
+                console.error('Erro na autenticação:', error);
+                showToast('❌ ' + error.message, 'error');
+            } finally {
+                btnLogin.innerHTML = '<span>🔑</span><span>Entrar</span>';
+                btnLogin.disabled = false;
+            }
+        }
+
+        // Logout
+        function logout() {
+            if (confirm('Deseja realmente sair?')) {
+                localStorage.removeItem('clienteToken');
+                localStorage.removeItem('clienteData');
+                localStorage.removeItem('scansData');
+                
+                if (scannerAtivo) {
+                    pararScanner();
+                }
+                
+                document.getElementById('mainApp').classList.add('hidden');
+                document.getElementById('loginScreen').classList.remove('hidden');
+                document.getElementById('tokenInput').value = '';
+                
+                // Reset data
+                clienteAtual = null;
+                convidados = [];
+                scansRealizados.clear();
+                
+                showToast('👋 Logout realizado', 'info');
+            }
+        }
+
+        // Tab System
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+                btn.classList.add('text-gray-500');
+            });
+            document.getElementById(`tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`).classList.add('active');
+            document.getElementById(`tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`).classList.remove('text-gray-500');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`${tabName}Tab`).classList.add('active');
+            
+            // Update FAB visibility
+            const fab = document.getElementById('fabScanner');
+            if (tabName === 'scanner') {
+                fab.classList.remove('hidden');
+            } else {
+                fab.classList.add('hidden');
+            }
+            
+            tabAtiva = tabName;
+            
+            if (tabName === 'relatorio') {
+                atualizarRelatorio();
+            }
+        }
+
+        // App Initialization
+        function inicializarApp() {
+            // Carregar dados salvos
+            const scansData = localStorage.getItem('scansData');
+            if (scansData) {
+                scansRealizados = new Map(JSON.parse(scansData));
+            }
+            
+            // Atualizar UI
+            atualizarListaConvidados();
+            atualizarProgresso();
+            atualizarRelatorio();
+        }
+
+        // Scanner Functions
+        async function toggleScanner() {
+            if (scannerAtivo) {
+                await pararScanner();
+            } else {
+                await iniciarScanner();
+            }
+        }
+
+        async function iniciarScanner() {
+            try {
+                if (scannerAtivo) return;
+
+                // Verificar permissões
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                stream.getTracks().forEach(track => track.stop());
+
+                // Obter câmeras
+                const devices = await Html5Qrcode.getCameras();
+                if (!devices || devices.length === 0) {
+                    throw new Error('Nenhuma câmera encontrada');
+                }
+
+                // Configurar scanner
+                html5QrCode = new Html5Qrcode("qr-reader");
+                
+                const config = {
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1.0,
+                    disableFlip: false,
+                    videoConstraints: {
+                        facingMode: "environment" // Câmera traseira
+                    }
+                };
+
+                // Iniciar scanner
+                await html5QrCode.start(
+                    devices[0].id,
+                    config,
+                    onScanSuccess,
+                    onScanFailure
+                );
+
+                scannerAtivo = true;
+                atualizarStatusScanner();
+                showToast('📷 Scanner iniciado!', 'success');
+
+            } catch (error) {
+                console.error('Erro ao iniciar scanner:', error);
+                showToast('❌ Erro ao iniciar scanner: ' + error.message, 'error');
+            }
+        }
+
+        async function pararScanner() {
+            try {
+                if (!scannerAtivo || !html5QrCode) return;
+
+                await html5QrCode.stop();
+                html5QrCode = null;
+                scannerAtivo = false;
+                
+                atualizarStatusScanner();
+                showToast('⏹️ Scanner parado', 'info');
+
+            } catch (error) {
+                console.error('Erro ao parar scanner:', error);
+            }
+        }
+
+        // Scanner Callbacks
+        async function onScanSuccess(decodedText, decodedResult) {
+            try {
+                // Parse QR data
+                const dadosQR = JSON.parse(decodedText);
+                
+                // Validar estrutura
+                if (!dadosQR.nome || !dadosQR.token_cliente || dadosQR.token_cliente !== clienteAtual.token) {
+                    showToast('❌ QR Code inválido ou de outro cliente', 'error');
+                    return;
+                }
+
+                // Verificar se convidado existe
+                const convidado = convidados.find(c => c.nome === dadosQR.nome);
+                if (!convidado) {
+                    showToast('❌ Convidado não encontrado na lista', 'error');
+                    return;
+                }
+
+                // Registrar scan
+                const agora = new Date();
+                if (!scansRealizados.has(dadosQR.nome)) {
+                    scansRealizados.set(dadosQR.nome, {
+                        count: 1,
+                        timestamps: [agora.toISOString()],
+                        firstScan: agora.toISOString()
+                    });
+                    showToast(`✅ ${dadosQR.nome} - Entrada autorizada!`, 'success');
+                } else {
+                    const scanData = scansRealizados.get(dadosQR.nome);
+                    scanData.count++;
+                    scanData.timestamps.push(agora.toISOString());
+                    scansRealizados.set(dadosQR.nome, scanData);
+                    showToast(`⚠️ ${dadosQR.nome} - Já escaneado (${scanData.count}x)`, 'warning');
+                }
+
+                // Salvar dados
+                localStorage.setItem('scansData', JSON.stringify([...scansRealizados]));
+                
+                // Atualizar UI
+                atualizarListaConvidados();
+                atualizarProgresso();
+                
+                // Vibrar dispositivo
+                if ('vibrate' in navigator) {
+                    navigator.vibrate([100, 50, 100]);
+                }
+
+            } catch (error) {
+                console.error('Erro ao processar QR:', error);
+                showToast('❌ QR Code inválido', 'error');
+            }
+        }
+
+        function onScanFailure(error) {
+            // Silencioso - erros de scan são normais
+        }
+
+        // UI Updates
+        function atualizarStatusScanner() {
+            const status = document.getElementById('scannerStatus');
+            const btnToggle = document.getElementById('btnToggleScanner');
+            const fabIcon = document.getElementById('fabIcon');
+            
+            if (scannerAtivo) {
+                status.innerHTML = `
+                    <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                    <span>Ativo</span>
+                `;
+                btnToggle.innerHTML = '<span>⏹️</span><span>Parar Scanner</span>';
+                btnToggle.className = 'w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2';
+                fabIcon.textContent = '⏹️';
+            } else {
+                status.innerHTML = `
+                    <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                    <span>Parado</span>
+                `;
+                btnToggle.innerHTML = '<span>▶️</span><span>Iniciar Scanner</span>';
+                btnToggle.className = 'w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2';
+                fabIcon.textContent = '▶️';
+            }
+        }
+
+        function atualizarListaConvidados() {
+            const container = document.getElementById('listaConvidados');
+            const totalElement = document.getElementById('totalConvidados');
+            
+            totalElement.textContent = `${convidados.length} convidados`;
+            
+            if (convidados.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <span class="text-4xl block mb-2">👥</span>
+                        <p>Nenhum convidado encontrado</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = convidados.map(convidado => {
+                const scanData = scansRealizados.get(convidado.nome);
+                const isScanned = !!scanData;
+                const isDuplicate = scanData && scanData.count > 1;
+                
+                let statusClass = '';
+                let statusIcon = '⏳';
+                let statusText = 'Aguardando';
+                
+                if (isScanned) {
+                    if (isDuplicate) {
+                        statusClass = 'duplicate';
+                        statusIcon = '⚠️';
+                        statusText = `${scanData.count}x scans`;
+                    } else {
+                        statusClass = 'scanned';
+                        statusIcon = '✅';
+                        statusText = 'Escaneado';
+                    }
+                }
+
+                return `
+                    <div class="guest-item ${statusClass} bg-white border rounded-lg p-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <div class="font-medium text-gray-800">${convidado.nome}</div>
+                                ${isScanned ? `<div class="text-xs text-gray-500 mt-1">
+                                    ${new Date(scanData.firstScan).toLocaleString('pt-BR')}
+                                </div>` : ''}
+                            </div>
+                            <div class="flex items-center gap-2 text-sm">
+                                <span>${statusIcon}</span>
+                                <span class="text-gray-600">${statusText}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function atualizarProgresso() {
+            const escaneados = scansRealizados.size;
+            const total = convidados.length;
+            const porcentagem = total > 0 ? Math.round((escaneados / total) * 100) : 0;
+            
+            document.getElementById('progressBar').style.width = `${porcentagem}%`;
+            document.getElementById('progressoTexto').textContent = `${escaneados}/${total}`;
+            document.getElementById('progressoDetalhes').textContent = 
+                `${porcentagem}% concluído • ${total - escaneados} restantes`;
+        }
+
+        function atualizarRelatorio() {
+            const escaneados = scansRealizados.size;
+            const total = convidados.length;
+            const restantes = total - escaneados;
+            const duplicados = [...scansRealizados.values()].filter(scan => scan.count > 1).length;
+            
+            document.getElementById('estatEscaneados').textContent = escaneados;
+            document.getElementById('estatRestantes').textContent = restantes;
+            document.getElementById('estatDuplicados').textContent = duplicados;
+            document.getElementById('estatTotal').textContent = total;
+            
+            // Atualizar detalhes dos scans
+            const detalhesContainer = document.getElementById('detalhesScans');
+            const scansArray = [...scansRealizados.entries()].sort((a, b) => 
+                new Date(b[1].firstScan) - new Date(a[1].firstScan)
+            );
+            
+            if (scansArray.length === 0) {
+                detalhesContainer.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <span class="text-4xl block mb-2">📊</span>
+                        <p>Nenhum scan realizado ainda</p>
+                    </div>
+                `;
+                return;
+            }
+
+            detalhesContainer.innerHTML = scansArray.map(([nome, data]) => {
+                const isDuplicate = data.count > 1;
+                return `
+                    <div class="bg-gray-50 border rounded-lg p-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <div class="font-medium text-gray-800">${nome}</div>
+                                <div class="text-xs text-gray-500 mt-1">
+                                    Primeiro scan: ${new Date(data.firstScan).toLocaleString('pt-BR')}
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm ${isDuplicate ? 'text-orange-600' : 'text-green-600'}">
+                                    ${isDuplicate ? '⚠️' : '✅'} ${data.count}x
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Report Actions
+        function desmarcarTodos() {
+            if (scansRealizados.size === 0) {
+                showToast('❌ Nenhum scan para desmarcar!', 'error');
+                return;
+            }
+
+            if (confirm(`Desmarcar todos os ${scansRealizados.size} scans realizados?`)) {
+                scansRealizados.clear();
+                localStorage.removeItem('scansData');
+                
+                atualizarListaConvidados();
+                atualizarProgresso();
+                atualizarRelatorio();
+                
+                showToast('🔄 Todos os scans foram desmarcados!', 'success');
+            }
+        }
+
+        function exportarPDF() {
+            if (convidados.length === 0) {
+                showToast('❌ Nenhum dado para exportar!', 'error');
+                return;
+            }
+
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // Título
+                doc.setFontSize(20);
+                doc.text('Relatório InvitesQR', 20, 20);
+                
+                // Info do cliente
+                doc.setFontSize(12);
+                doc.text(`Cliente: ${clienteAtual.nome}`, 20, 35);
+                doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 20, 45);
+                doc.text(`Hora: ${new Date().toLocaleTimeString('pt-BR')}`, 20, 55);
+                
+                // Estatísticas
+                const escaneados = scansRealizados.size;
+                const total = convidados.length;
+                const duplicados = [...scansRealizados.values()].filter(scan => scan.count > 1).length;
+                
+                doc.text('ESTATÍSTICAS:', 20, 75);
+                doc.text(`• Total de convidados: ${total}`, 25, 85);
+                doc.text(`• Escaneados: ${escaneados}`, 25, 95);
+                doc.text(`• Restantes: ${total - escaneados}`, 25, 105);
+                doc.text(`• Duplicados: ${duplicados}`, 25, 115);
+                
+                // Lista de convidados
+                doc.text('LISTA DE CONVIDADOS:', 20, 135);
+                
+                let y = 145;
+                convidados.forEach((convidado, index) => {
+                    if (y > 270) {
+                        doc.addPage();
+                        y = 20;
+                    }
+                    
+                    const scanData = scansRealizados.get(convidado.nome);
+                    const status = scanData ? 
+                        (scanData.count > 1 ? `✓ (${scanData.count}x)` : '✓') : 
+                        '○';
+                    
+                    doc.text(`${index + 1}. ${convidado.nome} ${status}`, 25, y);
+                    
+                    if (scanData) {
+                        y += 8;
+                        doc.setFontSize(8);
+                        doc.text(`   Escaneado em: ${new Date(scanData.firstScan).toLocaleString('pt-BR')}`, 25, y);
+                        doc.setFontSize(12);
+                    }
+                    
+                    y += 12;
+                });
+                
+                // Salvar PDF
+                const filename = `relatorio-${clienteAtual.nome.replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`;
+                doc.save(filename);
+                
+                showToast('📄 Relatório PDF exportado!', 'success');
+
+            } catch (error) {
+                console.error('Erro ao gerar PDF:', error);
+                showToast('❌ Erro ao gerar PDF', 'error');
+            }
+        }
+
+        // Keyboard Shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.target.id === 'tokenInput') {
+                e.preventDefault();
+                autenticar();
+            }
+        });
+
+        // Auto-login if token exists
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedToken = localStorage.getItem('clienteToken');
+            const savedClient = localStorage.getItem('clienteData');
+            
+            if (savedToken && savedClient) {
+                document.getElementById('tokenInput').value = savedToken;
+                // Auto-authenticate silently
+                setTimeout(() => {
+                    autenticar();
+                }, 500);
+            }
+            
+            // Initialize UI
+            atualizarStatusScanner();
+        });
+
+        // Prevent zoom on double tap
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'966a1f01262b77d7',t:'MTc1Mzc2NTk0NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
