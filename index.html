@@ -783,83 +783,48 @@
         // Scanner Callbacks
         async function onScanSuccess(decodedText, decodedResult) {
             try {
-                // Parse QR data - formato texto simples
-                const linhas = decodedText.trim().split('\n');
+                // O QR code contém apenas o código do convidado (ex: "assd0001")
+                const codigoQR = decodedText.trim();
                 
-                if (linhas.length < 2) {
+                if (!codigoQR) {
                     showToast('❌ Inválido', 'error');
                     return;
                 }
 
-                // Primeira linha deve conter a validade
-                const primeiraLinha = linhas[0];
-                if (!primeiraLinha.startsWith('#validade:')) {
-                    showToast('❌ Inválido', 'error');
-                    return;
-                }
-
-                // Extrair e verificar validade
-                const validadeStr = primeiraLinha.replace('#validade:', '');
-                const validadeQR = new Date(validadeStr);
-                const hoje = new Date();
+                // 🐛 DEBUG: Vamos ver o que está acontecendo
+                console.log('=== DEBUG SCAN ===');
+                console.log('QR Code lido:', codigoQR);
+                console.log('Total de convidados carregados:', convidados.length);
+                console.log('Primeiros 3 convidados:', convidados.slice(0, 3));
                 
-                if (validadeQR < hoje) {
+                // Verificar se existe campo 'codigo' nos dados
+                if (convidados.length > 0) {
+                    console.log('Campos disponíveis no primeiro convidado:', Object.keys(convidados[0]));
+                }
+
+                // VALIDAÇÃO DE SEGURANÇA: Verificar se o código existe na nossa lista do Supabase
+                // Isso impede que alguém crie QRs falsos com códigos inventados
+                const convidadoEncontrado = convidados.find(c => 
+                    c.codigo && c.codigo.toLowerCase().trim() === codigoQR.toLowerCase().trim()
+                );
+
+                // 🐛 DEBUG: Mostrar resultado da busca
+                console.log('Convidado encontrado:', convidadoEncontrado);
+
+                // Se o código não existe no Supabase, rejeitar
+                if (!convidadoEncontrado) {
                     showToast('❌ Inválido', 'error');
+                    console.log('❌ Tentativa de acesso com código não autorizado:', codigoQR);
+                    
+                    // 🐛 DEBUG: Mostrar todos os códigos disponíveis para comparação
+                    console.log('Códigos disponíveis no banco:');
+                    convidados.forEach((c, index) => {
+                        console.log(`${index + 1}. Nome: "${c.nome}" | Código: "${c.codigo}"`);
+                    });
                     return;
                 }
 
-                // Processar lista de convidados do QR
-                const convidadosQR = [];
-                for (let i = 1; i < linhas.length; i++) {
-                    const linha = linhas[i].trim();
-                    if (linha) {
-                        const partes = linha.split(',');
-                        if (partes.length >= 2) {
-                            const codigo = partes[0].trim();
-                            const nome = partes.slice(1).join(',').trim();
-                            convidadosQR.push({ codigo, nome });
-                        }
-                    }
-                }
-
-                if (convidadosQR.length === 0) {
-                    showToast('❌ Inválido', 'error');
-                    return;
-                }
-
-                // VALIDAÇÃO DE SEGURANÇA: Verificar se TODOS os convidados do QR existem na nossa lista do Supabase
-                // Isso impede que alguém crie QRs falsos com nomes inventados
-                let convidadosValidados = [];
-                let nomesInvalidos = [];
-                
-                for (const convidadoQR of convidadosQR) {
-                    const convidado = convidados.find(c => 
-                        c.nome.toLowerCase().trim() === convidadoQR.nome.toLowerCase().trim()
-                    );
-                    if (convidado) {
-                        convidadosValidados.push(convidado);
-                    } else {
-                        nomesInvalidos.push(convidadoQR.nome);
-                    }
-                }
-
-                // Se algum nome do QR não existe no Supabase, rejeitar completamente
-                if (nomesInvalidos.length > 0) {
-                    showToast('❌ Inválido', 'error');
-                    console.log('Tentativa de acesso com nomes não autorizados:', nomesInvalidos);
-                    return;
-                }
-
-                // Se não há convidados validados, rejeitar
-                if (convidadosValidados.length === 0) {
-                    showToast('❌ Inválido', 'error');
-                    return;
-                }
-
-                // Usar o primeiro convidado validado para o scan
-                const convidadoEncontrado = convidadosValidados[0];
-
-                // Registrar scan
+                // Registrar scan usando o nome do convidado encontrado
                 const agora = new Date();
                 const nomeConvidado = convidadoEncontrado.nome;
                 
@@ -867,7 +832,8 @@
                     scansRealizados.set(nomeConvidado, {
                         count: 1,
                         timestamps: [agora.toISOString()],
-                        firstScan: agora.toISOString()
+                        firstScan: agora.toISOString(),
+                        codigo: convidadoEncontrado.codigo
                     });
                     showToast(`✅ Permitido - ${nomeConvidado}`, 'success');
                 } else {
@@ -949,18 +915,15 @@
                 const isDuplicate = scanData && scanData.count > 1;
                 
                 let statusClass = '';
-                let statusIcon = '⏳';
-                let statusText = 'Aguardando';
+                let statusIcon = '⚪';
                 
                 if (isScanned) {
                     if (isDuplicate) {
                         statusClass = 'duplicate';
                         statusIcon = '⚠️';
-                        statusText = `${scanData.count}x scans`;
                     } else {
                         statusClass = 'scanned';
                         statusIcon = '✅';
-                        statusText = 'Escaneado';
                     }
                 }
 
@@ -973,9 +936,8 @@
                                     ${new Date(scanData.firstScan).toLocaleString('pt-BR')}
                                 </div>` : ''}
                             </div>
-                            <div class="flex items-center gap-3 text-sm">
-                                <span class="text-xl">${statusIcon}</span>
-                                <span class="text-gray-700 font-medium">${statusText}</span>
+                            <div class="flex items-center justify-center">
+                                <span class="text-2xl">${statusIcon}</span>
                             </div>
                         </div>
                     </div>
@@ -1167,5 +1129,5 @@
             lastTouchEnd = now;
         }, false);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'966a34c9e14277d7',t:'MTc1Mzc2NjgzNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'966a4077174b77da',t:'MTc1Mzc2NzMxNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
