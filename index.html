@@ -1326,47 +1326,94 @@
       
       scannerLocked = true;
       console.log('🔍 QR Code detectado:', decodedText);
+      console.log('🔍 Tamanho do QR:', decodedText.length);
       
       try {
         let qrInfo;
         
-        // Primeiro tenta como JSON direto (não criptografado)
+        // Tenta múltiplas abordagens para processar o QR
+        
+        // 1. Primeiro tenta como JSON direto
         try {
           qrInfo = JSON.parse(decodedText);
-          console.log('📄 QR não criptografado detectado');
+          console.log('📄 QR JSON direto processado:', qrInfo);
         } catch (jsonError) {
-          // Se falhar, tenta descriptografar
-          console.log('🔐 Tentando descriptografar QR...');
+          console.log('❌ Não é JSON direto, tentando descriptografar...');
           
+          // 2. Tenta descriptografar com diferentes encodings
           try {
-            const decryptedBytes = CryptoJS.AES.decrypt(decodedText, SECRET_KEY);
-            const decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
-            
-            if (!decryptedData) {
-              throw new Error('Falha na desencriptação');
+            // Tenta descriptografar normalmente
+            let decryptedData;
+            try {
+              const decryptedBytes = CryptoJS.AES.decrypt(decodedText, SECRET_KEY);
+              decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
+            } catch (e) {
+              console.log('❌ Descriptografia UTF8 falhou, tentando Base64...');
+              // Tenta como Base64 primeiro
+              try {
+                const base64Decoded = atob(decodedText);
+                const decryptedBytes = CryptoJS.AES.decrypt(base64Decoded, SECRET_KEY);
+                decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
+              } catch (e2) {
+                console.log('❌ Base64 falhou, tentando URL decode...');
+                // Tenta URL decode
+                const urlDecoded = decodeURIComponent(decodedText);
+                const decryptedBytes = CryptoJS.AES.decrypt(urlDecoded, SECRET_KEY);
+                decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
+              }
             }
             
+            console.log('🔓 Dados descriptografados:', decryptedData);
+            
+            if (!decryptedData || decryptedData.trim() === '') {
+              throw new Error('Descriptografia resultou em dados vazios');
+            }
+            
+            // Tenta parsear como JSON
             qrInfo = JSON.parse(decryptedData);
-            console.log('🔓 QR desencriptado com sucesso');
+            console.log('✅ QR descriptografado e parseado:', qrInfo);
+            
           } catch (decryptError) {
-            throw new Error('QR Code inválido - não foi possível processar');
+            console.error('❌ Erro na descriptografia:', decryptError);
+            
+            // 3. Última tentativa: verifica se é um formato conhecido
+            if (decodedText.includes('{') && decodedText.includes('}')) {
+              // Parece JSON mas pode estar mal formatado
+              try {
+                // Remove caracteres especiais e tenta novamente
+                const cleanedText = decodedText.replace(/[\x00-\x1F\x7F-\x9F]/g, '');
+                qrInfo = JSON.parse(cleanedText);
+                console.log('✅ QR limpo e parseado:', qrInfo);
+              } catch (e) {
+                throw new Error(`QR inválido - formato não reconhecido. Conteúdo: ${decodedText.substring(0, 100)}...`);
+              }
+            } else {
+              throw new Error(`QR inválido - não é JSON nem criptografado. Conteúdo: ${decodedText.substring(0, 100)}...`);
+            }
           }
+        }
+        
+        // Valida se tem os campos necessários
+        if (!qrInfo || typeof qrInfo !== 'object') {
+          throw new Error('QR não contém objeto válido');
         }
         
         const { codigo, nome } = qrInfo;
         
         if (!codigo || !nome) {
-          throw new Error('QR Code inválido - dados incompletos');
+          console.error('❌ Campos faltando:', { codigo, nome, qrInfo });
+          throw new Error(`QR incompleto - Código: ${codigo || 'FALTA'}, Nome: ${nome || 'FALTA'}`);
         }
         
-        console.log(`✅ QR processado: ${codigo} - ${nome}`);
+        console.log(`✅ QR válido processado: ${codigo} - ${nome}`);
         await processGuest(codigo, nome);
         
       } catch (error) {
-        console.error('❌ Erro ao processar QR:', error);
+        console.error('❌ Erro completo ao processar QR:', error);
+        console.error('❌ QR original:', decodedText);
         scanStats.invalid++;
         localStorage.setItem('invitesqr_stats', JSON.stringify(scanStats));
-        showScanStatus('ERRO', 'QR Code inválido', 'error');
+        showScanStatus('ERRO', error.message || 'QR Code inválido', 'error');
         updateStatistics();
       }
     }
@@ -1450,7 +1497,80 @@
     function enableNextScan() {
       scannerLocked = false;
       document.getElementById('nextBtn').style.display = 'none';
-      closeFullscreen();
+      document.getElementById('qrStatus').textContent = 'Posicione o QR Code na câmera';
+      document.getElementById('qrGuestName').textContent = '';
+      
+      // Reinicia o scanner sem fechar a tela
+      startScannerAgain();
+    }
+    
+    // Restart scanner without closing fullscreen
+    async function startScannerAgain() {
+      try {
+        // Get available cameras and prefer back camera
+        const cameras = await Html5Qrcode.getCameras();
+        let preferredCameraId = null;
+        
+        if (cameras && cameras.length > 0) {
+          // Look for back camera first
+          const backCamera = cameras.find(camera => 
+            camera.label.toLowerCase().includes('back') || 
+            camera.label.toLowerCase().includes('rear') ||
+            camera.label.toLowerCase().includes('environment')
+          );
+          
+          preferredCameraId = backCamera ? backCamera.id : cameras[0].id;
+        }
+
+        const config = {
+          fps: 30,
+          qrbox: function(viewfinderWidth, viewfinderHeight) {
+            let minEdgePercentage = 0.8;
+            let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
+            let qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
+            return {
+              width: qrboxSize,
+              height: qrboxSize
+            };
+          },
+          aspectRatio: 1.0,
+          disableFlip: false,
+          videoConstraints: {
+            facingMode: "environment",
+            focusMode: "continuous",
+            advanced: [
+              { focusMode: "continuous" },
+              { focusDistance: { min: 0.1, max: 10 } }
+            ]
+          },
+          rememberLastUsedCamera: false,
+          supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+          experimentalFeatures: {
+            useBarCodeDetectorIfSupported: true
+          }
+        };
+
+        // Use câmera específica se encontrada
+        if (preferredCameraId) {
+          fullscreenScanner = new Html5Qrcode("qrViewFull");
+          await fullscreenScanner.start(
+            preferredCameraId,
+            config,
+            onScanSuccess,
+            onScanFailure
+          );
+        } else {
+          // Fallback para scanner automático
+          fullscreenScanner = new Html5QrcodeScanner("qrViewFull", config, false);
+          fullscreenScanner.render(onScanSuccess, onScanFailure);
+        }
+        
+        console.log('📱 Scanner reiniciado com sucesso');
+        
+      } catch (error) {
+        console.error('❌ Erro ao reiniciar scanner:', error);
+        document.getElementById('qrStatus').textContent = 'Erro ao reiniciar câmera';
+      }
     }
 
     // Close fullscreen scanner
@@ -1717,5 +1837,5 @@
     console.log('📱 Versão: 2.0.0');
     console.log('🔧 Funcionalidades: Login, Scanner QR, Supabase, Offline Support');
   </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'966bc8c7f70e77d7',t:'MTc1Mzc4MzM4NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'966bda3a33ac77d9',t:'MTc1Mzc4NDA5OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
