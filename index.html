@@ -3,1225 +3,402 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InvitesQR - Leitor Mobile</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.0/dist/umd/supabase.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <title>InvitesQR - Leitor de QR Codes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
     <style>
-        /* Responsive design for mobile and desktop */
-        body {
-            -webkit-user-select: none;
-            -webkit-touch-callout: none;
-            -webkit-tap-highlight-color: transparent;
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        }
-        
-        /* Desktop adaptations */
-        @media (min-width: 768px) {
-            body {
-                -webkit-user-select: text;
-            }
-            
-            .login-card {
-                max-width: 500px;
-            }
-            
-            .modern-card {
-                max-width: none;
-            }
-            
-            .fab {
-                display: none; /* Hide FAB on desktop */
-            }
-        }
-        
-        /* Tab system */
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-        }
-        
-        .tab-button {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-        .tab-button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
-        }
-        .tab-button:hover::before {
-            left: 100%;
-        }
-        .tab-button.active {
-            background: linear-gradient(135deg, #6366f1, #4f46e5);
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .tab-button.active { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
-            border-radius: 20px 20px 0 0;
         }
-        
-        /* Modern card design */
-        .modern-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 24px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: all 0.3s ease;
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
-        .modern-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-        }
-        
-        /* Scanner styles */
-        #qr-reader {
-            border-radius: 24px;
-            overflow: hidden;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-            border: 3px solid rgba(99, 102, 241, 0.2);
-        }
-        
-        #qr-reader__dashboard_section_csr {
-            display: none !important;
-        }
-        
-        /* Progress bar */
-        .progress-bar {
-            background: linear-gradient(90deg, #10b981, #059669, #34d399);
-            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 12px;
-            position: relative;
-            overflow: hidden;
-        }
-        .progress-bar::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            animation: shimmer 2s infinite;
-        }
-        
-        @keyframes shimmer {
-            0% { left: -100%; }
-            100% { left: 100%; }
-        }
-        
-        /* Guest list */
-        .guest-item {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            border-left: 5px solid transparent;
-            border-radius: 16px;
-            position: relative;
-            overflow: hidden;
-        }
-        .guest-item::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-            transition: left 0.5s;
-        }
-        .guest-item:hover::before {
-            left: 100%;
-        }
-        .guest-item.scanned {
-            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
-            border-left-color: #10b981;
-            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.15);
-        }
-        .guest-item.duplicate {
-            background: linear-gradient(135deg, #fef3c7, #fde68a);
-            border-left-color: #f59e0b;
-            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.15);
-        }
-        
-        /* Modern buttons */
-        .modern-btn {
-            background: linear-gradient(135deg, #6366f1, #4f46e5);
-            border: none;
-            border-radius: 16px;
-            color: white;
-            font-weight: 600;
-            padding: 16px 24px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
-        }
-        .modern-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
-        }
-        .modern-btn:hover::before {
-            left: 100%;
-        }
-        .modern-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 35px rgba(99, 102, 241, 0.4);
-        }
-        .modern-btn:active {
-            transform: translateY(-1px);
-        }
-        
-        .modern-btn.success {
-            background: linear-gradient(135deg, #10b981, #059669);
-            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
-        }
-        .modern-btn.success:hover {
-            box-shadow: 0 15px 35px rgba(16, 185, 129, 0.4);
-        }
-        
-        .modern-btn.danger {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
-        }
-        .modern-btn.danger:hover {
-            box-shadow: 0 15px 35px rgba(239, 68, 68, 0.4);
-        }
-        
-        .modern-btn.warning {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
-        }
-        .modern-btn.warning:hover {
-            box-shadow: 0 15px 35px rgba(245, 158, 11, 0.4);
-        }
-        
-        .modern-btn.purple {
-            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
-        }
-        .modern-btn.purple:hover {
-            box-shadow: 0 15px 35px rgba(139, 92, 246, 0.4);
-        }
-        
-        /* Statistics cards */
-        .stat-card {
-            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7));
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.3);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        .stat-card::before {
-            content: '';
-            position: absolute;
+        .scanner-overlay {
+            position: fixed;
             top: 0;
             left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
-        }
-        .stat-card:hover {
-            transform: translateY(-8px) scale(1.02);
-            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
-        }
-        
-        /* Animations */
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
-        
-        .animate-slide-in { animation: slideIn 0.5s ease-out; }
-        .animate-pulse-success { animation: pulse 0.8s ease-in-out; }
-        .animate-float { animation: float 3s ease-in-out infinite; }
-        
-        /* Toast notifications */
-        .toast {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-100px);
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
             z-index: 1000;
-            padding: 16px 24px;
-            border-radius: 30px;
-            color: white;
-            font-weight: 600;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-            max-width: 90vw;
-            text-align: center;
-            backdrop-filter: blur(20px);
         }
-        .toast.show { 
-            transform: translateX(-50%) translateY(0);
-            animation: float 2s ease-in-out infinite;
-        }
-        .toast.success { 
-            background: linear-gradient(135deg, #10b981, #059669);
-            box-shadow: 0 15px 35px rgba(16, 185, 129, 0.3);
-        }
-        .toast.error { 
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            box-shadow: 0 15px 35px rgba(239, 68, 68, 0.3);
-        }
-        .toast.warning { 
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            box-shadow: 0 15px 35px rgba(245, 158, 11, 0.3);
-        }
-        .toast.info { 
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
-            box-shadow: 0 15px 35px rgba(59, 130, 246, 0.3);
-        }
-        
-        /* Login screen */
-        .login-container {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-            min-height: 100vh;
-            position: relative;
-        }
-        .login-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-            opacity: 0.3;
-        }
-        
-        .login-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 32px;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-        
-        /* Floating action button */
-        .fab {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
-            border: none;
-            font-size: 28px;
-            box-shadow: 0 15px 35px rgba(16, 185, 129, 0.4);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 100;
-        }
-        .fab:hover {
-            transform: translateY(-5px) scale(1.1);
-            box-shadow: 0 20px 40px rgba(16, 185, 129, 0.5);
-        }
-        .fab:active {
-            transform: translateY(-2px) scale(1.05);
-        }
-        
-        /* Loading spinner */
-        .spinner {
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-top: 3px solid #6366f1;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        /* Header gradient */
-        .header-gradient {
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.2);
-        }
-        
-        /* Input styles */
-        .modern-input {
-            background: rgba(255, 255, 255, 0.9);
-            border: 2px solid rgba(99, 102, 241, 0.2);
-            border-radius: 16px;
-            padding: 16px 20px;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-        }
-        .modern-input:focus {
-            border-color: #6366f1;
-            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
-            background: rgba(255, 255, 255, 1);
-        }
-        
-        /* Status indicator */
-        .status-indicator {
-            position: relative;
-        }
-        .status-indicator.active::after {
-            content: '';
+        .scanner-frame {
             position: absolute;
             top: 50%;
-            left: -8px;
-            width: 4px;
-            height: 4px;
-            background: #10b981;
-            border-radius: 50%;
-            transform: translateY(-50%);
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+            border: 3px solid #667eea;
+            border-radius: 20px;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+        }
+        .result-display {
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            z-index: 1001;
+        }
+        .status-permitido { color: #10b981; }
+        .status-usado { color: #ef4444; }
+        .status-invalido { color: #ef4444; }
+        .pulse-animation {
             animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
     </style>
 </head>
-<body class="bg-gray-50">
+<body class="bg-gray-50 min-h-screen">
     <!-- Login Screen -->
-    <div id="loginScreen" class="login-container flex items-center justify-center p-6">
-        <div class="login-card p-10 w-full max-w-md animate-float">
-            <div class="text-center mb-10">
-                <div class="text-7xl mb-6 animate-float">📱</div>
-                <h1 class="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-3">InvitesQR</h1>
-                <p class="text-gray-600 font-medium">Leitor Mobile Premium</p>
+    <div id="login-screen" class="min-h-screen flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-lg p-8 max-w-md w-full mx-4">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 gradient-bg rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="text-2xl text-white">📱</span>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-800">InvitesQR</h1>
+                <p class="text-gray-600">Leitor de QR Codes</p>
             </div>
             
-            <div class="space-y-6">
+            <form id="login-form" class="space-y-6">
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-3">Token do Cliente</label>
-                    <input type="text" id="tokenInput" placeholder="Digite seu token..." 
-                           class="modern-input w-full text-center font-mono text-lg">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Token do Cliente</label>
+                    <input type="text" id="token-input" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Digite o token do evento..." required>
                 </div>
                 
-                <button onclick="autenticar()" id="btnLogin" 
-                        class="modern-btn w-full flex items-center justify-center gap-3 text-lg">
-                    <span>🔑</span>
-                    <span>Entrar</span>
+                <button type="submit" class="w-full gradient-bg text-white py-3 rounded-lg hover:opacity-90 transition-opacity font-medium">
+                    Acessar Sistema
                 </button>
-            </div>
+            </form>
             
-            <div class="mt-8 text-center text-sm text-gray-500">
-                <p class="font-medium">Digite o token fornecido pelo administrador</p>
-            </div>
+            <div id="login-status" class="mt-4 text-center text-sm"></div>
         </div>
     </div>
 
     <!-- Main App -->
-    <div id="mainApp" class="hidden">
+    <div id="main-app" class="hidden">
         <!-- Header -->
-        <div class="header-gradient shadow-2xl sticky top-0 z-50">
-            <div class="px-6 py-6">
+        <header class="gradient-bg text-white shadow-lg">
+            <div class="container mx-auto px-6 py-4">
                 <div class="flex items-center justify-between">
-                    <div>
-                        <h1 class="text-xl font-bold text-white">InvitesQR</h1>
-                        <p class="text-sm text-indigo-200 font-medium" id="clienteNome">Cliente</p>
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                            <span class="text-xl">📱</span>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold">Leitor QR</h1>
+                            <p id="evento-nome" class="text-sm opacity-90">Carregando evento...</p>
+                        </div>
                     </div>
-                    <button onclick="logout()" class="p-3 text-white hover:text-red-300 transition-all duration-300 hover:scale-110 rounded-full hover:bg-white/10">
-                        <span class="text-2xl">🚪</span>
+                    <div class="text-right">
+                        <p class="text-sm opacity-90">Status</p>
+                        <p id="connection-status" class="font-semibold">🔄 Conectando...</p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="bg-white shadow-sm border-b">
+            <div class="container mx-auto px-6">
+                <div class="flex space-x-1">
+                    <button class="tab-button px-6 py-4 text-sm font-medium rounded-t-lg transition-all duration-200 active" onclick="showTab('scanner')">
+                        📷 Iniciar Scanner
+                    </button>
+                    <button class="tab-button px-6 py-4 text-sm font-medium rounded-t-lg transition-all duration-200" onclick="showTab('gestao')">
+                        👥 Gestão de Convidados
                     </button>
                 </div>
             </div>
-            
-            <!-- Tabs -->
-            <div class="flex px-4 pb-2">
-                <button onclick="switchTab('scanner')" id="tabScanner" 
-                        class="tab-button active flex-1 py-4 px-6 text-sm font-semibold text-center mx-1">
-                    📷 Scanner
-                </button>
-                <button onclick="switchTab('relatorio')" id="tabRelatorio" 
-                        class="tab-button flex-1 py-4 px-6 text-sm font-semibold text-center text-white/70 mx-1">
-                    📊 Relatório
-                </button>
-            </div>
-        </div>
+        </nav>
 
-        <!-- Tab 1: Scanner -->
-        <div id="scannerTab" class="tab-content active p-6">
-            <!-- Progress Bar -->
-            <div class="modern-card p-6 mb-6">
-                <div class="flex justify-between items-center mb-4">
-                    <span class="text-lg font-semibold text-gray-800">Progresso</span>
-                    <span class="text-lg font-bold text-indigo-600" id="progressoTexto">0/0</span>
+        <!-- Main Content -->
+        <main class="container mx-auto px-6 py-8">
+            <!-- Scanner Tab -->
+            <div id="scanner" class="tab-content active">
+                <div class="text-center">
+                    <div class="bg-white rounded-xl shadow-sm p-8 mb-6">
+                        <div class="text-6xl mb-4">📷</div>
+                        <h2 class="text-2xl font-bold mb-4">Scanner de QR Codes</h2>
+                        <p class="text-gray-600 mb-6">Clique no botão abaixo para iniciar o scanner</p>
+                        
+                        <button id="start-scanner" class="gradient-bg text-white px-8 py-4 rounded-lg hover:opacity-90 transition-opacity text-lg font-medium">
+                            Iniciar Scanner
+                        </button>
+                    </div>
+                    
+                    <!-- Stats -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-white rounded-xl shadow-sm p-6">
+                            <div class="text-3xl mb-2">✅</div>
+                            <p class="text-2xl font-bold text-green-600" id="total-permitidos">0</p>
+                            <p class="text-sm text-gray-600">Permitidos</p>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-sm p-6">
+                            <div class="text-3xl mb-2">🔴</div>
+                            <p class="text-2xl font-bold text-red-600" id="total-usados">0</p>
+                            <p class="text-sm text-gray-600">Já Usados</p>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-sm p-6">
+                            <div class="text-3xl mb-2">❌</div>
+                            <p class="text-2xl font-bold text-red-600" id="total-invalidos">0</p>
+                            <p class="text-sm text-gray-600">Inválidos</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="w-full bg-gray-200 rounded-full h-4 mb-3">
-                    <div class="progress-bar h-4 rounded-full" id="progressBar" style="width: 0%"></div>
-                </div>
-                <div class="text-sm text-gray-600 font-medium" id="progressoDetalhes">Aguardando...</div>
             </div>
-            
-            <!-- Scanner Area -->
-            <div class="modern-card p-6 mb-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-bold text-gray-800">Scanner QR</h2>
-                    <div class="flex items-center gap-4">
-                        <!-- Help tooltip for PC users -->
-                        <div class="hidden md:block relative group">
-                            <button class="text-gray-400 hover:text-gray-600 transition-colors">
-                                <span class="text-lg">❓</span>
-                            </button>
-                            <div class="absolute right-0 top-8 bg-gray-800 text-white text-xs rounded-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 w-48">
-                                <div class="font-semibold mb-2">Atalhos do PC:</div>
-                                <div>• S - Iniciar/Parar scanner</div>
-                                <div>• U - Carregar imagem</div>
-                                <div>• Ctrl+V - Colar imagem</div>
-                                <div>• 1/2 - Trocar abas</div>
+
+            <!-- Gestão Tab -->
+            <div id="gestao" class="tab-content">
+                <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold">👥 Lista de Convidados</h3>
+                        <button onclick="desmarcarTodos()" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors">
+                            Desmarcar Todos os Scaneados
+                        </button>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <input type="text" id="search-convidados" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="🔍 Pesquisar convidados...">
+                    </div>
+                    
+                    <div id="lista-convidados-gestao" class="space-y-3 max-h-96 overflow-y-auto">
+                        <div class="flex items-center justify-center py-8 text-gray-500">
+                            <div class="text-center">
+                                <div class="text-4xl mb-2">👥</div>
+                                <p>Carregando convidados...</p>
                             </div>
                         </div>
-                        
-                        <div id="scannerStatus" class="status-indicator flex items-center gap-3 text-sm font-medium">
-                            <span class="w-3 h-3 bg-red-500 rounded-full"></span>
-                            <span>Parado</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="qr-reader" class="w-full mb-6" style="min-height: 280px;"></div>
-                
-                <!-- Scanner Controls -->
-                <div class="space-y-4">
-                    <button onclick="toggleScanner()" id="btnToggleScanner" 
-                            class="modern-btn success w-full flex items-center justify-center gap-3 text-lg">
-                        <span>▶️</span>
-                        <span>Iniciar Scanner</span>
-                    </button>
-                    
-                    <!-- Image Upload Option -->
-                    <div class="border-t pt-4">
-                        <div class="text-center mb-4">
-                            <span class="text-sm text-gray-600 font-medium">ou</span>
-                        </div>
-                        
-                        <div class="flex flex-col sm:flex-row gap-3">
-                            <input type="file" id="imageUpload" accept="image/*" 
-                                   class="hidden" onchange="processImageUpload(event)">
-                            
-                            <button onclick="document.getElementById('imageUpload').click()" 
-                                    class="modern-btn w-full flex items-center justify-center gap-3 text-lg">
-                                <span>📷</span>
-                                <span>Carregar Imagem</span>
-                            </button>
-                            
-                            <button onclick="pasteFromClipboard()" 
-                                    class="modern-btn w-full flex items-center justify-center gap-3 text-lg">
-                                <span>📋</span>
-                                <span>Colar Imagem</span>
-                            </button>
-                        </div>
-                        
-                        <div id="imagePreview" class="mt-4 hidden">
-                            <div class="text-sm text-gray-600 mb-2 font-medium">Imagem carregada:</div>
-                            <img id="previewImg" class="w-full max-w-xs mx-auto rounded-lg shadow-md" alt="Preview">
-                        </div>
                     </div>
                 </div>
             </div>
-            
-            <!-- Guest List -->
-            <div class="modern-card p-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-bold text-gray-800">Lista de Convidados</h2>
-                    <div class="text-sm text-gray-600 font-medium px-3 py-1 bg-gray-100 rounded-full" id="totalConvidados">0 convidados</div>
-                </div>
-                
-                <div id="listaConvidados" class="space-y-3 max-h-80 overflow-y-auto">
-                    <!-- Lista será preenchida dinamicamente -->
-                </div>
-            </div>
-        </div>
+        </main>
+    </div>
 
-        <!-- Tab 2: Relatório -->
-        <div id="relatorioTab" class="tab-content p-6">
-            <!-- Statistics Cards -->
-            <div class="grid grid-cols-2 gap-4 mb-6">
-                <div class="stat-card p-6 text-center">
-                    <div class="text-3xl font-bold text-green-600 mb-2" id="estatEscaneados">0</div>
-                    <div class="text-sm text-gray-700 font-semibold">Escaneados</div>
-                </div>
-                <div class="stat-card p-6 text-center">
-                    <div class="text-3xl font-bold text-blue-600 mb-2" id="estatRestantes">0</div>
-                    <div class="text-sm text-gray-700 font-semibold">Restantes</div>
-                </div>
-                <div class="stat-card p-6 text-center">
-                    <div class="text-3xl font-bold text-orange-600 mb-2" id="estatDuplicados">0</div>
-                    <div class="text-sm text-gray-700 font-semibold">Duplicados</div>
-                </div>
-                <div class="stat-card p-6 text-center">
-                    <div class="text-3xl font-bold text-purple-600 mb-2" id="estatTotal">0</div>
-                    <div class="text-sm text-gray-700 font-semibold">Total</div>
-                </div>
-            </div>
-            
-            <!-- Actions -->
-            <div class="space-y-4 mb-6">
-                <button onclick="desmarcarTodos()" 
-                        class="modern-btn warning w-full flex items-center justify-center gap-3 text-lg">
-                    <span>🔄</span>
-                    <span>Desmarcar Todos os Lidos</span>
+    <!-- Scanner Overlay -->
+    <div id="scanner-overlay" class="scanner-overlay hidden">
+        <video id="video" autoplay playsinline></video>
+        <canvas id="canvas" style="display: none;"></canvas>
+        
+        <div class="scanner-frame"></div>
+        
+        <div class="result-display" id="result-display">
+            <div class="bg-white rounded-xl p-6 shadow-lg max-w-sm">
+                <div id="scan-status" class="text-6xl font-bold mb-4">📷</div>
+                <div id="scan-message" class="text-lg text-gray-600 mb-4">Posicione o QR code na área destacada</div>
+                <div id="guest-name" class="text-xl font-semibold mb-4 hidden"></div>
+                <button id="next-scan" class="gradient-bg text-white px-6 py-3 rounded-lg hover:opacity-90 transition-opacity hidden">
+                    Próximo Scan
                 </button>
-                
-                <button onclick="exportarPDF()" 
-                        class="modern-btn purple w-full flex items-center justify-center gap-3 text-lg">
-                    <span>📄</span>
-                    <span>Exportar Relatório PDF</span>
+                <button id="close-scanner" class="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition-colors ml-2">
+                    Fechar Scanner
                 </button>
-            </div>
-            
-            <!-- Detailed List -->
-            <div class="modern-card p-6">
-                <h3 class="text-xl font-bold text-gray-800 mb-6">Detalhes dos Scans</h3>
-                <div id="detalhesScans" class="space-y-3 max-h-80 overflow-y-auto">
-                    <!-- Lista será preenchida dinamicamente -->
-                </div>
             </div>
         </div>
     </div>
 
-    <!-- Floating Action Button (only on scanner tab) -->
-    <button id="fabScanner" onclick="toggleScanner()" class="fab hidden">
-        <span id="fabIcon">▶️</span>
-    </button>
-
     <script>
-        // Conectar ao Supabase
-        const supabase = window.supabase.createClient(
-            'https://rnvunprjvppbjavkaoek.supabase.co',
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJudnVucHJqdnBwYmphdmthb2VrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2NjYzOTksImV4cCI6MjA2NzI0MjM5OX0.5E37Qm-KMmyGtGKbOINbDqMQlZlfgcQx91RQ01qslT8'
-        );
-
+        // Configuração do Supabase
+        const SUPABASE_URL = 'https://rnvunprjvppbjavkaoek.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJudnVucHJqdnBwYmphdmthb2VrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2NjYzOTksImV4cCI6MjA2NzI0MjM5OX0.5E37Qm-KMmyGtGKbOINbDqMQlZlfgcQx91RQ01qslT8';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        // Chave secreta para desencriptação
+        const SECRET_KEY = "Luand@2025!.";
+        
         // Variáveis globais
-        let clienteAtual = null;
+        let currentToken = '';
+        let currentCliente = null;
         let convidados = [];
-        let scansRealizados = new Map(); // nome -> {count, timestamps}
-        let html5QrCode = null;
-        let scannerAtivo = false;
-        let tabAtiva = 'scanner';
+        let scannerActive = false;
+        let video, canvas, context;
+        let scanCounts = { permitidos: 0, usados: 0, invalidos: 0 };
 
-        // Toast Notifications
-        function showToast(message, type = 'info', duration = 3000) {
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.textContent = message;
-            document.body.appendChild(toast);
-            
-            setTimeout(() => toast.classList.add('show'), 100);
-            setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => toast.remove(), 300);
-            }, duration);
+        // Funções de desencriptação
+        function decrypt(encryptedText) {
+            try {
+                const bytes = CryptoJS.AES.decrypt(encryptedText, SECRET_KEY);
+                return bytes.toString(CryptoJS.enc.Utf8);
+            } catch (error) {
+                console.error('Erro ao desencriptar:', error);
+                return null;
+            }
         }
 
-        // Authentication
-        async function autenticar() {
-            const token = document.getElementById('tokenInput').value.trim();
-            const btnLogin = document.getElementById('btnLogin');
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // Login form
+            document.getElementById('login-form').addEventListener('submit', handleLogin);
+            
+            // Scanner buttons
+            document.getElementById('start-scanner').addEventListener('click', startScanner);
+            document.getElementById('close-scanner').addEventListener('click', closeScanner);
+            document.getElementById('next-scan').addEventListener('click', nextScan);
+            
+            // Search
+            document.getElementById('search-convidados').addEventListener('input', searchConvidados);
+        }
+
+        // Login
+        async function handleLogin(e) {
+            e.preventDefault();
+            
+            const token = document.getElementById('token-input').value.trim();
+            const statusDiv = document.getElementById('login-status');
             
             if (!token) {
-                showToast('❌ Digite o token!', 'error');
+                statusDiv.innerHTML = '<span class="text-red-600">Por favor, digite o token</span>';
                 return;
             }
-
-            // Loading state
-            btnLogin.innerHTML = '<div class="spinner"></div><span>Verificando...</span>';
-            btnLogin.disabled = true;
-
+            
+            statusDiv.innerHTML = '<span class="text-blue-600">🔄 Verificando token...</span>';
+            
             try {
-                // Buscar cliente pelo token
+                // Verificar se o token existe
                 const { data: cliente, error } = await supabase
                     .from('clientes')
                     .select('*')
                     .eq('token', token)
                     .single();
-
-                if (error || !cliente) {
-                    throw new Error('Token inválido ou cliente não encontrado');
-                }
-
-                // Verificar validade
-                if (new Date(cliente.validade) < new Date()) {
-                    throw new Error('Token expirado');
-                }
-
-                // Carregar convidados do cliente
-                const { data: convidadosData, error: errorConvidados } = await supabase
-                    .from('convidados')
-                    .select('*')
-                    .eq('token_cliente', token)
-                    .eq('status', 'ativo');
-
-                if (errorConvidados) {
-                    throw new Error('Erro ao carregar convidados');
-                }
-
-                // Sucesso na autenticação
-                clienteAtual = cliente;
-                convidados = convidadosData || [];
                 
-                // Salvar no localStorage
-                localStorage.setItem('clienteToken', token);
-                localStorage.setItem('clienteData', JSON.stringify(cliente));
+                if (error || !cliente) {
+                    statusDiv.innerHTML = '<span class="text-red-600">❌ Token inválido</span>';
+                    return;
+                }
+                
+                // Verificar se não expirou
+                if (cliente.validade < Date.now()) {
+                    statusDiv.innerHTML = '<span class="text-red-600">❌ Token expirado</span>';
+                    return;
+                }
+                
+                // Login bem-sucedido
+                currentToken = token;
+                currentCliente = cliente;
+                
+                // Registrar log de acesso
+                await registrarLog(token, 'login', navigator.userAgent);
                 
                 // Mostrar app principal
-                document.getElementById('loginScreen').classList.add('hidden');
-                document.getElementById('mainApp').classList.remove('hidden');
-                document.getElementById('clienteNome').textContent = cliente.nome;
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('main-app').classList.remove('hidden');
                 
-                // Inicializar dados
-                inicializarApp();
+                // Carregar dados
+                await initializeApp();
                 
-                showToast(`✅ Bem-vindo, ${cliente.nome}!`, 'success');
-
             } catch (error) {
-                console.error('Erro na autenticação:', error);
-                showToast('❌ ' + error.message, 'error');
-            } finally {
-                btnLogin.innerHTML = '<span>🔑</span><span>Entrar</span>';
-                btnLogin.disabled = false;
+                console.error('Erro no login:', error);
+                statusDiv.innerHTML = '<span class="text-red-600">❌ Erro de conexão</span>';
             }
         }
 
-        // Logout
-        function logout() {
-            if (confirm('Deseja realmente sair?')) {
-                localStorage.removeItem('clienteToken');
-                localStorage.removeItem('clienteData');
-                localStorage.removeItem('scansData');
+        async function initializeApp() {
+            try {
+                // Atualizar header
+                document.getElementById('evento-nome').textContent = currentCliente.nome;
+                document.getElementById('connection-status').innerHTML = '✅ Conectado';
+                document.getElementById('connection-status').className = 'font-semibold text-green-300';
                 
-                if (scannerAtivo) {
-                    pararScanner();
-                }
+                // Carregar convidados
+                await carregarConvidados();
                 
-                document.getElementById('mainApp').classList.add('hidden');
-                document.getElementById('loginScreen').classList.remove('hidden');
-                document.getElementById('tokenInput').value = '';
-                
-                // Reset data
-                clienteAtual = null;
-                convidados = [];
-                scansRealizados.clear();
-                
-                showToast('👋 Logout realizado', 'info');
+            } catch (error) {
+                console.error('Erro na inicialização:', error);
+                document.getElementById('connection-status').innerHTML = '❌ Erro';
+                document.getElementById('connection-status').className = 'font-semibold text-red-300';
             }
         }
 
-        // Tab System
-        function switchTab(tabName) {
-            // Update tab buttons
+        // Navegação entre abas
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
             document.querySelectorAll('.tab-button').forEach(btn => {
                 btn.classList.remove('active');
-                btn.classList.add('text-gray-500');
             });
-            document.getElementById(`tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`).classList.add('active');
-            document.getElementById(`tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`).classList.remove('text-gray-500');
             
-            // Update tab content
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            document.getElementById(`${tabName}Tab`).classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
             
-            // Update FAB visibility
-            const fab = document.getElementById('fabScanner');
-            if (tabName === 'scanner') {
-                fab.classList.remove('hidden');
-            } else {
-                fab.classList.add('hidden');
-            }
-            
-            tabAtiva = tabName;
-            
-            if (tabName === 'relatorio') {
-                atualizarRelatorio();
+            if (tabName === 'gestao') {
+                carregarConvidados();
             }
         }
 
-        // App Initialization
-        function inicializarApp() {
-            // Carregar dados salvos
-            const scansData = localStorage.getItem('scansData');
-            if (scansData) {
-                scansRealizados = new Map(JSON.parse(scansData));
-            }
-            
-            // Atualizar UI
-            atualizarListaConvidados();
-            atualizarProgresso();
-            atualizarRelatorio();
-        }
-
-        // Scanner Functions
-        async function toggleScanner() {
-            if (scannerAtivo) {
-                await pararScanner();
-            } else {
-                await iniciarScanner();
-            }
-        }
-
-        // Image Upload Functions
-        async function processImageUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
+        // Carregar convidados
+        async function carregarConvidados() {
             try {
-                showToast('📷 Processando imagem...', 'info');
+                const { data, error } = await supabase
+                    .from('convidados')
+                    .select('*')
+                    .eq('token_cliente', currentToken)
+                    .order('nome');
                 
-                // Show preview
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('previewImg').src = e.target.result;
-                    document.getElementById('imagePreview').classList.remove('hidden');
-                };
-                reader.readAsDataURL(file);
-
-                // Create a temporary HTML5QrCode instance for file scanning
-                const tempDiv = document.createElement('div');
-                tempDiv.id = 'temp-qr-reader';
-                tempDiv.style.display = 'none';
-                document.body.appendChild(tempDiv);
-
-                const html5QrCode = new Html5Qrcode("temp-qr-reader");
+                if (error) throw error;
                 
-                // Try multiple scan configurations for better detection
-                const configs = [
-                    { verbose: true },
-                    { verbose: true, experimentalFeatures: { useBarCodeDetectorIfSupported: true } },
-                    { verbose: true, rememberLastUsedCamera: false }
-                ];
-
-                let result = null;
-                let lastError = null;
-
-                for (const config of configs) {
-                    try {
-                        result = await html5QrCode.scanFile(file, config);
-                        if (result) break;
-                    } catch (error) {
-                        lastError = error;
-                        console.log('Tentativa de scan falhou:', error.message);
-                    }
-                }
-
-                // Clean up
-                document.body.removeChild(tempDiv);
-
-                if (result) {
-                    await onScanSuccess(result, null);
-                } else {
-                    throw lastError || new Error('QR Code não detectado');
-                }
+                convidados = data || [];
+                exibirConvidados(convidados);
+                atualizarEstatisticas();
                 
             } catch (error) {
-                console.error('Erro ao processar imagem:', error);
-                showToast('❌ Nenhum QR Code encontrado na imagem. Tente uma imagem mais nítida ou com melhor iluminação.', 'error', 4000);
+                console.error('Erro ao carregar convidados:', error);
             }
         }
 
-        async function pasteFromClipboard() {
-            try {
-                if (!navigator.clipboard || !navigator.clipboard.read) {
-                    showToast('❌ Clipboard não suportado neste navegador', 'error');
-                    return;
-                }
-
-                showToast('📋 Verificando clipboard...', 'info');
-                
-                const clipboardItems = await navigator.clipboard.read();
-                
-                for (const clipboardItem of clipboardItems) {
-                    for (const type of clipboardItem.types) {
-                        if (type.startsWith('image/')) {
-                            const blob = await clipboardItem.getType(type);
-                            
-                            // Show preview
-                            const url = URL.createObjectURL(blob);
-                            document.getElementById('previewImg').src = url;
-                            document.getElementById('imagePreview').classList.remove('hidden');
-                            
-                            // Convert blob to file
-                            const file = new File([blob], 'clipboard-image.png', { type: blob.type });
-                            
-                            // Create a temporary HTML5QrCode instance for file scanning
-                            const tempDiv = document.createElement('div');
-                            tempDiv.id = 'temp-qr-reader-clipboard';
-                            tempDiv.style.display = 'none';
-                            document.body.appendChild(tempDiv);
-
-                            const html5QrCode = new Html5Qrcode("temp-qr-reader-clipboard");
-                            
-                            // Try multiple scan configurations
-                            const configs = [
-                                { verbose: true },
-                                { verbose: true, experimentalFeatures: { useBarCodeDetectorIfSupported: true } },
-                                { verbose: true, rememberLastUsedCamera: false }
-                            ];
-
-                            let result = null;
-                            let lastError = null;
-
-                            for (const config of configs) {
-                                try {
-                                    result = await html5QrCode.scanFile(file, config);
-                                    if (result) break;
-                                } catch (error) {
-                                    lastError = error;
-                                    console.log('Tentativa de scan falhou:', error.message);
-                                }
-                            }
-
-                            // Clean up
-                            document.body.removeChild(tempDiv);
-
-                            if (result) {
-                                await onScanSuccess(result, null);
-                                return;
-                            } else {
-                                throw lastError || new Error('QR Code não detectado');
-                            }
-                        }
-                    }
-                }
-                
-                showToast('❌ Nenhuma imagem encontrada no clipboard', 'error');
-                
-            } catch (error) {
-                console.error('Erro ao colar imagem:', error);
-                if (error.name === 'NotAllowedError') {
-                    showToast('❌ Permissão negada para acessar clipboard', 'error');
-                } else {
-                    showToast('❌ Nenhum QR Code encontrado na imagem. Tente uma imagem mais nítida ou com melhor iluminação.', 'error', 4000);
-                }
-            }
-        }
-
-        async function iniciarScanner() {
-            try {
-                if (scannerAtivo) return;
-
-                // Verificar permissões
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                stream.getTracks().forEach(track => track.stop());
-
-                // Obter câmeras
-                const devices = await Html5Qrcode.getCameras();
-                if (!devices || devices.length === 0) {
-                    throw new Error('Nenhuma câmera encontrada');
-                }
-
-                // Configurar scanner
-                html5QrCode = new Html5Qrcode("qr-reader");
-                
-                const config = {
-                    fps: 10,
-                    qrbox: { width: 250, height: 250 },
-                    aspectRatio: 1.0,
-                    disableFlip: false,
-                    videoConstraints: {
-                        facingMode: "environment" // Câmera traseira
-                    }
-                };
-
-                // Iniciar scanner
-                await html5QrCode.start(
-                    devices[0].id,
-                    config,
-                    onScanSuccess,
-                    onScanFailure
-                );
-
-                scannerAtivo = true;
-                atualizarStatusScanner();
-                showToast('📷 Scanner iniciado!', 'success');
-
-            } catch (error) {
-                console.error('Erro ao iniciar scanner:', error);
-                showToast('❌ Erro ao iniciar scanner: ' + error.message, 'error');
-            }
-        }
-
-        async function pararScanner() {
-            try {
-                if (!scannerAtivo || !html5QrCode) return;
-
-                await html5QrCode.stop();
-                html5QrCode = null;
-                scannerAtivo = false;
-                
-                atualizarStatusScanner();
-                showToast('⏹️ Scanner parado', 'info');
-
-            } catch (error) {
-                console.error('Erro ao parar scanner:', error);
-            }
-        }
-
-        // Scanner Callbacks
-        async function onScanSuccess(decodedText, decodedResult) {
-            try {
-                // O QR code contém apenas o código do convidado (ex: "ABC001")
-                const codigoQR = decodedText.trim();
-                
-                if (!codigoQR) {
-                    showToast('❌ QR Code vazio', 'error');
-                    return;
-                }
-
-                // 🐛 DEBUG: Informações detalhadas para descobrir o problema
-                console.log('=== DEBUG SCAN COMPLETO ===');
-                console.log('1. QR Code lido:', `"${codigoQR}"`);
-                console.log('2. Tamanho do código:', codigoQR.length);
-                console.log('3. Total de convidados carregados:', convidados.length);
-                
-                if (convidados.length > 0) {
-                    console.log('4. Campos disponíveis no primeiro convidado:', Object.keys(convidados[0]));
-                    console.log('5. Exemplo do primeiro convidado:', convidados[0]);
-                    
-                    // Mostrar todos os possíveis campos que podem conter o código
-                    const primeiroConvidado = convidados[0];
-                    Object.keys(primeiroConvidado).forEach(campo => {
-                        console.log(`   Campo "${campo}":`, primeiroConvidado[campo]);
-                    });
-                }
-
-                // VALIDAÇÃO INTELIGENTE: Tentar diferentes campos possíveis
-                let convidadoEncontrado = null;
-                let campoEncontrado = '';
-                
-                // Lista de possíveis campos onde o código pode estar
-                const camposPossiveis = ['codigo', 'code', 'id', 'qr_code', 'convite_id', 'guest_code'];
-                
-                for (const campo of camposPossiveis) {
-                    convidadoEncontrado = convidados.find(c => 
-                        c[campo] && c[campo].toString().toLowerCase().trim() === codigoQR.toLowerCase().trim()
-                    );
-                    
-                    if (convidadoEncontrado) {
-                        campoEncontrado = campo;
-                        console.log(`6. ✅ Convidado encontrado no campo "${campo}":`, convidadoEncontrado);
-                        break;
-                    }
-                }
-
-                // Se não encontrou, tentar busca mais flexível (por nome ou outros campos)
-                if (!convidadoEncontrado) {
-                    console.log('7. ❌ Não encontrado nos campos padrão. Tentando busca flexível...');
-                    
-                    // Mostrar todos os códigos disponíveis para comparação
-                    console.log('8. Códigos disponíveis no banco:');
-                    convidados.forEach((c, index) => {
-                        const todosValores = Object.values(c).join(' | ');
-                        console.log(`   ${index + 1}. ${todosValores}`);
-                    });
-                    
-                    showToast(`❌ Código "${codigoQR}" não encontrado`, 'error');
-                    return;
-                }
-
-                // Registrar scan usando o nome do convidado encontrado
-                const agora = new Date();
-                const nomeConvidado = convidadoEncontrado.nome || convidadoEncontrado.name || 'Convidado';
-                
-                console.log(`9. ✅ Processando scan para: "${nomeConvidado}"`);
-                
-                if (!scansRealizados.has(nomeConvidado)) {
-                    scansRealizados.set(nomeConvidado, {
-                        count: 1,
-                        timestamps: [agora.toISOString()],
-                        firstScan: agora.toISOString(),
-                        codigo: codigoQR,
-                        campo: campoEncontrado
-                    });
-                    showToast(`✅ Entrada Permitida\n${nomeConvidado}`, 'success');
-                } else {
-                    const scanData = scansRealizados.get(nomeConvidado);
-                    scanData.count++;
-                    scanData.timestamps.push(agora.toISOString());
-                    scansRealizados.set(nomeConvidado, scanData);
-                    showToast(`⚠️ Já Utilizado (${scanData.count}x)\n${nomeConvidado}`, 'warning');
-                }
-
-                // Salvar dados
-                localStorage.setItem('scansData', JSON.stringify([...scansRealizados]));
-                
-                // Atualizar UI
-                atualizarListaConvidados();
-                atualizarProgresso();
-                
-                // Vibrar dispositivo
-                if ('vibrate' in navigator) {
-                    navigator.vibrate([100, 50, 100]);
-                }
-
-            } catch (error) {
-                console.error('Erro ao processar QR:', error);
-                showToast('❌ Erro interno', 'error');
-            }
-        }
-
-        function onScanFailure(error) {
-            // Silencioso - erros de scan são normais
-        }
-
-        // UI Updates
-        function atualizarStatusScanner() {
-            const status = document.getElementById('scannerStatus');
-            const btnToggle = document.getElementById('btnToggleScanner');
-            const fabIcon = document.getElementById('fabIcon');
+        function exibirConvidados(lista) {
+            const container = document.getElementById('lista-convidados-gestao');
             
-            if (scannerAtivo) {
-                status.innerHTML = `
-                    <span class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
-                    <span>Ativo</span>
-                `;
-                status.classList.add('active');
-                btnToggle.innerHTML = '<span>⏹️</span><span>Parar Scanner</span>';
-                btnToggle.className = 'modern-btn danger w-full flex items-center justify-center gap-3 text-lg';
-                fabIcon.textContent = '⏹️';
-            } else {
-                status.innerHTML = `
-                    <span class="w-3 h-3 bg-red-500 rounded-full"></span>
-                    <span>Parado</span>
-                `;
-                status.classList.remove('active');
-                btnToggle.innerHTML = '<span>▶️</span><span>Iniciar Scanner</span>';
-                btnToggle.className = 'modern-btn success w-full flex items-center justify-center gap-3 text-lg';
-                fabIcon.textContent = '▶️';
-            }
-        }
-
-        function atualizarListaConvidados() {
-            const container = document.getElementById('listaConvidados');
-            const totalElement = document.getElementById('totalConvidados');
-            
-            totalElement.textContent = `${convidados.length} convidados`;
-            
-            if (convidados.length === 0) {
+            if (!lista || lista.length === 0) {
                 container.innerHTML = `
                     <div class="text-center py-8 text-gray-500">
-                        <span class="text-4xl block mb-2">👥</span>
+                        <div class="text-4xl mb-2">👥</div>
                         <p>Nenhum convidado encontrado</p>
                     </div>
                 `;
                 return;
             }
-
-            container.innerHTML = convidados.map(convidado => {
-                const scanData = scansRealizados.get(convidado.nome);
-                const isScanned = !!scanData;
-                const isDuplicate = scanData && scanData.count > 1;
+            
+            container.innerHTML = lista.map(convidado => {
+                const isUsed = convidado.status === 'usado';
+                const statusClass = isUsed ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200';
+                const statusIcon = isUsed ? '🔴' : '✅';
+                const statusText = isUsed ? 'USADO' : 'DISPONÍVEL';
+                const statusColor = isUsed ? 'text-red-600' : 'text-green-600';
                 
-                let statusClass = '';
-                let statusIcon = '⚪';
-                
-                if (isScanned) {
-                    if (isDuplicate) {
-                        statusClass = 'duplicate';
-                        statusIcon = '⚠️';
-                    } else {
-                        statusClass = 'scanned';
-                        statusIcon = '✅';
-                    }
-                }
-
                 return `
-                    <div class="guest-item ${statusClass} bg-white border rounded-2xl p-4 shadow-sm">
+                    <div class="border rounded-lg p-4 ${statusClass}">
                         <div class="flex items-center justify-between">
-                            <div class="flex-1">
-                                <div class="font-semibold text-gray-800 text-lg">${convidado.nome}</div>
-                                ${isScanned ? `<div class="text-sm text-gray-500 mt-2 font-medium">
-                                    ${new Date(scanData.firstScan).toLocaleString('pt-BR')}
-                                </div>` : ''}
-                            </div>
-                            <div class="flex items-center justify-center">
+                            <div class="flex items-center space-x-3">
                                 <span class="text-2xl">${statusIcon}</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function atualizarProgresso() {
-            const escaneados = scansRealizados.size;
-            const total = convidados.length;
-            const porcentagem = total > 0 ? Math.round((escaneados / total) * 100) : 0;
-            
-            document.getElementById('progressBar').style.width = `${porcentagem}%`;
-            document.getElementById('progressoTexto').textContent = `${escaneados}/${total}`;
-            document.getElementById('progressoDetalhes').textContent = 
-                `${porcentagem}% concluído • ${total - escaneados} restantes`;
-        }
-
-        function atualizarRelatorio() {
-            const escaneados = scansRealizados.size;
-            const total = convidados.length;
-            const restantes = total - escaneados;
-            const duplicados = [...scansRealizados.values()].filter(scan => scan.count > 1).length;
-            
-            document.getElementById('estatEscaneados').textContent = escaneados;
-            document.getElementById('estatRestantes').textContent = restantes;
-            document.getElementById('estatDuplicados').textContent = duplicados;
-            document.getElementById('estatTotal').textContent = total;
-            
-            // Atualizar detalhes dos scans
-            const detalhesContainer = document.getElementById('detalhesScans');
-            const scansArray = [...scansRealizados.entries()].sort((a, b) => 
-                new Date(b[1].firstScan) - new Date(a[1].firstScan)
-            );
-            
-            if (scansArray.length === 0) {
-                detalhesContainer.innerHTML = `
-                    <div class="text-center py-8 text-gray-500">
-                        <span class="text-4xl block mb-2">📊</span>
-                        <p>Nenhum scan realizado ainda</p>
-                    </div>
-                `;
-                return;
-            }
-
-            detalhesContainer.innerHTML = scansArray.map(([nome, data]) => {
-                const isDuplicate = data.count > 1;
-                return `
-                    <div class="bg-gradient-to-r from-gray-50 to-gray-100 border rounded-2xl p-4 shadow-sm">
-                        <div class="flex items-center justify-between">
-                            <div class="flex-1">
-                                <div class="font-semibold text-gray-800 text-lg">${nome}</div>
-                                <div class="text-sm text-gray-600 mt-2 font-medium">
-                                    Primeiro scan: ${new Date(data.firstScan).toLocaleString('pt-BR')}
+                                <div>
+                                    <h4 class="font-semibold">${convidado.nome}</h4>
+                                    <p class="text-sm text-gray-600">Código: ${convidado.codigo}</p>
                                 </div>
                             </div>
                             <div class="text-right">
-                                <div class="text-lg font-bold ${isDuplicate ? 'text-orange-600' : 'text-green-600'}">
-                                    ${isDuplicate ? '⚠️' : '✅'} ${data.count}x
-                                </div>
+                                <span class="text-sm font-medium ${statusColor}">${statusText}</span>
                             </div>
                         </div>
                     </div>
@@ -1229,175 +406,233 @@
             }).join('');
         }
 
-        // Report Actions
-        function desmarcarTodos() {
-            if (scansRealizados.size === 0) {
-                showToast('❌ Nenhum scan para desmarcar!', 'error');
-                return;
-            }
-
-            if (confirm(`Desmarcar todos os ${scansRealizados.size} scans realizados?`)) {
-                scansRealizados.clear();
-                localStorage.removeItem('scansData');
-                
-                atualizarListaConvidados();
-                atualizarProgresso();
-                atualizarRelatorio();
-                
-                showToast('🔄 Todos os scans foram desmarcados!', 'success');
-            }
+        function searchConvidados() {
+            const search = document.getElementById('search-convidados').value.toLowerCase();
+            const filtered = convidados.filter(convidado => 
+                convidado.nome.toLowerCase().includes(search) ||
+                convidado.codigo.toLowerCase().includes(search)
+            );
+            exibirConvidados(filtered);
         }
 
-        function exportarPDF() {
-            if (convidados.length === 0) {
-                showToast('❌ Nenhum dado para exportar!', 'error');
-                return;
-            }
+        function atualizarEstatisticas() {
+            const usados = convidados.filter(c => c.status === 'usado').length;
+            const disponiveis = convidados.filter(c => c.status === 'ativo').length;
+            
+            document.getElementById('total-permitidos').textContent = disponiveis;
+            document.getElementById('total-usados').textContent = usados;
+            document.getElementById('total-invalidos').textContent = scanCounts.invalidos;
+        }
 
+        // Scanner
+        async function startScanner() {
             try {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF();
-                
-                // Título
-                doc.setFontSize(20);
-                doc.text('Relatório InvitesQR', 20, 20);
-                
-                // Info do cliente
-                doc.setFontSize(12);
-                doc.text(`Cliente: ${clienteAtual.nome}`, 20, 35);
-                doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 20, 45);
-                doc.text(`Hora: ${new Date().toLocaleTimeString('pt-BR')}`, 20, 55);
-                
-                // Estatísticas
-                const escaneados = scansRealizados.size;
-                const total = convidados.length;
-                const duplicados = [...scansRealizados.values()].filter(scan => scan.count > 1).length;
-                
-                doc.text('ESTATÍSTICAS:', 20, 75);
-                doc.text(`• Total de convidados: ${total}`, 25, 85);
-                doc.text(`• Escaneados: ${escaneados}`, 25, 95);
-                doc.text(`• Restantes: ${total - escaneados}`, 25, 105);
-                doc.text(`• Duplicados: ${duplicados}`, 25, 115);
-                
-                // Lista de convidados
-                doc.text('LISTA DE CONVIDADOS:', 20, 135);
-                
-                let y = 145;
-                convidados.forEach((convidado, index) => {
-                    if (y > 270) {
-                        doc.addPage();
-                        y = 20;
-                    }
-                    
-                    const scanData = scansRealizados.get(convidado.nome);
-                    const status = scanData ? 
-                        (scanData.count > 1 ? `✓ (${scanData.count}x)` : '✓') : 
-                        '○';
-                    
-                    doc.text(`${index + 1}. ${convidado.nome} ${status}`, 25, y);
-                    
-                    if (scanData) {
-                        y += 8;
-                        doc.setFontSize(8);
-                        doc.text(`   Escaneado em: ${new Date(scanData.firstScan).toLocaleString('pt-BR')}`, 25, y);
-                        doc.setFontSize(12);
-                    }
-                    
-                    y += 12;
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' } 
                 });
                 
-                // Salvar PDF
-                const filename = `relatorio-${clienteAtual.nome.replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`;
-                doc.save(filename);
+                video = document.getElementById('video');
+                canvas = document.getElementById('canvas');
+                context = canvas.getContext('2d');
                 
-                showToast('📄 Relatório PDF exportado!', 'success');
-
+                video.srcObject = stream;
+                video.play();
+                
+                document.getElementById('scanner-overlay').classList.remove('hidden');
+                scannerActive = true;
+                
+                // Reset display
+                document.getElementById('scan-status').textContent = '📷';
+                document.getElementById('scan-message').textContent = 'Posicione o QR code na área destacada';
+                document.getElementById('guest-name').classList.add('hidden');
+                document.getElementById('next-scan').classList.add('hidden');
+                
+                // Start scanning
+                requestAnimationFrame(scanFrame);
+                
             } catch (error) {
-                console.error('Erro ao gerar PDF:', error);
-                showToast('❌ Erro ao gerar PDF', 'error');
+                console.error('Erro ao acessar câmera:', error);
+                alert('Erro ao acessar a câmera. Verifique as permissões.');
             }
         }
 
-        // Keyboard Shortcuts
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' && e.target.id === 'tokenInput') {
-                e.preventDefault();
-                autenticar();
-            }
+        function scanFrame() {
+            if (!scannerActive) return;
             
-            // PC Shortcuts (only when not typing in inputs)
-            if (!e.target.matches('input, textarea')) {
-                switch(e.key.toLowerCase()) {
-                    case 's':
-                        e.preventDefault();
-                        if (tabAtiva === 'scanner') {
-                            toggleScanner();
-                        }
-                        break;
-                    case 'u':
-                        e.preventDefault();
-                        if (tabAtiva === 'scanner') {
-                            document.getElementById('imageUpload').click();
-                        }
-                        break;
-                    case 'v':
-                        e.preventDefault();
-                        if (tabAtiva === 'scanner' && (e.ctrlKey || e.metaKey)) {
-                            pasteFromClipboard();
-                        }
-                        break;
-                    case '1':
-                        e.preventDefault();
-                        switchTab('scanner');
-                        break;
-                    case '2':
-                        e.preventDefault();
-                        switchTab('relatorio');
-                        break;
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                canvas.height = video.videoHeight;
+                canvas.width = video.videoWidth;
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, imageData.width, imageData.height);
+                
+                if (code) {
+                    processQRCode(code.data);
+                    return;
                 }
             }
-        });
+            
+            requestAnimationFrame(scanFrame);
+        }
 
-        // Paste event listener for images
-        document.addEventListener('paste', function(e) {
-            if (tabAtiva === 'scanner') {
-                const items = e.clipboardData.items;
-                for (let i = 0; i < items.length; i++) {
-                    if (items[i].type.indexOf('image') !== -1) {
-                        e.preventDefault();
-                        pasteFromClipboard();
-                        break;
-                    }
+        async function processQRCode(qrData) {
+            scannerActive = false;
+            
+            try {
+                // Tentar desencriptar o QR code
+                const decryptedData = decrypt(qrData);
+                
+                if (!decryptedData) {
+                    showScanResult('INVÁLIDO', '', 'invalido');
+                    scanCounts.invalidos++;
+                    return;
                 }
+                
+                // Parse dos dados
+                let guestData;
+                try {
+                    guestData = JSON.parse(decryptedData);
+                } catch (error) {
+                    showScanResult('INVÁLIDO', '', 'invalido');
+                    scanCounts.invalidos++;
+                    return;
+                }
+                
+                // Verificar se o convidado existe
+                const convidado = convidados.find(c => 
+                    c.codigo === guestData.codigo && c.nome === guestData.nome
+                );
+                
+                if (!convidado) {
+                    showScanResult('INVÁLIDO', '', 'invalido');
+                    scanCounts.invalidos++;
+                    return;
+                }
+                
+                // Verificar se já foi usado
+                if (convidado.status === 'usado') {
+                    showScanResult('USADO', convidado.nome, 'usado');
+                    scanCounts.usados++;
+                    return;
+                }
+                
+                // Marcar como usado
+                await marcarComoUsado(convidado.id);
+                showScanResult('PERMITIDO', convidado.nome, 'permitido');
+                scanCounts.permitidos++;
+                
+                // Registrar log
+                await registrarLog(currentToken, 'scan', `${convidado.codigo}:${convidado.nome}`);
+                
+                // Atualizar lista
+                await carregarConvidados();
+                
+            } catch (error) {
+                console.error('Erro ao processar QR code:', error);
+                showScanResult('ERRO', '', 'invalido');
             }
-        });
+        }
 
-        // Auto-login if token exists
-        document.addEventListener('DOMContentLoaded', function() {
-            const savedToken = localStorage.getItem('clienteToken');
-            const savedClient = localStorage.getItem('clienteData');
+        function showScanResult(status, guestName, type) {
+            const statusElement = document.getElementById('scan-status');
+            const messageElement = document.getElementById('scan-message');
+            const nameElement = document.getElementById('guest-name');
+            const nextButton = document.getElementById('next-scan');
             
-            if (savedToken && savedClient) {
-                document.getElementById('tokenInput').value = savedToken;
-                // Auto-authenticate silently
-                setTimeout(() => {
-                    autenticar();
-                }, 500);
+            // Configurar status
+            statusElement.textContent = status;
+            statusElement.className = `text-6xl font-bold mb-4 status-${type}`;
+            
+            // Configurar mensagem
+            messageElement.textContent = '';
+            
+            // Mostrar nome se disponível
+            if (guestName) {
+                nameElement.textContent = guestName;
+                nameElement.classList.remove('hidden');
+            } else {
+                nameElement.classList.add('hidden');
             }
             
-            // Initialize UI
-            atualizarStatusScanner();
-        });
+            // Mostrar botão próximo
+            nextButton.classList.remove('hidden');
+            
+            // Atualizar estatísticas
+            atualizarEstatisticas();
+        }
 
-        // Prevent zoom on double tap
-        let lastTouchEnd = 0;
-        document.addEventListener('touchend', function (event) {
-            const now = (new Date()).getTime();
-            if (now - lastTouchEnd <= 300) {
-                event.preventDefault();
+        function nextScan() {
+            // Reset display
+            document.getElementById('scan-status').textContent = '📷';
+            document.getElementById('scan-message').textContent = 'Posicione o QR code na área destacada';
+            document.getElementById('guest-name').classList.add('hidden');
+            document.getElementById('next-scan').classList.add('hidden');
+            
+            // Restart scanning
+            scannerActive = true;
+            requestAnimationFrame(scanFrame);
+        }
+
+        function closeScanner() {
+            scannerActive = false;
+            
+            if (video && video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
             }
-            lastTouchEnd = now;
-        }, false);
+            
+            document.getElementById('scanner-overlay').classList.add('hidden');
+        }
+
+        async function marcarComoUsado(convidadoId) {
+            try {
+                const { error } = await supabase
+                    .from('convidados')
+                    .update({ status: 'usado' })
+                    .eq('id', convidadoId);
+                
+                if (error) throw error;
+                
+            } catch (error) {
+                console.error('Erro ao marcar como usado:', error);
+            }
+        }
+
+        async function desmarcarTodos() {
+            if (!confirm('Tem certeza que deseja desmarcar todos os convidados scaneados?')) {
+                return;
+            }
+            
+            try {
+                const { error } = await supabase
+                    .from('convidados')
+                    .update({ status: 'ativo' })
+                    .eq('token_cliente', currentToken)
+                    .eq('status', 'usado');
+                
+                if (error) throw error;
+                
+                alert('Todos os convidados foram desmarcados!');
+                await carregarConvidados();
+                
+            } catch (error) {
+                console.error('Erro ao desmarcar convidados:', error);
+                alert('Erro ao desmarcar convidados');
+            }
+        }
+
+        async function registrarLog(token, status, dispositivo) {
+            try {
+                await supabase.from('logs').insert([{
+                    token: token,
+                    data: new Date().toISOString(),
+                    status: status,
+                    dispositivo: dispositivo
+                }]);
+            } catch (error) {
+                console.error('Erro ao registrar log:', error);
+            }
+        }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'966a6162518677dd',t:'MTc1Mzc2ODY2My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'966b2091633077d7',t:'MTc1Mzc3NjQ5NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
