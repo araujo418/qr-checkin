@@ -374,7 +374,7 @@
       font-size: 18px;
       font-weight: bold;
       cursor: pointer;
-      margin-bottom: 25px;
+      margin-bottom: 15px;
       transition: all 0.3s ease;
       box-shadow: 0 6px 15px rgba(56, 161, 105, 0.3);
       position: relative;
@@ -389,6 +389,43 @@
     
     .scan-btn:active {
       transform: translateY(-1px);
+    }
+    
+    /* Upload Section */
+    .upload-section {
+      margin-bottom: 25px;
+    }
+    
+    .upload-btn {
+      width: 100%;
+      padding: 20px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      border-radius: 15px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+      position: relative;
+      overflow: hidden;
+      min-height: 55px;
+    }
+    
+    .upload-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    .upload-btn:active {
+      transform: translateY(-1px);
+    }
+    
+    .upload-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
     }
     
     /* Result Display */
@@ -814,6 +851,12 @@
       padding: 20px;
       font-size: 18px;
       border-radius: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .upload-btn {
+      padding: 18px;
+      font-size: 16px;
       margin-bottom: 20px;
     }
     
@@ -966,6 +1009,13 @@
       <button class="scan-btn" onclick="startFullscreenScanner()">
         📷 Escanear QR Code
       </button>
+      
+      <div class="upload-section">
+        <input type="file" id="qrImageInput" accept="image/*" style="display: none;" onchange="processQRImage(this)">
+        <button class="upload-btn" onclick="document.getElementById('qrImageInput').click()">
+          🖼️ Upload de Imagem QR
+        </button>
+      </div>
       
       <div class="output" id="result">
         Nenhum código validado ainda…
@@ -1939,9 +1989,207 @@
       }
     });
 
+    // Process QR from uploaded image
+    async function processQRImage(input) {
+      const file = input.files[0];
+      if (!file) return;
+      
+      console.log('🖼️ Processando imagem QR:', file.name);
+      
+      // Show loading state
+      const uploadBtn = document.querySelector('.upload-btn');
+      const originalText = uploadBtn.textContent;
+      uploadBtn.disabled = true;
+      uploadBtn.textContent = '🔄 Processando...';
+      
+      try {
+        let qrCodeMessage = null;
+        
+        // === MÉTODO 1: Html5Qrcode.scanFile ===
+        try {
+          console.log('🔍 Tentando Html5Qrcode.scanFile...');
+          
+          // Create temporary div for Html5Qrcode
+          const tempDiv = document.createElement('div');
+          tempDiv.id = 'temp-qr-reader-' + Date.now();
+          tempDiv.style.cssText = 'position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0;';
+          document.body.appendChild(tempDiv);
+          
+          const html5QrCode = new Html5Qrcode(tempDiv.id);
+          
+          // Scan the image file directly
+          qrCodeMessage = await html5QrCode.scanFile(file, true);
+          console.log('✅ Html5Qrcode encontrou QR:', qrCodeMessage.substring(0, 100));
+          
+          // Clean up
+          html5QrCode.clear();
+          document.body.removeChild(tempDiv);
+          
+        } catch (html5Error) {
+          console.log('❌ Html5Qrcode falhou:', html5Error.message);
+          
+          // Clean up on error
+          const tempDiv = document.getElementById('temp-qr-reader-' + (Date.now() - 1000));
+          if (tempDiv) document.body.removeChild(tempDiv);
+          
+          // === MÉTODO 2: Canvas + jsQR ===
+          try {
+            console.log('🔍 Tentando Canvas + jsQR...');
+            
+            // Create image element
+            const img = new Image();
+            
+            // Load image
+            await new Promise((resolve, reject) => {
+              img.onload = resolve;
+              img.onerror = reject;
+              img.src = URL.createObjectURL(file);
+            });
+            
+            // Create canvas and draw image
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+            
+            // Get image data
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            
+            // Load jsQR library dynamically
+            if (!window.jsQR) {
+              console.log('📦 Carregando jsQR...');
+              const script = document.createElement('script');
+              script.src = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js';
+              document.head.appendChild(script);
+              
+              await new Promise((resolve, reject) => {
+                script.onload = resolve;
+                script.onerror = reject;
+              });
+            }
+            
+            // Scan with jsQR
+            const code = jsQR(imageData.data, imageData.width, imageData.height, {
+              inversionAttempts: "dontInvert"
+            });
+            
+            if (code && code.data) {
+              qrCodeMessage = code.data;
+              console.log('✅ jsQR encontrou QR:', qrCodeMessage.substring(0, 100));
+            } else {
+              throw new Error('jsQR não encontrou QR Code');
+            }
+            
+            // Clean up
+            URL.revokeObjectURL(img.src);
+            
+          } catch (jsQRError) {
+            console.log('❌ jsQR também falhou:', jsQRError.message);
+            
+            // === MÉTODO 3: Múltiplas tentativas com diferentes configurações ===
+            try {
+              console.log('🔍 Tentando múltiplas configurações...');
+              
+              const img = new Image();
+              await new Promise((resolve, reject) => {
+                img.onload = resolve;
+                img.onerror = reject;
+                img.src = URL.createObjectURL(file);
+              });
+              
+              const canvas = document.createElement('canvas');
+              const ctx = canvas.getContext('2d');
+              
+              // Tenta diferentes tamanhos e configurações
+              const attempts = [
+                { width: img.width, height: img.height, invert: false },
+                { width: img.width * 2, height: img.height * 2, invert: false },
+                { width: img.width / 2, height: img.height / 2, invert: false },
+                { width: img.width, height: img.height, invert: true }
+              ];
+              
+              for (const attempt of attempts) {
+                canvas.width = attempt.width;
+                canvas.height = attempt.height;
+                
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw image
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                
+                // Apply filters if needed
+                if (attempt.invert) {
+                  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                  const data = imageData.data;
+                  for (let i = 0; i < data.length; i += 4) {
+                    data[i] = 255 - data[i];     // Red
+                    data[i + 1] = 255 - data[i + 1]; // Green
+                    data[i + 2] = 255 - data[i + 2]; // Blue
+                  }
+                  ctx.putImageData(imageData, 0, 0);
+                }
+                
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                
+                const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                  inversionAttempts: "attemptBoth"
+                });
+                
+                if (code && code.data) {
+                  qrCodeMessage = code.data;
+                  console.log(`✅ Encontrado na tentativa ${attempts.indexOf(attempt) + 1}:`, qrCodeMessage.substring(0, 100));
+                  break;
+                }
+              }
+              
+              URL.revokeObjectURL(img.src);
+              
+              if (!qrCodeMessage) {
+                throw new Error('Nenhuma configuração conseguiu detectar o QR Code');
+              }
+              
+            } catch (multiError) {
+              console.log('❌ Múltiplas tentativas falharam:', multiError.message);
+              throw new Error('Não foi possível encontrar um QR Code válido na imagem. Verifique se a imagem contém um QR Code claro e bem definido.');
+            }
+          }
+        }
+        
+        // Process the found QR code
+        if (qrCodeMessage) {
+          console.log('🎯 Processando QR encontrado na imagem...');
+          await onScanSuccess(qrCodeMessage, null);
+          updateResult('✅ QR Code da imagem processado com sucesso!', true);
+        } else {
+          throw new Error('Nenhum QR Code foi encontrado na imagem');
+        }
+        
+      } catch (error) {
+        console.error('❌ Erro final ao processar imagem:', error);
+        updateResult(`❌ ${error.message || 'Erro ao processar imagem'}`, false);
+        
+        // Update invalid stats only if it's a processing error, not a "not found" error
+        if (!error.message.includes('não encontrou') && !error.message.includes('não foi encontrado')) {
+          scanStats.invalid++;
+          localStorage.setItem('invitesqr_stats', JSON.stringify(scanStats));
+          updateStatistics();
+        }
+        
+      } finally {
+        // Reset button
+        uploadBtn.disabled = false;
+        uploadBtn.textContent = originalText;
+        
+        // Clear input
+        input.value = '';
+      }
+    }
+
     console.log('✅ InvitesQR Mobile carregado completamente');
-    console.log('📱 Versão: 2.0.0');
-    console.log('🔧 Funcionalidades: Login, Scanner QR, Supabase, Offline Support');
+    console.log('📱 Versão: 2.1.0');
+    console.log('🔧 Funcionalidades: Login, Scanner QR, Upload Imagem, Supabase, Offline Support');
   </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'966be0a5703177d9',t:'MTc1Mzc4NDM2Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'966c0064b4ed77d7',t:'MTc1Mzc4NTY2Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
