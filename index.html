@@ -36,9 +36,8 @@
         .scanner-container {
             position: relative;
             width: 100%;
-            max-width: 500px;
+            max-width: 400px;
             margin: 0 auto;
-            min-height: 400px;
         }
         .scanner-overlay {
             position: absolute;
@@ -46,11 +45,10 @@
             left: 0;
             right: 0;
             bottom: 0;
-            border: 3px solid #10b981;
-            border-radius: 16px;
+            border: 2px solid #667eea;
+            border-radius: 12px;
             pointer-events: none;
             z-index: 10;
-            box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
         }
         .scanner-overlay::before {
             content: '';
@@ -58,67 +56,11 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 280px;
-            height: 280px;
-            border: 3px solid #10b981;
-            border-radius: 12px;
-            box-shadow: 0 0 0 9999px rgba(0,0,0,0.7);
-            animation: scanPulse 2s infinite;
-        }
-        
-        @keyframes scanPulse {
-            0%, 100% { box-shadow: 0 0 0 9999px rgba(0,0,0,0.7), inset 0 0 20px rgba(16, 185, 129, 0.3); }
-            50% { box-shadow: 0 0 0 9999px rgba(0,0,0,0.7), inset 0 0 30px rgba(16, 185, 129, 0.5); }
-        }
-        
-        .scanner-corners {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 280px;
-            height: 280px;
-            pointer-events: none;
-            z-index: 15;
-        }
-        
-        .scanner-corner {
-            position: absolute;
-            width: 30px;
-            height: 30px;
-            border: 4px solid #10b981;
-        }
-        
-        .scanner-corner.top-left {
-            top: -2px;
-            left: -2px;
-            border-right: none;
-            border-bottom: none;
-            border-radius: 8px 0 0 0;
-        }
-        
-        .scanner-corner.top-right {
-            top: -2px;
-            right: -2px;
-            border-left: none;
-            border-bottom: none;
-            border-radius: 0 8px 0 0;
-        }
-        
-        .scanner-corner.bottom-left {
-            bottom: -2px;
-            left: -2px;
-            border-right: none;
-            border-top: none;
-            border-radius: 0 0 0 8px;
-        }
-        
-        .scanner-corner.bottom-right {
-            bottom: -2px;
-            right: -2px;
-            border-left: none;
-            border-top: none;
-            border-radius: 0 0 8px 0;
+            width: 200px;
+            height: 200px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);
         }
         .toast {
             position: fixed;
@@ -151,16 +93,6 @@
         .guest-pending {
             background: #f3f4f6;
             color: #374151;
-        }
-        .filter-btn.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-            color: white !important;
-        }
-        .search-highlight {
-            background-color: #fef3c7;
-            padding: 2px 4px;
-            border-radius: 4px;
-            font-weight: bold;
         }
     </style>
 </head>
@@ -248,35 +180,14 @@
 
 
 
-            <!-- Quick Actions -->
-            <div class="mb-6 grid grid-cols-2 gap-3">
+            <!-- Scanner Controls -->
+            <div class="mb-6">
                 <button 
                     id="start-scanner-btn" 
-                    class="gradient-bg text-white py-4 rounded-xl font-bold text-lg hover:opacity-90 transition-all transform hover:scale-105 shadow-lg"
+                    class="w-full gradient-bg text-white py-4 rounded-lg font-medium text-lg hover:opacity-90 transition-opacity"
                 >
-                    📱 SCANNER
+                    🎯 Iniciar Scanner
                 </button>
-                <button 
-                    id="quick-search-btn" 
-                    class="bg-green-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-green-700 transition-all transform hover:scale-105 shadow-lg"
-                >
-                    🔍 BUSCAR
-                </button>
-            </div>
-
-            <!-- Tutorial Card -->
-            <div id="tutorial-card" class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 mb-6">
-                <div class="flex items-start justify-between">
-                    <div class="flex-1">
-                        <h4 class="font-bold text-blue-800 mb-2">💡 Como usar:</h4>
-                        <ul class="text-sm text-blue-700 space-y-1">
-                            <li>• <strong>Scanner:</strong> Aponte para o QR code</li>
-                            <li>• <strong>Buscar:</strong> Digite nome ou código</li>
-                            <li>• <strong>Filtros:</strong> Veja apenas escaneados/pendentes</li>
-                        </ul>
-                    </div>
-                    <button id="close-tutorial" class="text-blue-400 hover:text-blue-600 text-xl ml-2">×</button>
-                </div>
             </div>
 
             <!-- Scanner Area -->
@@ -296,13 +207,11 @@
                 </div>
 
                 <!-- Scan Result Messages (Above Scanner) -->
-                <div id="scan-result-overlay" class="hidden bg-black text-center p-8 relative z-60 border-b-4 border-white">
-                    <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-2xl p-6 mx-4 border border-white border-opacity-20">
-                        <div id="result-status" class="text-6xl font-black mb-4 drop-shadow-lg"></div>
-                        <div id="result-name" class="text-2xl text-white font-bold mb-3 drop-shadow-md"></div>
-                        <div id="result-time" class="text-base text-gray-200 mb-2 font-medium"></div>
-                        <div id="result-timestamp" class="text-sm text-gray-300 font-medium"></div>
-                    </div>
+                <div id="scan-result-overlay" class="hidden bg-black bg-opacity-90 text-center p-6 relative z-60">
+                    <div id="result-status" class="text-5xl font-bold mb-3"></div>
+                    <div id="result-name" class="text-xl text-white mb-2"></div>
+                    <div id="result-time" class="text-sm text-gray-300 mb-1"></div>
+                    <div id="result-timestamp" class="text-xs text-gray-400"></div>
                 </div>
 
                 <!-- Scanner Container -->
@@ -310,25 +219,17 @@
                     <div class="scanner-container relative">
                         <div id="qr-reader" class="rounded-lg overflow-hidden"></div>
                         <div class="scanner-overlay"></div>
-                        <div class="scanner-corners">
-                            <div class="scanner-corner top-left"></div>
-                            <div class="scanner-corner top-right"></div>
-                            <div class="scanner-corner bottom-left"></div>
-                            <div class="scanner-corner bottom-right"></div>
-                        </div>
                     </div>
                 </div>
 
                 <!-- Next Button (Below Scanner) -->
-                <div id="next-button-area" class="hidden bg-black p-6 relative z-60 border-t-4 border-white">
-                    <div class="max-w-md mx-auto">
-                        <button 
-                            id="next-scan-btn" 
-                            class="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-5 rounded-2xl font-bold text-xl hover:from-blue-700 hover:to-blue-800 transform hover:scale-105 transition-all duration-200 shadow-2xl border-2 border-blue-400"
-                        >
-                            ▶️ PRÓXIMO SCAN
-                        </button>
-                    </div>
+                <div id="next-button-area" class="hidden bg-black bg-opacity-75 p-4 relative z-60">
+                    <button 
+                        id="next-scan-btn" 
+                        class="w-full bg-blue-600 text-white py-4 rounded-lg font-medium text-lg hover:bg-blue-700"
+                    >
+                        PRÓXIMO
+                    </button>
                 </div>
 
                 <!-- Scanner Instructions -->
@@ -340,31 +241,7 @@
             <!-- Guest List -->
             <div class="bg-white rounded-lg shadow-md">
                 <div class="p-4 border-b">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-semibold text-lg">Lista de Convidados</h3>
-                        <div class="flex gap-2">
-                            <button id="filter-all" class="filter-btn active px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                                Todos
-                            </button>
-                            <button id="filter-scanned" class="filter-btn px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600 hover:bg-green-100 hover:text-green-800">
-                                ✅ Escaneados
-                            </button>
-                            <button id="filter-pending" class="filter-btn px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600 hover:bg-orange-100 hover:text-orange-800">
-                                ⏳ Pendentes
-                            </button>
-                        </div>
-                    </div>
-                    <div class="relative">
-                        <input 
-                            type="text" 
-                            id="guest-search" 
-                            placeholder="🔍 Buscar convidado por nome ou código..." 
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
-                        >
-                        <button id="clear-search" class="hidden absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xl">
-                            ×
-                        </button>
-                    </div>
+                    <h3 class="font-semibold text-lg">Lista de Convidados</h3>
                 </div>
                 <div id="guests-list" class="max-h-96 overflow-y-auto">
                     <!-- Guest items will be loaded here -->
@@ -493,9 +370,6 @@
         // Global variables
         let currentClient = null;
         let allGuests = [];
-        let filteredGuests = [];
-        let currentFilter = 'all';
-        let searchTerm = '';
         let scannedGuests = new Set(); // Local tracking only
         let scanAttempts = new Map(); // Track scan attempts per code
         let html5QrCode = null;
@@ -830,45 +704,13 @@
                 if (error) throw error;
 
                 allGuests = guests || [];
-                filteredGuests = [...allGuests];
-                filterGuests();
+                updateGuestsList();
                 updateProgress();
 
             } catch (error) {
                 console.error('Error loading guests:', error);
                 showToast('error', 'Erro', 'Erro ao carregar convidados');
             }
-        }
-
-        // Filter and search guests
-        function filterGuests() {
-            let filtered = [...allGuests];
-            
-            // Apply status filter
-            if (currentFilter === 'scanned') {
-                filtered = filtered.filter(guest => scannedGuests.has(guest.codigo));
-            } else if (currentFilter === 'pending') {
-                filtered = filtered.filter(guest => !scannedGuests.has(guest.codigo));
-            }
-            
-            // Apply search filter
-            if (searchTerm) {
-                const term = searchTerm.toLowerCase();
-                filtered = filtered.filter(guest => 
-                    guest.nome.toLowerCase().includes(term) || 
-                    guest.codigo.toLowerCase().includes(term)
-                );
-            }
-            
-            filteredGuests = filtered;
-            updateGuestsList();
-        }
-
-        // Highlight search terms
-        function highlightSearchTerm(text, term) {
-            if (!term) return text;
-            const regex = new RegExp(`(${term})`, 'gi');
-            return text.replace(regex, '<span class="search-highlight">$1</span>');
         }
 
         // Update guests list display
@@ -880,74 +722,23 @@
                 return;
             }
 
-            if (filteredGuests.length === 0) {
-                const message = searchTerm ? 
-                    `Nenhum resultado para "${searchTerm}"` : 
-                    `Nenhum convidado ${currentFilter === 'scanned' ? 'escaneado' : 'pendente'}`;
-                guestsList.innerHTML = `<div class="p-4 text-center text-gray-500">${message}</div>`;
-                return;
-            }
-
-            guestsList.innerHTML = filteredGuests.map(guest => {
+            guestsList.innerHTML = allGuests.map(guest => {
                 const isScanned = scannedGuests.has(guest.codigo);
                 const itemClass = isScanned ? 'guest-scanned' : 'guest-pending';
                 const icon = isScanned ? '✅' : '⏳';
                 
-                // Highlight search terms
-                const highlightedName = highlightSearchTerm(guest.nome, searchTerm);
-                const highlightedCode = highlightSearchTerm(guest.codigo, searchTerm);
-                
                 return `
-                    <div class="guest-item ${itemClass} p-4 border-b last:border-b-0 cursor-pointer hover:opacity-80 transition-opacity" onclick="selectGuest('${guest.codigo}')">
+                    <div class="guest-item ${itemClass} p-4 border-b last:border-b-0">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="font-medium">${highlightedName}</p>
-                                <p class="text-sm opacity-75">${highlightedCode}</p>
+                                <p class="font-medium">${guest.nome}</p>
+                                <p class="text-sm opacity-75">${guest.codigo}</p>
                             </div>
                             <div class="text-xl">${icon}</div>
                         </div>
                     </div>
                 `;
             }).join('');
-        }
-
-        // Select guest from list
-        function selectGuest(codigo) {
-            const guest = allGuests.find(g => g.codigo === codigo);
-            if (!guest) return;
-            
-            const isScanned = scannedGuests.has(codigo);
-            const status = isScanned ? 'escaneado' : 'pendente';
-            
-            if (confirm(`${guest.nome}\nCódigo: ${codigo}\nStatus: ${status}\n\nAbrir scanner?`)) {
-                startScanner();
-            }
-        }
-
-        // Set filter
-        function setFilter(filter) {
-            currentFilter = filter;
-            
-            // Update button states
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('active');
-                btn.classList.add('bg-gray-100', 'text-gray-600');
-                btn.classList.remove('bg-blue-100', 'text-blue-800', 'bg-green-100', 'text-green-800', 'bg-orange-100', 'text-orange-800');
-            });
-            
-            const activeBtn = document.getElementById(`filter-${filter}`);
-            activeBtn.classList.add('active');
-            activeBtn.classList.remove('bg-gray-100', 'text-gray-600');
-            
-            if (filter === 'scanned') {
-                activeBtn.classList.add('bg-green-100', 'text-green-800');
-            } else if (filter === 'pending') {
-                activeBtn.classList.add('bg-orange-100', 'text-orange-800');
-            } else {
-                activeBtn.classList.add('bg-blue-100', 'text-blue-800');
-            }
-            
-            filterGuests();
         }
 
         // Update header info
@@ -1186,7 +977,7 @@
                 await logScan(guest.codigo, 'scan_success');
 
                 // Update displays
-                filterGuests();
+                updateGuestsList();
                 updateProgress();
                 updateDetailedList();
                 updateScannerCounter();
@@ -1367,7 +1158,7 @@
             if (confirm('Desmarcar todos os convidados escaneados? (Apenas no dispositivo)')) {
                 scannedGuests.clear();
                 scanAttempts.clear();
-                filterGuests();
+                updateGuestsList();
                 updateProgress();
                 updateDetailedList();
                 showToast('info', 'Limpo', 'Todos os scans foram desmarcados localmente');
@@ -1675,46 +1466,6 @@
             document.getElementById('close-scanner-btn').addEventListener('click', stopScanner);
             document.getElementById('next-scan-btn').addEventListener('click', hideResultAndContinue);
 
-            // Search and filter controls
-            const searchInput = document.getElementById('guest-search');
-            const clearSearchBtn = document.getElementById('clear-search');
-            
-            searchInput.addEventListener('input', (e) => {
-                searchTerm = e.target.value.trim();
-                clearSearchBtn.classList.toggle('hidden', !searchTerm);
-                filterGuests();
-            });
-            
-            clearSearchBtn.addEventListener('click', () => {
-                searchInput.value = '';
-                searchTerm = '';
-                clearSearchBtn.classList.add('hidden');
-                filterGuests();
-                searchInput.focus();
-            });
-
-            // Filter buttons
-            document.getElementById('filter-all').addEventListener('click', () => setFilter('all'));
-            document.getElementById('filter-scanned').addEventListener('click', () => setFilter('scanned'));
-            document.getElementById('filter-pending').addEventListener('click', () => setFilter('pending'));
-
-            // Quick search button
-            document.getElementById('quick-search-btn').addEventListener('click', () => {
-                searchInput.focus();
-                searchInput.select();
-            });
-
-            // Tutorial close
-            document.getElementById('close-tutorial').addEventListener('click', () => {
-                document.getElementById('tutorial-card').style.display = 'none';
-                localStorage.setItem('tutorial_closed', 'true');
-            });
-
-            // Check if tutorial should be hidden
-            if (localStorage.getItem('tutorial_closed') === 'true') {
-                document.getElementById('tutorial-card').style.display = 'none';
-            }
-
             // Report controls
             document.getElementById('clear-scans-btn').addEventListener('click', clearAllScans);
             document.getElementById('download-pdf-btn').addEventListener('click', generatePDF);
@@ -1731,5 +1482,5 @@
             });
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9673300167f377e0',t:'MTc1Mzg2MTAxMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96732430569177d9',t:'MTc1Mzg2MDUyOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
