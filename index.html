@@ -164,36 +164,17 @@
 
         <!-- Scanner Tab -->
         <div id="scanner" class="tab-content p-4">
-            <!-- Progress Ring -->
-            <div class="text-center mb-6">
-                <div class="relative inline-block">
-                    <svg class="progress-ring w-24 h-24" width="96" height="96">
-                        <circle
-                            class="progress-ring-circle stroke-gray-200"
-                            stroke-width="4"
-                            fill="transparent"
-                            r="44"
-                            cx="48"
-                            cy="48"
-                        />
-                        <circle
-                            id="progress-circle"
-                            class="progress-ring-circle stroke-blue-600"
-                            stroke-width="4"
-                            fill="transparent"
-                            r="44"
-                            cx="48"
-                            cy="48"
-                            stroke-dasharray="276.46"
-                            stroke-dashoffset="276.46"
-                        />
-                    </svg>
-                    <div class="absolute inset-0 flex items-center justify-center">
-                        <span id="progress-text" class="text-lg font-bold text-gray-800">0%</span>
-                    </div>
+            <!-- Progress Bar -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-lg font-semibold text-gray-800">Progresso do Evento</h3>
+                    <span id="progress-text" class="text-lg font-bold text-blue-600">0%</span>
                 </div>
-                <p class="text-sm text-gray-600 mt-2">
-                    <span id="scanned-count">0</span> de <span id="total-count">0</span> convidados
+                <div class="w-full bg-gray-200 rounded-full h-4 mb-3">
+                    <div id="progress-bar" class="gradient-bg h-4 rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+                </div>
+                <p class="text-sm text-gray-600 text-center">
+                    <span id="scanned-count">0</span> de <span id="total-count">0</span> convidados escaneados
                 </p>
             </div>
 
@@ -232,17 +213,27 @@
                         <div class="scanner-overlay"></div>
                         
                         <!-- Scan Result Overlay -->
-                        <div id="scan-result-overlay" class="hidden absolute inset-0 bg-black bg-opacity-90 flex flex-col items-center justify-center text-center p-6 rounded-lg">
-                            <div id="result-status" class="text-6xl font-bold mb-4"></div>
-                            <div id="result-name" class="text-xl text-white mb-2"></div>
-                            <div id="result-time" class="text-sm text-gray-300 mb-2"></div>
-                            <div id="result-timestamp" class="text-xs text-gray-400 mb-6"></div>
-                            <button 
-                                id="next-scan-btn" 
-                                class="bg-blue-600 text-white px-8 py-3 rounded-lg font-medium text-lg hover:bg-blue-700"
-                            >
-                                PRÓXIMO
-                            </button>
+                        <div id="scan-result-overlay" class="hidden absolute inset-0 bg-black bg-opacity-90 flex flex-col rounded-lg">
+                            <!-- Result message at top -->
+                            <div class="flex-none bg-black bg-opacity-75 p-4 text-center rounded-t-lg">
+                                <div id="result-status" class="text-4xl font-bold mb-2"></div>
+                                <div id="result-name" class="text-lg text-white mb-1"></div>
+                                <div id="result-time" class="text-sm text-gray-300 mb-1"></div>
+                                <div id="result-timestamp" class="text-xs text-gray-400"></div>
+                            </div>
+                            
+                            <!-- Spacer to keep scanner view visible -->
+                            <div class="flex-1"></div>
+                            
+                            <!-- Next button at bottom -->
+                            <div class="flex-none p-4 bg-black bg-opacity-75 rounded-b-lg">
+                                <button 
+                                    id="next-scan-btn" 
+                                    class="w-full bg-blue-600 text-white py-3 rounded-lg font-medium text-lg hover:bg-blue-700"
+                                >
+                                    PRÓXIMO
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -386,12 +377,15 @@
         let currentClient = null;
         let allGuests = [];
         let scannedGuests = new Set(); // Local tracking only
+        let scanAttempts = new Map(); // Track scan attempts per code
         let html5QrCode = null;
         let deviceId = null;
         let fastMode = false;
         let soundEnabled = true;
         let vibrationEnabled = true;
         let darkMode = false;
+        let isOnline = navigator.onLine;
+        let connectivityCheckInterval = null;
 
         // Generate unique device ID
         function generateDeviceId() {
@@ -401,6 +395,130 @@
             const newId = 'mobile-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
             localStorage.setItem('scanner_device_id', newId);
             return newId;
+        }
+
+        // Check internet connectivity
+        async function checkConnectivity() {
+            try {
+                // Try to fetch a small resource from Supabase
+                const response = await fetch(SUPABASE_URL + '/rest/v1/', {
+                    method: 'HEAD',
+                    headers: {
+                        'apikey': SUPABASE_KEY
+                    },
+                    timeout: 5000
+                });
+                return response.ok;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        // Handle connectivity changes
+        function handleConnectivityChange(online) {
+            isOnline = online;
+            
+            if (!online) {
+                // Stop scanner if running
+                if (html5QrCode) {
+                    stopScanner();
+                }
+                
+                // Show offline message
+                showToast('error', 'Sem Internet', 'Conexão perdida. O app precisa de internet para funcionar.');
+                
+                // Disable all interactive elements
+                disableApp();
+            } else {
+                // Re-enable app
+                enableApp();
+                showToast('success', 'Online', 'Conexão restaurada!');
+            }
+        }
+
+        // Disable app when offline
+        function disableApp() {
+            // Disable all buttons
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+            });
+            
+            // Show offline overlay
+            showOfflineOverlay();
+        }
+
+        // Enable app when online
+        function enableApp() {
+            // Enable all buttons
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(btn => {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            });
+            
+            // Hide offline overlay
+            hideOfflineOverlay();
+        }
+
+        // Show offline overlay
+        function showOfflineOverlay() {
+            let overlay = document.getElementById('offline-overlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'offline-overlay';
+                overlay.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50';
+                overlay.innerHTML = `
+                    <div class="bg-white rounded-lg p-8 mx-4 text-center max-w-sm">
+                        <div class="text-6xl mb-4">📡</div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Sem Conexão</h3>
+                        <p class="text-gray-600 mb-4">Este app precisa de internet para funcionar. Verifique sua conexão.</p>
+                        <div class="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto"></div>
+                        <p class="text-sm text-gray-500 mt-2">Verificando conexão...</p>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+            }
+            overlay.classList.remove('hidden');
+        }
+
+        // Hide offline overlay
+        function hideOfflineOverlay() {
+            const overlay = document.getElementById('offline-overlay');
+            if (overlay) {
+                overlay.classList.add('hidden');
+            }
+        }
+
+        // Start connectivity monitoring
+        function startConnectivityMonitoring() {
+            // Listen for online/offline events
+            window.addEventListener('online', () => handleConnectivityChange(true));
+            window.addEventListener('offline', () => handleConnectivityChange(false));
+            
+            // Periodic connectivity check (every 10 seconds)
+            connectivityCheckInterval = setInterval(async () => {
+                const online = await checkConnectivity();
+                if (online !== isOnline) {
+                    handleConnectivityChange(online);
+                }
+            }, 10000);
+            
+            // Initial check
+            checkConnectivity().then(online => {
+                if (!online) {
+                    handleConnectivityChange(false);
+                }
+            });
+        }
+
+        // Stop connectivity monitoring
+        function stopConnectivityMonitoring() {
+            if (connectivityCheckInterval) {
+                clearInterval(connectivityCheckInterval);
+                connectivityCheckInterval = null;
+            }
         }
 
         // Sound feedback
@@ -447,11 +565,21 @@
             }
         }
 
-        // Load saved token
-        function loadSavedToken() {
+        // Load saved token and auto-login
+        async function loadSavedToken() {
             const savedToken = localStorage.getItem('saved_token');
             if (savedToken) {
                 document.getElementById('token-input').value = savedToken;
+                
+                // Auto-login with saved token
+                try {
+                    await handleLogin(savedToken);
+                } catch (error) {
+                    // If auto-login fails, clear the saved token and show login screen
+                    localStorage.removeItem('saved_token');
+                    document.getElementById('token-input').value = '';
+                    console.log('Auto-login failed, token may be expired');
+                }
             }
         }
 
@@ -513,6 +641,11 @@
         // Login functionality
         async function handleLogin(token) {
             try {
+                // Check connectivity first
+                if (!isOnline) {
+                    throw new Error('Sem conexão com a internet');
+                }
+
                 // Validate token format
                 if (!token.startsWith('evt-')) {
                     throw new Error('Formato de token inválido');
@@ -552,6 +685,9 @@
                 // Update header
                 document.getElementById('event-name').textContent = client.nome;
                 updateHeaderInfo();
+
+                // Start connectivity monitoring
+                startConnectivityMonitoring();
 
                 showToast('success', 'Sucesso', 'Login realizado com sucesso!');
 
@@ -626,11 +762,9 @@
             const scanned = scannedGuests.size;
             const percentage = total > 0 ? Math.round((scanned / total) * 100) : 0;
             
-            // Update progress ring
-            const circle = document.getElementById('progress-circle');
-            const circumference = 2 * Math.PI * 44;
-            const offset = circumference - (percentage / 100) * circumference;
-            circle.style.strokeDashoffset = offset;
+            // Update progress bar
+            const progressBar = document.getElementById('progress-bar');
+            progressBar.style.width = percentage + '%';
             
             // Update text
             document.getElementById('progress-text').textContent = percentage + '%';
@@ -650,6 +784,12 @@
         let scannerPaused = false;
 
         function startScanner() {
+            // Check connectivity before starting scanner
+            if (!isOnline) {
+                showToast('error', 'Sem Internet', 'Precisa de conexão para usar o scanner');
+                return;
+            }
+
             const scannerArea = document.getElementById('scanner-area');
             const startBtn = document.getElementById('start-scanner-btn');
             
@@ -790,13 +930,25 @@
                 return;
             }
 
+            // Check connectivity before processing scan
+            if (!isOnline) {
+                showScanResult('invalid', 'Sem conexão com a internet');
+                stopScanner();
+                return;
+            }
+
             try {
+                // Track scan attempt
+                const currentAttempts = scanAttempts.get(decodedText) || 0;
+                scanAttempts.set(decodedText, currentAttempts + 1);
+
                 // Validate QR code in Supabase
                 const validationResult = await validateQRCode(decodedText);
                 
                 if (!validationResult.valid) {
                     showScanResult('invalid', validationResult.message);
                     await logScan(decodedText, 'scan_error');
+                    updateDetailedList(); // Update to show attempt count
                     return;
                 }
 
@@ -807,6 +959,8 @@
                     // Get timestamp from logs for when it was first scanned
                     const timestamp = await getFirstScanTimestamp(guest.codigo);
                     showScanResult('used', guest.nome, timestamp);
+                    await logScan(guest.codigo, 'scan_duplicate');
+                    updateDetailedList(); // Update to show attempt count
                     return;
                 }
 
@@ -831,10 +985,25 @@
 
             } catch (error) {
                 console.error('Scan processing error:', error);
-                showScanResult('invalid', 'Erro ao processar: ' + error.message);
                 
-                // Log error to Supabase
-                await logScan(decodedText, 'scan_error');
+                // Track failed attempt
+                const currentAttempts = scanAttempts.get(decodedText) || 0;
+                scanAttempts.set(decodedText, currentAttempts + 1);
+                
+                // Check if error is due to connectivity
+                if (!isOnline) {
+                    showScanResult('invalid', 'Conexão perdida durante o scan');
+                    stopScanner();
+                } else {
+                    showScanResult('invalid', 'Erro ao processar: ' + error.message);
+                }
+                
+                // Try to log error to Supabase if online
+                if (isOnline) {
+                    await logScan(decodedText, 'scan_error');
+                }
+                
+                updateDetailedList(); // Update to show attempt count
             }
         }
 
@@ -986,6 +1155,7 @@
         function clearAllScans() {
             if (confirm('Desmarcar todos os convidados escaneados? (Apenas no dispositivo)')) {
                 scannedGuests.clear();
+                scanAttempts.clear();
                 updateGuestsList();
                 updateProgress();
                 updateDetailedList();
@@ -1000,26 +1170,68 @@
             const scannedGuestsList = allGuests.filter(guest => scannedGuests.has(guest.codigo));
             const pendingGuestsList = allGuests.filter(guest => !scannedGuests.has(guest.codigo));
             
+            // Get all codes that have been attempted (including invalid ones)
+            const attemptedCodes = Array.from(scanAttempts.keys());
+            const invalidAttempts = attemptedCodes.filter(code => 
+                !allGuests.some(guest => guest.codigo === code)
+            );
+            
             let html = '';
             
             if (scannedGuestsList.length > 0) {
                 html += '<div class="p-4 bg-green-50 border-b"><h4 class="font-medium text-green-800">✅ Escaneados (' + scannedGuestsList.length + ')</h4></div>';
-                html += scannedGuestsList.map(guest => `
-                    <div class="p-3 border-b last:border-b-0 bg-green-50">
-                        <p class="font-medium text-green-800">${guest.nome}</p>
-                        <p class="text-sm text-green-600">${guest.codigo}</p>
-                    </div>
-                `).join('');
+                html += scannedGuestsList.map(guest => {
+                    const attempts = scanAttempts.get(guest.codigo) || 1;
+                    const attemptsText = attempts > 1 ? ` (${attempts}x tentativas)` : '';
+                    return `
+                        <div class="p-3 border-b last:border-b-0 bg-green-50">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="font-medium text-green-800">${guest.nome}</p>
+                                    <p class="text-sm text-green-600">${guest.codigo}</p>
+                                </div>
+                                ${attempts > 1 ? `<span class="text-xs bg-green-200 text-green-800 px-2 py-1 rounded">${attempts}x</span>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
             }
             
             if (pendingGuestsList.length > 0) {
                 html += '<div class="p-4 bg-orange-50 border-b"><h4 class="font-medium text-orange-800">⏳ Pendentes (' + pendingGuestsList.length + ')</h4></div>';
-                html += pendingGuestsList.map(guest => `
-                    <div class="p-3 border-b last:border-b-0">
-                        <p class="font-medium">${guest.nome}</p>
-                        <p class="text-sm text-gray-600">${guest.codigo}</p>
-                    </div>
-                `).join('');
+                html += pendingGuestsList.map(guest => {
+                    const attempts = scanAttempts.get(guest.codigo) || 0;
+                    return `
+                        <div class="p-3 border-b last:border-b-0">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="font-medium">${guest.nome}</p>
+                                    <p class="text-sm text-gray-600">${guest.codigo}</p>
+                                </div>
+                                ${attempts > 0 ? `<span class="text-xs bg-orange-200 text-orange-800 px-2 py-1 rounded">${attempts}x tentativas</span>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            // Show invalid attempts
+            if (invalidAttempts.length > 0) {
+                html += '<div class="p-4 bg-red-50 border-b"><h4 class="font-medium text-red-800">❌ Códigos Inválidos (' + invalidAttempts.length + ')</h4></div>';
+                html += invalidAttempts.map(code => {
+                    const attempts = scanAttempts.get(code);
+                    return `
+                        <div class="p-3 border-b last:border-b-0 bg-red-50">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="font-medium text-red-800">Código Inválido</p>
+                                    <p class="text-sm text-red-600">${code}</p>
+                                </div>
+                                <span class="text-xs bg-red-200 text-red-800 px-2 py-1 rounded">${attempts}x tentativas</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
             }
             
             if (html === '') {
@@ -1053,8 +1265,17 @@
                 doc.text(`Pendentes: ${allGuests.length - scannedGuests.size}`, 20, 115);
                 doc.text(`Taxa de Comparência: ${Math.round((scannedGuests.size / allGuests.length) * 100)}%`, 20, 125);
                 
+                // Calculate total attempts
+                const totalAttempts = Array.from(scanAttempts.values()).reduce((sum, attempts) => sum + attempts, 0);
+                const invalidCodes = Array.from(scanAttempts.keys()).filter(code => 
+                    !allGuests.some(guest => guest.codigo === code)
+                ).length;
+                
+                doc.text(`Total de Tentativas de Scan: ${totalAttempts}`, 20, 135);
+                doc.text(`Códigos Inválidos Tentados: ${invalidCodes}`, 20, 145);
+                
                 // Scanned guests list
-                let yPos = 145;
+                let yPos = 165;
                 doc.setFontSize(14);
                 doc.text('Convidados Escaneados:', 20, yPos);
                 yPos += 10;
@@ -1067,9 +1288,39 @@
                         doc.addPage();
                         yPos = 20;
                     }
-                    doc.text(`${index + 1}. ${guest.nome} (${guest.codigo})`, 20, yPos);
+                    const attempts = scanAttempts.get(guest.codigo) || 1;
+                    const attemptsText = attempts > 1 ? ` [${attempts}x tentativas]` : '';
+                    doc.text(`${index + 1}. ${guest.nome} (${guest.codigo})${attemptsText}`, 20, yPos);
                     yPos += 8;
                 });
+                
+                // Add invalid attempts section if any
+                const invalidAttempts = Array.from(scanAttempts.keys()).filter(code => 
+                    !allGuests.some(guest => guest.codigo === code)
+                );
+                
+                if (invalidAttempts.length > 0) {
+                    if (yPos > 250) {
+                        doc.addPage();
+                        yPos = 20;
+                    }
+                    
+                    yPos += 10;
+                    doc.setFontSize(14);
+                    doc.text('Códigos Inválidos Tentados:', 20, yPos);
+                    yPos += 10;
+                    
+                    doc.setFontSize(10);
+                    invalidAttempts.forEach((code, index) => {
+                        if (yPos > 270) {
+                            doc.addPage();
+                            yPos = 20;
+                        }
+                        const attempts = scanAttempts.get(code);
+                        doc.text(`${index + 1}. ${code} [${attempts}x tentativas]`, 20, yPos);
+                        yPos += 8;
+                    });
+                }
                 
                 // Save PDF
                 const fileName = `relatorio_${currentClient.token}_${new Date().toISOString().split('T')[0]}.pdf`;
@@ -1127,10 +1378,17 @@
                     stopScanner();
                 }
                 
+                // Stop connectivity monitoring
+                stopConnectivityMonitoring();
+                
                 // Clear data
                 currentClient = null;
                 allGuests = [];
                 scannedGuests.clear();
+                scanAttempts.clear();
+                
+                // Hide offline overlay if visible
+                hideOfflineOverlay();
                 
                 // Show login screen
                 document.getElementById('main-app').classList.add('hidden');
@@ -1143,10 +1401,18 @@
         }
 
         // Initialize app
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             initTabs();
-            loadSavedToken();
+            await loadSavedToken();
             loadSettings();
+            
+            // Initial connectivity check
+            checkConnectivity().then(online => {
+                isOnline = online;
+                if (!online) {
+                    showToast('error', 'Sem Internet', 'Este app precisa de conexão com a internet');
+                }
+            });
             
             // Settings toggles
             document.getElementById('fast-mode-toggle').addEventListener('change', (e) => {
@@ -1175,12 +1441,21 @@
             });
             
             // Login form
-            document.getElementById('login-form').addEventListener('submit', (e) => {
+            document.getElementById('login-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const token = document.getElementById('token-input').value.trim();
                 if (token) {
                     document.getElementById('login-error').classList.add('hidden');
-                    handleLogin(token);
+                    const loginBtn = document.getElementById('login-btn');
+                    loginBtn.textContent = 'Entrando...';
+                    loginBtn.disabled = true;
+                    
+                    try {
+                        await handleLogin(token);
+                    } finally {
+                        loginBtn.textContent = 'Entrar';
+                        loginBtn.disabled = false;
+                    }
                 }
             });
 
@@ -1205,5 +1480,5 @@
             });
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9673080f73f977d9',t:'MTc1Mzg1OTM3Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967318b6f02977d9',t:'MTc1Mzg2MDA1OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
