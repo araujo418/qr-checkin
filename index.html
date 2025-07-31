@@ -434,10 +434,10 @@
                             <div id="connection-indicator" class="flex items-center">
                                 <div class="w-2 h-2 bg-gray-500 rounded-full mr-2"></div>
                             </div>
-                            <button onclick="toggleTheme()" class="text-gray-400 hover:text-white" title="Alternar tema">
+                            <button class="text-gray-400 hover:text-white" title="Alternar tema">
                                 <i id="theme-icon" class="fas fa-moon text-xl"></i>
                             </button>
-                            <button onclick="logout()" class="text-gray-400 hover:text-white">
+                            <button class="text-gray-400 hover:text-white">
                                 <i class="fas fa-sign-out-alt text-xl"></i>
                             </button>
                         </div>
@@ -448,11 +448,11 @@
             <!-- Navigation -->
             <nav class="bg-gray-800 border-b border-gray-700 flex-shrink-0">
                 <div class="flex">
-                    <button onclick="showTab('scanner')" id="tab-scanner" class="flex-1 py-4 px-2 text-center bg-blue-600 text-white min-h-[60px] active:bg-blue-700">
+                    <button id="tab-scanner" class="flex-1 py-4 px-2 text-center bg-blue-600 text-white min-h-[60px] active:bg-blue-700">
                         <i class="fas fa-qrcode block mb-1 text-lg"></i>
                         <span class="text-xs">Scanner</span>
                     </button>
-                    <button onclick="showTab('options')" id="tab-options" class="flex-1 py-4 px-2 text-center text-gray-400 hover:text-white min-h-[60px] active:bg-gray-700">
+                    <button id="tab-options" class="flex-1 py-4 px-2 text-center text-gray-400 hover:text-white min-h-[60px] active:bg-gray-700">
                         <i class="fas fa-ellipsis-h block mb-1 text-lg"></i>
                         <span class="text-xs">Opções</span>
                     </button>
@@ -487,12 +487,12 @@
 
                 <!-- Controls -->
                 <div class="p-4 space-y-4">
-                    <button id="scanner-toggle" onclick="toggleScanner()" 
+                    <button id="scanner-toggle" 
                             class="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-medium py-4 px-6 rounded-lg transition-colors text-lg min-h-[56px]">
                         <i class="fas fa-play mr-2"></i>Iniciar Scanner
                     </button>
 
-                    <button id="next-scan-btn" onclick="enableNextScan()" 
+                    <button id="next-scan-btn" 
                             class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium py-4 px-6 rounded-lg transition-colors text-lg min-h-[56px] hidden">
                         <i class="fas fa-arrow-right mr-2"></i>Próximo Convidado
                     </button>
@@ -500,6 +500,15 @@
                     <div id="scan-status-info" class="bg-gray-800 rounded-lg p-4 text-center hidden">
                         <p class="text-gray-400 text-sm mb-2">Scanner ativo - aguardando próximo comando</p>
                         <p class="text-xs text-gray-500">Clique em "Próximo Convidado" para escanear</p>
+                    </div>
+
+                    <!-- Debug Info -->
+                    <div id="debug-info" class="bg-gray-800 rounded-lg p-4 text-xs text-gray-400 hidden">
+                        <h4 class="font-medium text-white mb-2">Debug Info:</h4>
+                        <div id="debug-content">Clique em "Iniciar Scanner" para ver informações de debug</div>
+                        <button onclick="toggleDebug()" class="mt-2 text-blue-400 hover:text-blue-300">
+                            <i class="fas fa-bug mr-1"></i>Toggle Debug
+                        </button>
                     </div>
                 </div>
                     </div>
@@ -528,7 +537,7 @@
 
                             <!-- Options Menu -->
                             <div class="space-y-3">
-                                <button onclick="showSubTab('guests')" class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-white font-medium py-4 px-6 rounded-lg transition-colors text-left flex items-center justify-between min-h-[56px]">
+                                <button class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-white font-medium py-4 px-6 rounded-lg transition-colors text-left flex items-center justify-between min-h-[56px]">
                                     <div class="flex items-center">
                                         <i class="fas fa-users text-blue-500 mr-4 text-xl"></i>
                                         <div>
@@ -539,7 +548,7 @@
                                     <i class="fas fa-chevron-right text-gray-400"></i>
                                 </button>
 
-                                <button onclick="showSubTab('reports')" class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-white font-medium py-4 px-6 rounded-lg transition-colors text-left flex items-center justify-between min-h-[56px]">
+                                <button class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-white font-medium py-4 px-6 rounded-lg transition-colors text-left flex items-center justify-between min-h-[56px]">
                                     <div class="flex items-center">
                                         <i class="fas fa-chart-bar text-green-500 mr-4 text-xl"></i>
                                         <div>
@@ -550,7 +559,7 @@
                                     <i class="fas fa-chevron-right text-gray-400"></i>
                                 </button>
 
-                                <button onclick="showSubTab('settings')" class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-white font-medium py-4 px-6 rounded-lg transition-colors text-left flex items-center justify-between min-h-[56px]">
+                                <button class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-white font-medium py-4 px-6 rounded-lg transition-colors text-left flex items-center justify-between min-h-[56px]">
                                     <div class="flex items-center">
                                         <i class="fas fa-cog text-purple-500 mr-4 text-xl"></i>
                                         <div>
@@ -561,7 +570,7 @@
                                     <i class="fas fa-chevron-right text-gray-400"></i>
                                 </button>
 
-                                <button onclick="clearAllScans()" class="w-full bg-orange-600 hover:bg-orange-700 active:bg-orange-800 text-white font-medium py-4 px-6 rounded-lg transition-colors text-left flex items-center justify-between min-h-[56px]">
+                                <button class="w-full bg-orange-600 hover:bg-orange-700 active:bg-orange-800 text-white font-medium py-4 px-6 rounded-lg transition-colors text-left flex items-center justify-between min-h-[56px]">
                                     <div class="flex items-center">
                                         <i class="fas fa-undo text-white mr-4 text-xl"></i>
                                         <div>
@@ -855,20 +864,139 @@
         
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('App initializing...');
+            
             // Force fullscreen mode
             enterFullscreenMode();
             
             // Prevent browser UI
             preventBrowserUI();
             
+            // Initialize all components
             checkConnectivity();
             setupLoginForm();
+            setupEventListeners();
             loadCameras();
             checkSavedToken(); // Check for saved token
             initializeTheme();
             setupSwipeNavigation();
             setInterval(checkConnectivity, 30000); // Check every 30 seconds
+            
+            console.log('App initialized successfully');
         });
+
+        // Setup all event listeners
+        function setupEventListeners() {
+            console.log('Setting up event listeners...');
+            
+            // Scanner toggle button
+            const scannerToggle = document.getElementById('scanner-toggle');
+            if (scannerToggle) {
+                scannerToggle.addEventListener('click', toggleScanner);
+            }
+            
+            // Next scan button
+            const nextScanBtn = document.getElementById('next-scan-btn');
+            if (nextScanBtn) {
+                nextScanBtn.addEventListener('click', enableNextScan);
+            }
+            
+            // Tab buttons
+            const tabScanner = document.getElementById('tab-scanner');
+            const tabOptions = document.getElementById('tab-options');
+            if (tabScanner) {
+                tabScanner.addEventListener('click', () => showTab('scanner'));
+            }
+            if (tabOptions) {
+                tabOptions.addEventListener('click', () => showTab('options'));
+            }
+            
+            // Theme toggle - use more specific selector
+            const headerButtons = document.querySelectorAll('header .flex.items-center.space-x-3 button');
+            if (headerButtons.length >= 2) {
+                headerButtons[0].addEventListener('click', toggleTheme);
+                headerButtons[1].addEventListener('click', logout);
+            }
+            
+            // Options menu buttons - use more specific selectors
+            const optionsButtons = document.querySelectorAll('#content-options .space-y-3 button');
+            if (optionsButtons.length >= 4) {
+                optionsButtons[0].addEventListener('click', () => showSubTab('guests'));
+                optionsButtons[1].addEventListener('click', () => showSubTab('reports'));
+                optionsButtons[2].addEventListener('click', () => showSubTab('settings'));
+                optionsButtons[3].addEventListener('click', clearAllScans);
+            }
+            
+            // Back buttons
+            document.querySelectorAll('[onclick="showTab(\'options\')"]').forEach(btn => {
+                btn.removeAttribute('onclick');
+                btn.addEventListener('click', () => showTab('options'));
+            });
+            
+            // Filter buttons
+            const filterAll = document.getElementById('filter-all');
+            const filterScanned = document.getElementById('filter-scanned');
+            const filterPending = document.getElementById('filter-pending');
+            
+            if (filterAll) {
+                filterAll.addEventListener('click', () => filterGuestsByStatus('all'));
+            }
+            if (filterScanned) {
+                filterScanned.addEventListener('click', () => filterGuestsByStatus('scanned'));
+            }
+            if (filterPending) {
+                filterPending.addEventListener('click', () => filterGuestsByStatus('pending'));
+            }
+            
+            // Search input
+            const guestSearch = document.getElementById('guest-search');
+            if (guestSearch) {
+                guestSearch.addEventListener('keyup', filterGuests);
+            }
+            
+            // Report buttons
+            const pdfBtn = document.querySelector('[onclick="generatePDFReport()"]');
+            const shareBtn = document.querySelector('[onclick="shareReport()"]');
+            
+            if (pdfBtn) {
+                pdfBtn.removeAttribute('onclick');
+                pdfBtn.addEventListener('click', generatePDFReport);
+            }
+            if (shareBtn) {
+                shareBtn.removeAttribute('onclick');
+                shareBtn.addEventListener('click', shareReport);
+            }
+            
+            // Settings buttons
+            const clearTokenBtn = document.querySelector('[onclick="clearSavedTokenAndNotify()"]');
+            if (clearTokenBtn) {
+                clearTokenBtn.removeAttribute('onclick');
+                clearTokenBtn.addEventListener('click', clearSavedTokenAndNotify);
+            }
+            
+            // Fullscreen scanner close button
+            const closeBtn = document.querySelector('[onclick="closeFullscreenScanner()"]');
+            if (closeBtn) {
+                closeBtn.removeAttribute('onclick');
+                closeBtn.addEventListener('click', closeFullscreenScanner);
+            }
+            
+            // Debug toggle
+            const debugBtn = document.querySelector('[onclick="toggleDebug()"]');
+            if (debugBtn) {
+                debugBtn.removeAttribute('onclick');
+                debugBtn.addEventListener('click', toggleDebug);
+            }
+            
+            // Connectivity check button
+            const connectivityBtn = document.querySelector('[onclick="checkConnectivity()"]');
+            if (connectivityBtn) {
+                connectivityBtn.removeAttribute('onclick');
+                connectivityBtn.addEventListener('click', checkConnectivity);
+            }
+            
+            console.log('Event listeners setup complete');
+        }
 
         // Fullscreen and browser UI prevention
         function enterFullscreenMode() {
@@ -1402,9 +1530,15 @@
         // Scanner functionality
         async function initializeScanner() {
             try {
+                if (html5QrCode) {
+                    return; // Already initialized
+                }
                 html5QrCode = new Html5Qrcode("qr-reader-fullscreen");
+                console.log('Scanner initialized successfully');
             } catch (error) {
-                showToast('Erro ao inicializar scanner', 'error');
+                console.error('Scanner initialization error:', error);
+                showToast('Erro ao inicializar scanner: ' + error.message, 'error');
+                throw error;
             }
         }
 
@@ -1482,28 +1616,54 @@
         }
 
         async function startScanner() {
-            if (!html5QrCode) {
-                await initializeScanner();
-            }
-
-            // Open fullscreen scanner
-            openFullscreenScanner();
-
-            const cameraId = document.getElementById('camera-select').value || { facingMode: "environment" };
+            console.log('Starting scanner...');
             
             try {
+                // Check camera permissions first
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error('Câmera não suportada neste dispositivo');
+                }
+
+                // Request camera permission
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    stream.getTracks().forEach(track => track.stop()); // Stop the test stream
+                    console.log('Camera permission granted');
+                } catch (permError) {
+                    throw new Error('Permissão de câmera negada. Ative a câmera nas configurações do browser.');
+                }
+
+                // Initialize scanner if needed
+                if (!html5QrCode) {
+                    await initializeScanner();
+                }
+
+                // Open fullscreen scanner
+                openFullscreenScanner();
+
+                // Get camera configuration
+                const cameraSelect = document.getElementById('camera-select');
+                const cameraId = cameraSelect.value || { facingMode: "environment" };
+                
+                console.log('Using camera:', cameraId);
+                
+                const config = {
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1.0
+                };
+
                 await html5QrCode.start(
                     cameraId,
-                    {
-                        fps: 10,
-                        qrbox: { width: 300, height: 300 }
-                    },
+                    config,
                     onScanSuccess,
                     onScanFailure
                 );
                 
                 isScanning = true;
                 canScan = false; // Start with scanning disabled
+                
+                console.log('Scanner started successfully');
                 
                 // Update UI
                 document.getElementById('scanner-toggle').innerHTML = '<i class="fas fa-stop mr-2"></i>Parar Scanner';
@@ -1515,9 +1675,15 @@
                     corner.classList.add('pulse-animation');
                 });
                 
+                showToast('Scanner iniciado com sucesso', 'success');
+                
             } catch (error) {
+                console.error('Scanner start error:', error);
                 showToast('Erro ao iniciar scanner: ' + error.message, 'error');
                 closeFullscreenScanner();
+                
+                // Reset button state
+                document.getElementById('scanner-toggle').innerHTML = '<i class="fas fa-play mr-2"></i>Iniciar Scanner';
             }
         }
 
@@ -2031,6 +2197,38 @@
             }, 5000);
         }
 
+        // Debug functionality
+        function toggleDebug() {
+            const debugInfo = document.getElementById('debug-info');
+            debugInfo.classList.toggle('hidden');
+            
+            if (!debugInfo.classList.contains('hidden')) {
+                updateDebugInfo();
+            }
+        }
+
+        function updateDebugInfo() {
+            const debugContent = document.getElementById('debug-content');
+            const info = [
+                `User Agent: ${navigator.userAgent}`,
+                `Screen: ${screen.width}x${screen.height}`,
+                `Viewport: ${window.innerWidth}x${window.innerHeight}`,
+                `Online: ${navigator.onLine}`,
+                `HTTPS: ${location.protocol === 'https:'}`,
+                `MediaDevices: ${!!navigator.mediaDevices}`,
+                `getUserMedia: ${!!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)}`,
+                `Scanner State: ${isScanning ? 'Active' : 'Stopped'}`,
+                `Can Scan: ${canScan}`,
+                `HTML5QrCode: ${!!html5QrCode}`,
+                `Cameras Available: ${document.getElementById('camera-select').options.length - 1}`,
+                `Current Client: ${currentClient ? currentClient.nome : 'None'}`,
+                `Guests Loaded: ${guests.length}`,
+                `Scanned Count: ${scannedGuests.size}`
+            ];
+            
+            debugContent.innerHTML = info.join('<br>');
+        }
+
         // Handle page visibility changes
         document.addEventListener('visibilitychange', function() {
             if (document.hidden && isScanning) {
@@ -2043,5 +2241,5 @@
         window.addEventListener('online', checkConnectivity);
         window.addEventListener('offline', checkConnectivity);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967b15f603db77d7',t:'MTc1Mzk0MzgzMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967b2098b40477d7',t:'MTc1Mzk0NDI2OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
