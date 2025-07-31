@@ -1,543 +1,1129 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InvitesQR - Scanner Mobile</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#1f2937">
+    <title>InvitesQR Scanner</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .dark-mode {
-            background: #1a1a1a;
-            color: #ffffff;
-        }
-        .dark-mode .bg-white {
-            background: #2d2d2d !important;
-            color: #ffffff !important;
-        }
-        .dark-mode .text-gray-800 {
-            color: #ffffff !important;
-        }
-        .dark-mode .text-gray-600 {
-            color: #cccccc !important;
-        }
-        .dark-mode .border-gray-300 {
-            border-color: #444444 !important;
-        }
-        .tab-active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        .scanner-container {
-            position: relative;
-            width: 100%;
-            max-width: 400px;
-            margin: 0 auto;
-        }
         .scanner-overlay {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            border: 2px solid #667eea;
-            border-radius: 12px;
             pointer-events: none;
-            z-index: 10;
         }
-        .scanner-overlay::before {
-            content: '';
+        .scanner-corner {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 200px;
-            height: 200px;
-            border: 2px solid #667eea;
-            border-radius: 8px;
-            box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);
+            width: 30px;
+            height: 30px;
+            border: 3px solid #10b981;
         }
-        .toast {
-            position: fixed;
+        .scanner-corner.top-left {
             top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            transition: all 0.3s ease;
-            opacity: 0;
-            pointer-events: none;
+            left: 20px;
+            border-right: none;
+            border-bottom: none;
         }
-        .toast.show {
-            opacity: 1;
-            pointer-events: auto;
+        .scanner-corner.top-right {
+            top: 20px;
+            right: 20px;
+            border-left: none;
+            border-bottom: none;
         }
-        .progress-ring {
-            transform: rotate(-90deg);
+        .scanner-corner.bottom-left {
+            bottom: 20px;
+            left: 20px;
+            border-right: none;
+            border-top: none;
         }
-        .progress-ring-circle {
-            transition: stroke-dashoffset 0.35s;
-            transform-origin: 50% 50%;
+        .scanner-corner.bottom-right {
+            bottom: 20px;
+            right: 20px;
+            border-left: none;
+            border-top: none;
         }
-        .guest-item {
-            transition: all 0.3s ease;
+        .pulse-animation {
+            animation: pulse 2s infinite;
         }
-        .guest-scanned {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
-        .guest-pending {
-            background: #f3f4f6;
-            color: #374151;
+        .slide-up {
+            animation: slideUp 0.3s ease-out;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .offline-overlay {
+            backdrop-filter: blur(4px);
+            background: rgba(0, 0, 0, 0.7);
+        }
+        .success-flash {
+            animation: successFlash 0.5s ease-out;
+        }
+        @keyframes successFlash {
+            0% { background-color: rgba(16, 185, 129, 0); }
+            50% { background-color: rgba(16, 185, 129, 0.3); }
+            100% { background-color: rgba(16, 185, 129, 0); }
+        }
+        .error-flash {
+            animation: errorFlash 0.5s ease-out;
+        }
+        @keyframes errorFlash {
+            0% { background-color: rgba(239, 68, 68, 0); }
+            50% { background-color: rgba(239, 68, 68, 0.3); }
+            100% { background-color: rgba(239, 68, 68, 0); }
+        }
+        
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .scanner-corner {
+                width: 25px;
+                height: 25px;
+                border-width: 2px;
+            }
+            
+            .scanner-corner.top-left,
+            .scanner-corner.top-right {
+                top: 15px;
+            }
+            
+            .scanner-corner.bottom-left,
+            .scanner-corner.bottom-right {
+                bottom: 15px;
+            }
+            
+            .scanner-corner.top-left,
+            .scanner-corner.bottom-left {
+                left: 15px;
+            }
+            
+            .scanner-corner.top-right,
+            .scanner-corner.bottom-right {
+                right: 15px;
+            }
+        }
+        
+        /* Prevent text selection on buttons */
+        button {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
         }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-gray-900 text-white min-h-screen">
+    <!-- Offline Overlay -->
+    <div id="offline-overlay" class="fixed inset-0 offline-overlay z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 mx-4 text-center text-gray-900 max-w-sm">
+            <i class="fas fa-wifi-slash text-4xl text-red-500 mb-4"></i>
+            <h3 class="text-lg font-bold mb-2">Sem Conexão</h3>
+            <p class="text-gray-600 mb-4">Verifique sua conexão com a internet para continuar.</p>
+            <button onclick="checkConnectivity()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                <i class="fas fa-sync-alt mr-2"></i>Tentar Novamente
+            </button>
+        </div>
+    </div>
+
     <!-- Login Screen -->
     <div id="login-screen" class="min-h-screen flex items-center justify-center p-4">
-        <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
+        <div class="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">
             <div class="text-center mb-8">
-                <div class="text-6xl mb-4">📱</div>
-                <h1 class="text-2xl font-bold text-gray-800">InvitesQR Scanner</h1>
-                <p class="text-gray-600">Insira o token do evento</p>
+                <i class="fas fa-qrcode text-5xl text-blue-500 mb-4"></i>
+                <h1 class="text-2xl font-bold mb-2">InvitesQR Scanner</h1>
+                <p class="text-gray-400">Validação de Convidados</p>
             </div>
-            
-            <form id="login-form">
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Token do Evento</label>
-                    <input 
-                        type="text" 
-                        id="token-input" 
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="evt-123456"
-                        required
-                    >
+
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Token do Evento</label>
+                    <input type="text" id="event-token" required 
+                           class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                           placeholder="evt-123456">
                 </div>
-                
-                <button 
-                    type="submit" 
-                    id="login-btn"
-                    class="w-full gradient-bg text-white py-3 rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
-                >
-                    Entrar
+
+                <button type="submit" id="login-btn" 
+                        class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium py-4 px-6 rounded-lg transition-colors text-lg min-h-[56px]">
+                    <i class="fas fa-sign-in-alt mr-2"></i>Entrar
                 </button>
             </form>
-            
-            <div id="login-error" class="hidden mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
-                Token inválido ou evento expirado
+
+            <div class="mt-6 text-center">
+                <div id="connection-status" class="flex items-center justify-center text-sm">
+                    <div class="w-2 h-2 bg-gray-500 rounded-full mr-2"></div>
+                    <span class="text-gray-400">Verificando conexão...</span>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Main App -->
-    <div id="main-app" class="hidden min-h-screen">
+    <div id="main-app" class="hidden">
         <!-- Header -->
-        <header class="gradient-bg text-white shadow-lg sticky top-0 z-40">
-            <div class="px-4 py-4">
-                <div class="flex justify-between items-center">
+        <header class="bg-gray-800 shadow-lg">
+            <div class="px-4 py-3">
+                <div class="flex items-center justify-between">
                     <div>
-                        <h1 class="text-xl font-bold" id="event-name">Carregando...</h1>
-                        <p class="text-blue-100 text-sm" id="event-info">Scanner Mobile</p>
+                        <h1 id="event-name" class="text-lg font-bold">Carregando...</h1>
+                        <p id="event-info" class="text-sm text-gray-400">Preparando scanner...</p>
                     </div>
-                    <button id="logout-btn" class="bg-white bg-opacity-20 px-3 py-1 rounded text-sm hover:bg-opacity-30">
-                        Sair
-                    </button>
+                    <div class="flex items-center space-x-3">
+                        <div id="connection-indicator" class="flex items-center">
+                            <div class="w-2 h-2 bg-gray-500 rounded-full mr-2"></div>
+                        </div>
+                        <button onclick="logout()" class="text-gray-400 hover:text-white">
+                            <i class="fas fa-sign-out-alt text-xl"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </header>
 
-        <!-- Tab Navigation -->
-        <nav class="bg-white shadow-sm border-b sticky top-16 z-30">
+        <!-- Navigation -->
+        <nav class="bg-gray-800 border-t border-gray-700 fixed bottom-0 left-0 right-0 z-30">
             <div class="flex">
-                <button class="tab-btn tab-active flex-1 py-3 px-4 font-medium transition-all" data-tab="scanner">
-                    📱 Scanner
+                <button onclick="showTab('scanner')" id="tab-scanner" class="flex-1 py-4 px-2 text-center bg-blue-600 text-white min-h-[60px] active:bg-blue-700">
+                    <i class="fas fa-qrcode block mb-1 text-lg"></i>
+                    <span class="text-xs">Scanner</span>
                 </button>
-                <button class="tab-btn flex-1 py-3 px-4 font-medium text-gray-600 hover:text-blue-600 transition-all" data-tab="opcoes">
-                    ⚙️ Opções
+                <button onclick="showTab('options')" id="tab-options" class="flex-1 py-4 px-2 text-center text-gray-400 hover:text-white min-h-[60px] active:bg-gray-700">
+                    <i class="fas fa-ellipsis-h block mb-1 text-lg"></i>
+                    <span class="text-xs">Opções</span>
                 </button>
             </div>
         </nav>
 
         <!-- Scanner Tab -->
-        <div id="scanner" class="tab-content p-4">
+        <div id="content-scanner" class="tab-content pb-20">
             <!-- Progress Bar -->
-            <div class="mb-6">
+            <div class="bg-gray-800 p-4">
                 <div class="flex justify-between items-center mb-2">
-                    <h3 class="text-lg font-semibold text-gray-800">Progresso do Evento</h3>
-                    <span id="progress-text" class="text-lg font-bold text-blue-600">0%</span>
+                    <span class="text-sm font-medium">Progresso do Evento</span>
+                    <span id="scanner-progress-percentage" class="text-sm text-gray-400">0%</span>
                 </div>
-                <div class="w-full bg-gray-200 rounded-full h-4 mb-3">
-                    <div id="progress-bar" class="gradient-bg h-4 rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+                <div class="w-full bg-gray-700 rounded-full h-3">
+                    <div id="scanner-progress-bar" class="bg-green-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
                 </div>
-                <p class="text-sm text-gray-600 text-center">
-                    <span id="scanned-count">0</span> de <span id="total-count">0</span> convidados escaneados
-                </p>
-            </div>
-
-
-
-            <!-- Scanner Controls -->
-            <div class="mb-6">
-                <button 
-                    id="start-scanner-btn" 
-                    class="w-full gradient-bg text-white py-4 rounded-lg font-medium text-lg hover:opacity-90 transition-opacity"
-                >
-                    🎯 Iniciar Scanner
-                </button>
-            </div>
-
-            <!-- Scanner Area -->
-            <div id="scanner-area" class="hidden fixed inset-0 bg-black z-50 flex flex-col">
-                <!-- Scanner Header -->
-                <div class="bg-black bg-opacity-50 text-white p-4 flex justify-between items-center relative z-60">
-                    <div>
-                        <h3 class="font-bold text-lg">Scanner QR</h3>
-                        <p class="text-sm opacity-75" id="scanner-counter">0 escaneados nesta sessão</p>
-                    </div>
-                    <button 
-                        id="close-scanner-btn" 
-                        class="bg-red-600 text-white w-10 h-10 rounded-full hover:bg-red-700 flex items-center justify-center text-xl z-60 relative"
-                    >
-                        ×
-                    </button>
-                </div>
-
-                <!-- Scan Result Messages (Above Scanner) -->
-                <div id="scan-result-overlay" class="hidden bg-black bg-opacity-90 text-center p-6 relative z-60">
-                    <div id="result-status" class="text-5xl font-bold mb-3"></div>
-                    <div id="result-name" class="text-xl text-white mb-2"></div>
-                    <div id="result-time" class="text-sm text-gray-300 mb-1"></div>
-                    <div id="result-timestamp" class="text-xs text-gray-400"></div>
-                </div>
-
-                <!-- Scanner Container -->
-                <div class="flex-1 flex items-center justify-center p-4">
-                    <div class="scanner-container relative">
-                        <div id="qr-reader" class="rounded-lg overflow-hidden"></div>
-                        <div class="scanner-overlay"></div>
-                    </div>
-                </div>
-
-                <!-- Next Button (Below Scanner) -->
-                <div id="next-button-area" class="hidden bg-black bg-opacity-75 p-4 relative z-60">
-                    <button 
-                        id="next-scan-btn" 
-                        class="w-full bg-blue-600 text-white py-4 rounded-lg font-medium text-lg hover:bg-blue-700"
-                    >
-                        PRÓXIMO
-                    </button>
-                </div>
-
-                <!-- Scanner Instructions -->
-                <div class="bg-black bg-opacity-50 text-white p-4 text-center">
-                    <p class="text-sm">Aponte a câmara para o código QR</p>
+                <div class="flex justify-between items-center mt-2 text-xs text-gray-400">
+                    <span id="scanner-validated-count">0 validados</span>
+                    <span id="scanner-total-count">de 0 convidados</span>
                 </div>
             </div>
 
-            <!-- Guest List -->
-            <div class="bg-white rounded-lg shadow-md">
-                <div class="p-4 border-b">
-                    <h3 class="font-semibold text-lg">Lista de Convidados</h3>
+            <!-- Scanner Container -->
+            <div class="relative">
+                <div id="qr-reader" class="w-full" style="height: 50vh; min-height: 300px;"></div>
+                <div class="scanner-overlay">
+                    <div class="scanner-corner top-left"></div>
+                    <div class="scanner-corner top-right"></div>
+                    <div class="scanner-corner bottom-left"></div>
+                    <div class="scanner-corner bottom-right"></div>
                 </div>
-                <div id="guests-list" class="max-h-96 overflow-y-auto">
-                    <!-- Guest items will be loaded here -->
-                </div>
-            </div>
-        </div>
-
-        <!-- Opções Tab -->
-        <div id="opcoes" class="tab-content hidden p-4">
-            <!-- Scanner Settings -->
-            <div class="bg-white rounded-lg shadow-md p-4 mb-6">
-                <h3 class="font-semibold text-lg mb-4">Configurações do Scanner</h3>
                 
-                <div class="space-y-4">
-                    <!-- Fast Mode Toggle -->
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="font-medium">⚡ Modo Rápido</p>
-                            <p class="text-sm text-gray-600">Scan contínuo sem parar</p>
-                        </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="fast-mode-toggle" class="sr-only peer">
-                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                        </label>
-                    </div>
-
-                    <!-- Dark Mode Toggle -->
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="font-medium">🌙 Modo Noturno</p>
-                            <p class="text-sm text-gray-600">Interface escura</p>
-                        </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="dark-mode-toggle" class="sr-only peer">
-                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                        </label>
-                    </div>
-
-                    <!-- Sound Toggle -->
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="font-medium">🔊 Som</p>
-                            <p class="text-sm text-gray-600">Feedback sonoro</p>
-                        </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="sound-toggle" class="sr-only peer" checked>
-                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                        </label>
-                    </div>
-
-                    <!-- Vibration Toggle -->
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="font-medium">📳 Vibração</p>
-                            <p class="text-sm text-gray-600">Feedback tátil</p>
-                        </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="vibration-toggle" class="sr-only peer" checked>
-                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                        </label>
+                <!-- Scanner Status -->
+                <div id="scanner-status" class="absolute bottom-4 left-4 right-4 text-center">
+                    <div class="bg-black bg-opacity-50 rounded-lg p-3">
+                        <p class="text-sm text-white">Posicione o QR code na área de leitura</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Summary Cards -->
-            <div class="grid grid-cols-2 gap-4 mb-6">
-                <div class="bg-white rounded-lg shadow-md p-4 text-center">
-                    <div class="text-2xl mb-2">✅</div>
-                    <p class="text-2xl font-bold text-green-600" id="summary-scanned">0</p>
-                    <p class="text-sm text-gray-600">Escaneados</p>
+            <!-- Controls -->
+            <div class="p-4 space-y-4">
+                <div class="flex items-center justify-between bg-gray-800 rounded-lg p-4">
+                    <div>
+                        <h3 class="font-medium">Modo Rápido</h3>
+                        <p class="text-sm text-gray-400">Scan contínuo sem pausas</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="fast-mode" class="sr-only peer" onchange="toggleFastMode()">
+                        <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
                 </div>
-                <div class="bg-white rounded-lg shadow-md p-4 text-center">
-                    <div class="text-2xl mb-2">⏳</div>
-                    <p class="text-2xl font-bold text-orange-600" id="summary-pending">0</p>
-                    <p class="text-sm text-gray-600">Pendentes</p>
-                </div>
-            </div>
 
-            <!-- Action Buttons -->
-            <div class="space-y-4 mb-6">
-                <button 
-                    id="clear-scans-btn" 
-                    class="w-full bg-orange-600 text-white py-3 rounded-lg font-medium hover:bg-orange-700"
-                >
-                    🔄 Desmarcar Todos os Escaneados
-                </button>
-                <button 
-                    id="download-pdf-btn" 
-                    class="w-full bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700"
-                >
-                    📄 Baixar Relatório PDF
+                <button id="scanner-toggle" onclick="toggleScanner()" 
+                        class="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-medium py-4 px-6 rounded-lg transition-colors text-lg min-h-[56px]">
+                    <i class="fas fa-play mr-2"></i>Iniciar Scanner
                 </button>
             </div>
 
-            <!-- Detailed List -->
-            <div class="bg-white rounded-lg shadow-md">
-                <div class="p-4 border-b">
-                    <h3 class="font-semibold text-lg">Relatório Detalhado</h3>
+            <!-- Last Scan Result -->
+            <div id="last-scan-result" class="hidden mx-4 mb-4 p-4 rounded-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h4 id="scan-guest-name" class="font-medium"></h4>
+                        <p id="scan-guest-code" class="text-sm text-gray-400"></p>
+                    </div>
+                    <div id="scan-status-icon" class="text-2xl"></div>
                 </div>
-                <div id="detailed-list" class="max-h-96 overflow-y-auto">
-                    <!-- Detailed items will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Options Tab -->
+        <div id="content-options" class="tab-content hidden pb-20">
+            <div class="p-4">
+                <!-- Stats Overview -->
+                <div class="bg-gray-800 rounded-lg p-4 mb-6">
+                    <h3 class="text-lg font-medium mb-4">Estatísticas</h3>
+                    <div class="grid grid-cols-3 gap-4 text-center">
+                        <div>
+                            <div id="options-scanned-count" class="text-2xl font-bold text-green-500">0</div>
+                            <div class="text-xs text-gray-400">Validados</div>
+                        </div>
+                        <div>
+                            <div id="options-total-guests" class="text-2xl font-bold text-blue-500">0</div>
+                            <div class="text-xs text-gray-400">Total</div>
+                        </div>
+                        <div>
+                            <div id="options-session-scans" class="text-2xl font-bold text-purple-500">0</div>
+                            <div class="text-xs text-gray-400">Sessão</div>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Options Menu -->
+                <div class="space-y-3">
+                    <button onclick="showSubTab('guests')" class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-white font-medium py-4 px-6 rounded-lg transition-colors text-left flex items-center justify-between min-h-[56px]">
+                        <div class="flex items-center">
+                            <i class="fas fa-users text-blue-500 mr-4 text-xl"></i>
+                            <div>
+                                <h3 class="font-medium">Convidados</h3>
+                                <p class="text-sm text-gray-400">Ver lista de convidados</p>
+                            </div>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-400"></i>
+                    </button>
+
+                    <button onclick="showSubTab('reports')" class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-white font-medium py-4 px-6 rounded-lg transition-colors text-left flex items-center justify-between min-h-[56px]">
+                        <div class="flex items-center">
+                            <i class="fas fa-chart-bar text-green-500 mr-4 text-xl"></i>
+                            <div>
+                                <h3 class="font-medium">Relatórios</h3>
+                                <p class="text-sm text-gray-400">Estatísticas e exportação</p>
+                            </div>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-400"></i>
+                    </button>
+
+                    <button onclick="showSubTab('settings')" class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-white font-medium py-4 px-6 rounded-lg transition-colors text-left flex items-center justify-between min-h-[56px]">
+                        <div class="flex items-center">
+                            <i class="fas fa-cog text-purple-500 mr-4 text-xl"></i>
+                            <div>
+                                <h3 class="font-medium">Configurações</h3>
+                                <p class="text-sm text-gray-400">Ajustes do aplicativo</p>
+                            </div>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-400"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Guests Sub-Tab -->
+        <div id="content-guests" class="tab-content hidden pb-20">
+            <!-- Back Button -->
+            <div class="bg-gray-800 p-4 flex items-center border-b border-gray-700">
+                <button onclick="showTab('options')" class="flex items-center text-blue-500 hover:text-blue-400">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    <span>Voltar</span>
+                </button>
+                <h2 class="ml-4 text-lg font-medium">Convidados</h2>
+            </div>
+            <div class="p-4">
+                <!-- Search -->
+                <div class="mb-4">
+                    <div class="relative">
+                        <input type="text" id="guest-search" placeholder="Buscar convidado..." 
+                               class="w-full bg-gray-800 border border-gray-600 rounded-lg pl-10 pr-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               onkeyup="filterGuests()">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="flex space-x-2 mb-4">
+                    <button onclick="filterGuestsByStatus('all')" id="filter-all" 
+                            class="flex-1 py-3 px-4 rounded-lg bg-blue-600 text-white text-sm min-h-[44px] active:bg-blue-700">
+                        Todos
+                    </button>
+                    <button onclick="filterGuestsByStatus('scanned')" id="filter-scanned" 
+                            class="flex-1 py-3 px-4 rounded-lg bg-gray-700 text-gray-300 text-sm min-h-[44px] active:bg-gray-600">
+                        Validados
+                    </button>
+                    <button onclick="filterGuestsByStatus('pending')" id="filter-pending" 
+                            class="flex-1 py-3 px-4 rounded-lg bg-gray-700 text-gray-300 text-sm min-h-[44px] active:bg-gray-600">
+                        Pendentes
+                    </button>
+                </div>
+
+                <!-- Guest List -->
+                <div id="guests-list" class="space-y-3">
+                    <div class="text-center py-8 text-gray-400">
+                        <i class="fas fa-users text-3xl mb-2"></i>
+                        <p>Carregando convidados...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reports Tab -->
+        <div id="content-reports" class="tab-content hidden pb-20">
+            <!-- Back Button -->
+            <div class="bg-gray-800 p-4 flex items-center border-b border-gray-700">
+                <button onclick="showTab('options')" class="flex items-center text-blue-500 hover:text-blue-400">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    <span>Voltar</span>
+                </button>
+                <h2 class="ml-4 text-lg font-medium">Relatórios</h2>
+            </div>
+            <div class="p-4">
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-gray-800 rounded-lg p-4 text-center">
+                        <div id="report-validated" class="text-2xl font-bold text-green-500">0</div>
+                        <div class="text-sm text-gray-400">Validados</div>
+                    </div>
+                    <div class="bg-gray-800 rounded-lg p-4 text-center">
+                        <div id="report-pending" class="text-2xl font-bold text-orange-500">0</div>
+                        <div class="text-sm text-gray-400">Pendentes</div>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="bg-gray-800 rounded-lg p-4 mb-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-medium">Progresso do Evento</span>
+                        <span id="progress-percentage" class="text-sm text-gray-400">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-700 rounded-full h-2">
+                        <div id="progress-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Export Options -->
+                <div class="space-y-3">
+                    <button onclick="generatePDFReport()" 
+                            class="w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-medium py-4 px-6 rounded-lg transition-colors min-h-[56px]">
+                        <i class="fas fa-file-pdf mr-2"></i>Exportar Relatório PDF
+                    </button>
+                    
+                    <button onclick="shareReport()" 
+                            class="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-medium py-4 px-6 rounded-lg transition-colors min-h-[56px]">
+                        <i class="fas fa-share mr-2"></i>Partilhar Relatório
+                    </button>
+                </div>
+
+                <!-- Recent Scans -->
+                <div class="mt-6">
+                    <h3 class="text-lg font-medium mb-4">Últimas Validações</h3>
+                    <div id="recent-scans" class="space-y-3">
+                        <div class="text-center py-4 text-gray-400">
+                            <p>Nenhuma validação ainda</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="content-settings" class="tab-content hidden pb-20">
+            <!-- Back Button -->
+            <div class="bg-gray-800 p-4 flex items-center border-b border-gray-700">
+                <button onclick="showTab('options')" class="flex items-center text-blue-500 hover:text-blue-400">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    <span>Voltar</span>
+                </button>
+                <h2 class="ml-4 text-lg font-medium">Configurações</h2>
+            </div>
+            <div class="p-4 space-y-6">
+                <!-- Sound Settings -->
+                <div class="bg-gray-800 rounded-lg p-4">
+                    <h3 class="text-lg font-medium mb-4">Áudio</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="font-medium">Som de Sucesso</h4>
+                                <p class="text-sm text-gray-400">Reproduzir som ao validar</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="success-sound" class="sr-only peer" checked>
+                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                        
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="font-medium">Som de Erro</h4>
+                                <p class="text-sm text-gray-400">Reproduzir som em caso de erro</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="error-sound" class="sr-only peer" checked>
+                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vibration Settings -->
+                <div class="bg-gray-800 rounded-lg p-4">
+                    <h3 class="text-lg font-medium mb-4">Vibração</h3>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h4 class="font-medium">Feedback Tátil</h4>
+                            <p class="text-sm text-gray-400">Vibrar ao escanear</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="vibration" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Scanner Settings -->
+                <div class="bg-gray-800 rounded-lg p-4">
+                    <h3 class="text-lg font-medium mb-4">Scanner</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Câmera</label>
+                            <select id="camera-select" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white">
+                                <option value="">Selecionar câmera...</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- App Info -->
+                <div class="bg-gray-800 rounded-lg p-4">
+                    <h3 class="text-lg font-medium mb-4">Informações</h3>
+                    <div class="space-y-2 text-sm text-gray-400">
+                        <div class="flex justify-between">
+                            <span>Versão:</span>
+                            <span>1.0.0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Dispositivo:</span>
+                            <span id="device-info">-</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Evento:</span>
+                            <span id="current-token">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Clear Saved Token -->
+                <button onclick="clearSavedTokenAndNotify()" 
+                        class="w-full bg-orange-600 hover:bg-orange-700 active:bg-orange-800 text-white font-medium py-4 px-6 rounded-lg transition-colors min-h-[56px] mb-3">
+                    <i class="fas fa-trash mr-2"></i>Limpar Token Guardado
+                </button>
+
+                <!-- Logout -->
+                <button onclick="logout()" 
+                        class="w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-medium py-4 px-6 rounded-lg transition-colors min-h-[56px]">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Terminar Sessão
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Toast Notification -->
-    <div id="toast" class="toast bg-white rounded-lg shadow-lg p-4 min-w-80 max-w-sm">
-        <div class="flex items-center">
-            <div id="toast-icon" class="text-2xl mr-3"></div>
-            <div class="flex-1">
-                <p id="toast-title" class="font-medium"></p>
-                <p id="toast-message" class="text-sm text-gray-600"></p>
-            </div>
-        </div>
-    </div>
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-4 right-4 z-40 space-y-2"></div>
 
     <script>
         // Supabase Configuration
         const SUPABASE_URL = 'https://rnvunprjvppbjavkaoek.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJudnVucHJqdnBwYmphdmthb2VrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2NjYzOTksImV4cCI6MjA2NzI0MjM5OX0.5E37Qm-KMmyGtGKbOINbDqMQlZlfgcQx91RQ01qslT8';
         
-        // Initialize Supabase
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        
+
         // Global variables
         let currentClient = null;
-        let allGuests = [];
-        let scannedGuests = new Set(); // Local tracking only
-        let scanAttempts = new Map(); // Track scan attempts per code
+        let guests = [];
+        let scannedGuests = new Set();
+        let sessionScans = 0;
         let html5QrCode = null;
-        let deviceId = null;
+        let isScanning = false;
         let fastMode = false;
-        let soundEnabled = true;
-        let vibrationEnabled = true;
-        let darkMode = false;
-        let isOnline = navigator.onLine;
-        let connectivityCheckInterval = null;
+        let isOnline = true;
+        let lastScanTime = 0;
+        let scanAttempts = new Map(); // Track scan attempts per code
+        let deviceName = '';
 
-        // Generate unique device ID
-        function generateDeviceId() {
-            const stored = localStorage.getItem('scanner_device_id');
-            if (stored) return stored;
-            
-            const newId = 'mobile-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-            localStorage.setItem('scanner_device_id', newId);
-            return newId;
+        // Audio contexts for feedback
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            checkConnectivity();
+            setupLoginForm();
+            loadCameras();
+            checkSavedToken(); // Check for saved token
+            setInterval(checkConnectivity, 30000); // Check every 30 seconds
+        });
+
+        // Token storage management
+        function saveToken(token) {
+            try {
+                localStorage.setItem('invitesqr_token', token);
+                localStorage.setItem('invitesqr_token_date', Date.now().toString());
+            } catch (error) {
+                console.error('Error saving token:', error);
+            }
         }
 
-        // Check internet connectivity
+        function getSavedToken() {
+            try {
+                const token = localStorage.getItem('invitesqr_token');
+                const savedDate = localStorage.getItem('invitesqr_token_date');
+                
+                if (!token || !savedDate) return null;
+                
+                // Check if token was saved more than 30 days ago
+                const daysSaved = (Date.now() - parseInt(savedDate)) / (1000 * 60 * 60 * 24);
+                if (daysSaved > 30) {
+                    clearSavedToken();
+                    return null;
+                }
+                
+                return token;
+            } catch (error) {
+                console.error('Error getting saved token:', error);
+                return null;
+            }
+        }
+
+        function clearSavedToken() {
+            try {
+                localStorage.removeItem('invitesqr_token');
+                localStorage.removeItem('invitesqr_token_date');
+            } catch (error) {
+                console.error('Error clearing saved token:', error);
+            }
+        }
+
+        async function checkSavedToken() {
+            const savedToken = getSavedToken();
+            if (savedToken && isOnline) {
+                document.getElementById('event-token').value = savedToken;
+                
+                // Show loading state
+                const loginBtn = document.getElementById('login-btn');
+                loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Entrando...';
+                loginBtn.disabled = true;
+                
+                // Auto-login after a short delay
+                setTimeout(async () => {
+                    try {
+                        await performLogin(savedToken);
+                    } catch (error) {
+                        // If auto-login fails, clear the saved token and show login form
+                        clearSavedToken();
+                        loginBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Entrar';
+                        loginBtn.disabled = false;
+                        showToast('Token expirado. Faça login novamente.', 'info');
+                    }
+                }, 1000);
+            }
+        }
+
+        // Connectivity management
         async function checkConnectivity() {
             try {
-                // Try to fetch a small resource from Supabase
-                const response = await fetch(SUPABASE_URL + '/rest/v1/', {
-                    method: 'HEAD',
-                    headers: {
-                        'apikey': SUPABASE_KEY
-                    },
-                    timeout: 5000
+                // Check internet connection
+                const response = await fetch('https://www.google.com/favicon.ico', { 
+                    mode: 'no-cors',
+                    cache: 'no-cache'
                 });
-                return response.ok;
+                
+                // Check Supabase connection
+                const { data, error } = await supabase.from('clientes').select('count').limit(1);
+                
+                if (error) throw error;
+                
+                isOnline = true;
+                updateConnectionStatus(true);
+                hideOfflineOverlay();
             } catch (error) {
-                return false;
-            }
-        }
-
-        // Handle connectivity changes
-        function handleConnectivityChange(online) {
-            isOnline = online;
-            
-            if (!online) {
-                // Stop scanner if running
-                if (html5QrCode) {
+                isOnline = false;
+                updateConnectionStatus(false);
+                showOfflineOverlay();
+                
+                if (isScanning) {
                     stopScanner();
                 }
-                
-                // Show offline message
-                showToast('error', 'Sem Internet', 'Conexão perdida. O app precisa de internet para funcionar.');
-                
-                // Disable all interactive elements
-                disableApp();
-            } else {
-                // Re-enable app
-                enableApp();
-                showToast('success', 'Online', 'Conexão restaurada!');
             }
         }
 
-        // Disable app when offline
-        function disableApp() {
-            // Disable all buttons
-            const buttons = document.querySelectorAll('button');
-            buttons.forEach(btn => {
-                btn.disabled = true;
-                btn.classList.add('opacity-50', 'cursor-not-allowed');
+        function updateConnectionStatus(online) {
+            const indicators = ['connection-status', 'connection-indicator'];
+            indicators.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.innerHTML = online ? 
+                        '<div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div><span class="text-green-400 text-sm">Online</span>' :
+                        '<div class="w-2 h-2 bg-red-500 rounded-full mr-2"></div><span class="text-red-400 text-sm">Offline</span>';
+                }
             });
-            
-            // Show offline overlay
-            showOfflineOverlay();
         }
 
-        // Enable app when online
-        function enableApp() {
-            // Enable all buttons
-            const buttons = document.querySelectorAll('button');
-            buttons.forEach(btn => {
-                btn.disabled = false;
-                btn.classList.remove('opacity-50', 'cursor-not-allowed');
-            });
-            
-            // Hide offline overlay
-            hideOfflineOverlay();
-        }
-
-        // Show offline overlay
         function showOfflineOverlay() {
-            let overlay = document.getElementById('offline-overlay');
-            if (!overlay) {
-                overlay = document.createElement('div');
-                overlay.id = 'offline-overlay';
-                overlay.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50';
-                overlay.innerHTML = `
-                    <div class="bg-white rounded-lg p-8 mx-4 text-center max-w-sm">
-                        <div class="text-6xl mb-4">📡</div>
-                        <h3 class="text-xl font-bold text-gray-800 mb-2">Sem Conexão</h3>
-                        <p class="text-gray-600 mb-4">Este app precisa de internet para funcionar. Verifique sua conexão.</p>
-                        <div class="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto"></div>
-                        <p class="text-sm text-gray-500 mt-2">Verificando conexão...</p>
-                    </div>
-                `;
-                document.body.appendChild(overlay);
-            }
-            overlay.classList.remove('hidden');
+            document.getElementById('offline-overlay').classList.remove('hidden');
         }
 
-        // Hide offline overlay
         function hideOfflineOverlay() {
-            const overlay = document.getElementById('offline-overlay');
-            if (overlay) {
-                overlay.classList.add('hidden');
-            }
+            document.getElementById('offline-overlay').classList.add('hidden');
         }
 
-        // Start connectivity monitoring
-        function startConnectivityMonitoring() {
-            // Listen for online/offline events
-            window.addEventListener('online', () => handleConnectivityChange(true));
-            window.addEventListener('offline', () => handleConnectivityChange(false));
-            
-            // Periodic connectivity check (every 10 seconds)
-            connectivityCheckInterval = setInterval(async () => {
-                const online = await checkConnectivity();
-                if (online !== isOnline) {
-                    handleConnectivityChange(online);
+        // Login functionality
+        function setupLoginForm() {
+            document.getElementById('login-form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                if (!isOnline) {
+                    showToast('Sem conexão com a internet', 'error');
+                    return;
                 }
-            }, 10000);
-            
-            // Initial check
-            checkConnectivity().then(online => {
-                if (!online) {
-                    handleConnectivityChange(false);
+
+                const token = document.getElementById('event-token').value.trim();
+                
+                const loginBtn = document.getElementById('login-btn');
+                loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Verificando...';
+                loginBtn.disabled = true;
+
+                try {
+                    await performLogin(token);
+                } catch (error) {
+                    showToast(error.message || 'Erro ao fazer login', 'error');
+                } finally {
+                    loginBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Entrar';
+                    loginBtn.disabled = false;
                 }
             });
         }
 
-        // Stop connectivity monitoring
-        function stopConnectivityMonitoring() {
-            if (connectivityCheckInterval) {
-                clearInterval(connectivityCheckInterval);
-                connectivityCheckInterval = null;
+        async function performLogin(token) {
+            deviceName = `Scanner-${Date.now()}`;
+            
+            // Fetch client data
+            const { data, error } = await supabase
+                .from('clientes')
+                .select('*')
+                .eq('token', token)
+                .single();
+
+            if (error || !data) {
+                throw new Error('Token inválido');
+            }
+
+            // Check if event is still valid (CRITICAL FIX: multiply by 1000)
+            const eventDate = new Date(data.validade * 1000);
+            const now = new Date();
+            
+            if (eventDate < now) {
+                throw new Error('Evento expirado');
+            }
+
+            currentClient = data;
+            
+            // Save token for future use
+            saveToken(token);
+            
+            // Log login
+            await supabase.from('logs').insert([{
+                token: token,
+                status: 'login',
+                dispositivo: deviceName
+            }]);
+
+            // Load guests
+            await loadGuests();
+            
+            // Switch to main app
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            
+            updateHeader();
+            updateStats();
+            
+            showToast('Login realizado com sucesso', 'success');
+        }
+
+        // Load guests for current event
+        async function loadGuests() {
+            try {
+                const { data, error } = await supabase
+                    .from('convidados')
+                    .select('*')
+                    .eq('token_cliente', currentClient.token)
+                    .eq('status', 'ativo');
+
+                if (error) throw error;
+                
+                guests = data || [];
+                renderGuests();
+                updateStats();
+                
+            } catch (error) {
+                showToast('Erro ao carregar convidados', 'error');
             }
         }
 
-        // Sound feedback
-        function playSound(type) {
-            if (!soundEnabled) return;
+        // Update header information
+        function updateHeader() {
+            if (!currentClient) return;
             
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            document.getElementById('event-name').textContent = currentClient.nome;
+            
+            // CRITICAL FIX: multiply by 1000 for correct date conversion
+            const eventDate = new Date(currentClient.validade * 1000);
+            const formattedDate = eventDate.toLocaleDateString('pt-PT');
+            
+            document.getElementById('event-info').textContent = 
+                `Válido até ${formattedDate} • ${guests.length} convidados`;
+            
+            document.getElementById('device-info').textContent = deviceName;
+            document.getElementById('current-token').textContent = currentClient.token;
+        }
+
+        // Update statistics
+        function updateStats() {
+            const scannedCount = scannedGuests.size;
+            const totalGuests = guests.length;
+            const progressPercentage = totalGuests > 0 ? Math.round((scannedCount / totalGuests) * 100) : 0;
+
+            // Update scanner progress bar
+            document.getElementById('scanner-progress-percentage').textContent = progressPercentage + '%';
+            document.getElementById('scanner-progress-bar').style.width = progressPercentage + '%';
+            document.getElementById('scanner-validated-count').textContent = scannedCount + ' validados';
+            document.getElementById('scanner-total-count').textContent = 'de ' + totalGuests + ' convidados';
+
+            // Update options stats
+            document.getElementById('options-scanned-count').textContent = scannedCount;
+            document.getElementById('options-total-guests').textContent = totalGuests;
+            document.getElementById('options-session-scans').textContent = sessionScans;
+            
+            // Update reports
+            document.getElementById('report-validated').textContent = scannedCount;
+            document.getElementById('report-pending').textContent = totalGuests - scannedCount;
+            document.getElementById('progress-percentage').textContent = progressPercentage + '%';
+            document.getElementById('progress-bar').style.width = progressPercentage + '%';
+        }
+
+        // Tab management
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            
+            // Remove active class from all tab buttons
+            document.querySelectorAll('[id^="tab-"]').forEach(btn => {
+                btn.className = btn.className.replace('bg-blue-600 text-white', 'text-gray-400 hover:text-white');
+            });
+            
+            // Show selected tab
+            document.getElementById(`content-${tabName}`).classList.remove('hidden');
+            
+            // Add active class to selected tab button
+            const activeBtn = document.getElementById(`tab-${tabName}`);
+            if (activeBtn) {
+                activeBtn.className = activeBtn.className.replace('text-gray-400 hover:text-white', 'bg-blue-600 text-white');
+            }
+            
+            // Initialize scanner if needed
+            if (tabName === 'scanner' && !html5QrCode) {
+                initializeScanner();
+            }
+        }
+
+        // Sub-tab management for options
+        function showSubTab(subTabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            
+            // Show selected sub-tab
+            document.getElementById(`content-${subTabName}`).classList.remove('hidden');
+        }
+
+        // Scanner functionality
+        async function initializeScanner() {
+            try {
+                html5QrCode = new Html5Qrcode("qr-reader");
+            } catch (error) {
+                showToast('Erro ao inicializar scanner', 'error');
+            }
+        }
+
+        async function loadCameras() {
+            try {
+                const devices = await Html5Qrcode.getCameras();
+                const select = document.getElementById('camera-select');
+                
+                select.innerHTML = '<option value="">Selecionar câmera...</option>';
+                devices.forEach((device, index) => {
+                    const option = document.createElement('option');
+                    option.value = device.id;
+                    option.textContent = device.label || `Câmera ${index + 1}`;
+                    select.appendChild(option);
+                });
+                
+                // Auto-select back camera if available
+                const backCamera = devices.find(device => 
+                    device.label.toLowerCase().includes('back') || 
+                    device.label.toLowerCase().includes('traseira')
+                );
+                if (backCamera) {
+                    select.value = backCamera.id;
+                }
+            } catch (error) {
+                console.error('Error loading cameras:', error);
+            }
+        }
+
+        async function toggleScanner() {
+            if (!isOnline) {
+                showToast('Scanner requer conexão com a internet', 'error');
+                return;
+            }
+
+            const button = document.getElementById('scanner-toggle');
+            
+            if (isScanning) {
+                await stopScanner();
+                button.innerHTML = '<i class="fas fa-play mr-2"></i>Iniciar Scanner';
+                button.className = 'w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-medium py-4 px-6 rounded-lg transition-colors text-lg min-h-[56px]';
+            } else {
+                await startScanner();
+                button.innerHTML = '<i class="fas fa-stop mr-2"></i>Parar Scanner';
+                button.className = 'w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-medium py-4 px-6 rounded-lg transition-colors text-lg min-h-[56px]';
+            }
+        }
+
+        async function startScanner() {
+            if (!html5QrCode) {
+                await initializeScanner();
+            }
+
+            const cameraId = document.getElementById('camera-select').value || { facingMode: "environment" };
+            
+            try {
+                await html5QrCode.start(
+                    cameraId,
+                    {
+                        fps: 10,
+                        qrbox: { width: 250, height: 250 }
+                    },
+                    onScanSuccess,
+                    onScanFailure
+                );
+                
+                isScanning = true;
+                updateScannerStatus('Scanner ativo - Posicione o QR code');
+                
+                // Add pulse animation to corners
+                document.querySelectorAll('.scanner-corner').forEach(corner => {
+                    corner.classList.add('pulse-animation');
+                });
+                
+            } catch (error) {
+                showToast('Erro ao iniciar scanner: ' + error.message, 'error');
+            }
+        }
+
+        async function stopScanner() {
+            if (html5QrCode && isScanning) {
+                try {
+                    await html5QrCode.stop();
+                    isScanning = false;
+                    updateScannerStatus('Scanner parado');
+                    
+                    // Remove pulse animation
+                    document.querySelectorAll('.scanner-corner').forEach(corner => {
+                        corner.classList.remove('pulse-animation');
+                    });
+                } catch (error) {
+                    console.error('Error stopping scanner:', error);
+                }
+            }
+        }
+
+        function updateScannerStatus(message) {
+            document.getElementById('scanner-status').innerHTML = `
+                <div class="bg-black bg-opacity-50 rounded-lg p-3">
+                    <p class="text-sm text-white">${message}</p>
+                </div>
+            `;
+        }
+
+        function toggleFastMode() {
+            fastMode = document.getElementById('fast-mode').checked;
+        }
+
+        // QR Code scan handlers
+        async function onScanSuccess(decodedText, decodedResult) {
+            const now = Date.now();
+            
+            // Prevent rapid duplicate scans
+            if (now - lastScanTime < 1000) {
+                return;
+            }
+            lastScanTime = now;
+
+            // Track scan attempts
+            const attempts = scanAttempts.get(decodedText) || 0;
+            scanAttempts.set(decodedText, attempts + 1);
+
+            await processQRCode(decodedText);
+            
+            // In fast mode, continue scanning immediately
+            if (!fastMode && isScanning) {
+                await stopScanner();
+                setTimeout(async () => {
+                    if (!isScanning) {
+                        await startScanner();
+                    }
+                }, 2000);
+            }
+        }
+
+        function onScanFailure(error) {
+            // Ignore scan failures in fast mode to reduce noise
+            if (!fastMode) {
+                console.log('Scan failed:', error);
+            }
+        }
+
+        async function processQRCode(code) {
+            try {
+                // Find guest by code
+                const guest = guests.find(g => g.codigo === code);
+                
+                if (!guest) {
+                    await handleScanResult('invalid', null, code);
+                    return;
+                }
+
+                if (scannedGuests.has(code)) {
+                    await handleScanResult('duplicate', guest, code);
+                    return;
+                }
+
+                // Valid scan
+                scannedGuests.add(code);
+                sessionScans++;
+                
+                // Log to Supabase
+                if (isOnline) {
+                    await supabase.from('logs').insert([{
+                        token: code,
+                        status: 'scan',
+                        dispositivo: deviceName
+                    }]);
+                }
+
+                await handleScanResult('success', guest, code);
+                updateStats();
+                renderGuests();
+                updateRecentScans();
+                
+            } catch (error) {
+                await handleScanResult('error', null, code);
+            }
+        }
+
+        async function handleScanResult(type, guest, code) {
+            const resultDiv = document.getElementById('last-scan-result');
+            const nameEl = document.getElementById('scan-guest-name');
+            const codeEl = document.getElementById('scan-guest-code');
+            const iconEl = document.getElementById('scan-status-icon');
+
+            let message, bgClass, iconClass, iconColor;
+
+            switch (type) {
+                case 'success':
+                    message = guest.nome;
+                    bgClass = 'bg-green-600';
+                    iconClass = 'fas fa-check-circle';
+                    iconColor = 'text-green-400';
+                    playSuccessSound();
+                    vibrate([100]);
+                    flashScreen('success');
+                    break;
+                    
+                case 'duplicate':
+                    message = guest.nome + ' (Já validado)';
+                    bgClass = 'bg-orange-600';
+                    iconClass = 'fas fa-exclamation-triangle';
+                    iconColor = 'text-orange-400';
+                    playErrorSound();
+                    vibrate([100, 100, 100]);
+                    break;
+                    
+                case 'invalid':
+                    message = 'Código inválido';
+                    bgClass = 'bg-red-600';
+                    iconClass = 'fas fa-times-circle';
+                    iconColor = 'text-red-400';
+                    playErrorSound();
+                    vibrate([200]);
+                    flashScreen('error');
+                    break;
+                    
+                case 'error':
+                    message = 'Erro ao processar';
+                    bgClass = 'bg-red-600';
+                    iconClass = 'fas fa-exclamation-circle';
+                    iconColor = 'text-red-400';
+                    playErrorSound();
+                    vibrate([200]);
+                    break;
+            }
+
+            nameEl.textContent = message;
+            codeEl.textContent = code;
+            iconEl.className = `${iconClass} ${iconColor}`;
+            resultDiv.className = `mx-4 mb-4 p-4 rounded-lg ${bgClass} slide-up`;
+            resultDiv.classList.remove('hidden');
+
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                resultDiv.classList.add('hidden');
+            }, 3000);
+        }
+
+        // Audio feedback
+        function playSuccessSound() {
+            if (!document.getElementById('success-sound').checked) return;
+            
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
             
             oscillator.connect(gainNode);
             gainNode.connect(audioContext.destination);
             
-            if (type === 'success') {
-                // Higher pitch for success
-                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-                oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.1);
-            } else if (type === 'error') {
-                // Lower pitch for error
-                oscillator.frequency.setValueAtTime(300, audioContext.currentTime);
-                oscillator.frequency.setValueAtTime(200, audioContext.currentTime + 0.1);
-            } else if (type === 'used') {
-                // Medium pitch for already used
-                oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
-            }
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+            oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.1);
             
             gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
@@ -546,941 +1132,291 @@
             oscillator.stop(audioContext.currentTime + 0.2);
         }
 
-        // Vibration feedback
+        function playErrorSound() {
+            if (!document.getElementById('error-sound').checked) return;
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(300, audioContext.currentTime);
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.3);
+        }
+
+        // Haptic feedback
         function vibrate(pattern) {
-            if (!vibrationEnabled || !navigator.vibrate) return;
-            
-            if (pattern === 'success') {
-                navigator.vibrate([100, 50, 100]); // Short-pause-short
-            } else if (pattern === 'error') {
-                navigator.vibrate([300]); // Long vibration
-            } else if (pattern === 'used') {
-                navigator.vibrate([100, 100, 100, 100, 100]); // Multiple short
+            if (document.getElementById('vibration').checked && navigator.vibrate) {
+                navigator.vibrate(pattern);
             }
         }
 
-        // Load saved token and auto-login
-        async function loadSavedToken() {
-            const savedToken = localStorage.getItem('saved_token');
-            if (savedToken) {
-                document.getElementById('token-input').value = savedToken;
-                
-                // Auto-login with saved token
-                try {
-                    await handleLogin(savedToken);
-                } catch (error) {
-                    // If auto-login fails, clear the saved token and show login screen
-                    localStorage.removeItem('saved_token');
-                    document.getElementById('token-input').value = '';
-                    console.log('Auto-login failed, token may be expired');
-                }
-            }
-        }
-
-        // Save token
-        function saveToken(token) {
-            localStorage.setItem('saved_token', token);
-        }
-
-        // Load settings
-        function loadSettings() {
-            fastMode = localStorage.getItem('fast_mode') === 'true';
-            soundEnabled = localStorage.getItem('sound_enabled') !== 'false';
-            vibrationEnabled = localStorage.getItem('vibration_enabled') !== 'false';
-            darkMode = localStorage.getItem('dark_mode') === 'true';
+        // Visual feedback
+        function flashScreen(type) {
+            const body = document.body;
+            const flashClass = type === 'success' ? 'success-flash' : 'error-flash';
             
-            document.getElementById('fast-mode-toggle').checked = fastMode;
-            document.getElementById('sound-toggle').checked = soundEnabled;
-            document.getElementById('vibration-toggle').checked = vibrationEnabled;
-            document.getElementById('dark-mode-toggle').checked = darkMode;
-            
-            if (darkMode) {
-                document.body.classList.add('dark-mode');
-            }
-        }
-
-        // Save settings
-        function saveSettings() {
-            localStorage.setItem('fast_mode', fastMode);
-            localStorage.setItem('sound_enabled', soundEnabled);
-            localStorage.setItem('vibration_enabled', vibrationEnabled);
-            localStorage.setItem('dark_mode', darkMode);
-        }
-
-        // Toast notification
-        function showToast(type, title, message) {
-            const toast = document.getElementById('toast');
-            const toastIcon = document.getElementById('toast-icon');
-            const toastTitle = document.getElementById('toast-title');
-            const toastMessage = document.getElementById('toast-message');
-            
-            const icons = {
-                success: '✅',
-                error: '❌',
-                warning: '⚠️',
-                info: 'ℹ️'
-            };
-            
-            toastIcon.textContent = icons[type];
-            toastTitle.textContent = title;
-            toastMessage.textContent = message;
-            
-            toast.classList.add('show');
-            
+            body.classList.add(flashClass);
             setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
+                body.classList.remove(flashClass);
+            }, 500);
         }
 
-        // Login functionality
-        async function handleLogin(token) {
-            try {
-                // Check connectivity first
-                if (!isOnline) {
-                    throw new Error('Sem conexão com a internet');
-                }
-
-                // Validate token format
-                if (!token.startsWith('evt-')) {
-                    throw new Error('Formato de token inválido');
-                }
-
-                // Check if client exists and is valid
-                const { data: client, error } = await supabase
-                    .from('clientes')
-                    .select('*')
-                    .eq('token', token)
-                    .single();
-
-                if (error || !client) {
-                    throw new Error('Token não encontrado');
-                }
-
-                // Check if event is still valid
-                const now = Date.now();
-                if (client.validade < now) {
-                    throw new Error('Evento expirado');
-                }
-
-                // Store client data
-                currentClient = client;
-                deviceId = generateDeviceId();
-                
-                // Save token for future use
-                saveToken(token);
-
-                // Load guests for this client
-                await loadGuests();
-
-                // Show main app
-                document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('main-app').classList.remove('hidden');
-
-                // Update header
-                document.getElementById('event-name').textContent = client.nome;
-                updateHeaderInfo();
-
-                // Start connectivity monitoring
-                startConnectivityMonitoring();
-
-                showToast('success', 'Sucesso', 'Login realizado com sucesso!');
-
-            } catch (error) {
-                console.error('Login error:', error);
-                document.getElementById('login-error').classList.remove('hidden');
-                showToast('error', 'Erro', error.message);
-            }
-        }
-
-        // Load guests from Supabase
-        async function loadGuests() {
-            try {
-                const { data: guests, error } = await supabase
-                    .from('convidados')
-                    .select('*')
-                    .eq('token_cliente', currentClient.token)
-                    .eq('status', 'ativo');
-
-                if (error) throw error;
-
-                allGuests = guests || [];
-                updateGuestsList();
-                updateProgress();
-
-            } catch (error) {
-                console.error('Error loading guests:', error);
-                showToast('error', 'Erro', 'Erro ao carregar convidados');
-            }
-        }
-
-        // Update guests list display
-        function updateGuestsList() {
-            const guestsList = document.getElementById('guests-list');
+        // Guest management
+        function renderGuests() {
+            const container = document.getElementById('guests-list');
             
-            if (allGuests.length === 0) {
-                guestsList.innerHTML = '<div class="p-4 text-center text-gray-500">Nenhum convidado encontrado</div>';
+            if (guests.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-400">
+                        <i class="fas fa-users text-3xl mb-2"></i>
+                        <p>Nenhum convidado encontrado</p>
+                    </div>
+                `;
                 return;
             }
 
-            guestsList.innerHTML = allGuests.map(guest => {
+            const guestsHtml = guests.map(guest => {
                 const isScanned = scannedGuests.has(guest.codigo);
-                const itemClass = isScanned ? 'guest-scanned' : 'guest-pending';
-                const icon = isScanned ? '✅' : '⏳';
+                const attempts = scanAttempts.get(guest.codigo) || 0;
                 
                 return `
-                    <div class="guest-item ${itemClass} p-4 border-b last:border-b-0">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="font-medium">${guest.nome}</p>
-                                <p class="text-sm opacity-75">${guest.codigo}</p>
-                            </div>
-                            <div class="text-xl">${icon}</div>
+                    <div class="bg-gray-800 rounded-lg p-4 flex items-center justify-between">
+                        <div class="flex-1">
+                            <h4 class="font-medium ${isScanned ? 'text-green-400' : 'text-white'}">${guest.nome}</h4>
+                            <p class="text-sm text-gray-400">${guest.codigo}</p>
+                            ${attempts > 0 ? `<p class="text-xs text-orange-400">${attempts} tentativa(s)</p>` : ''}
+                        </div>
+                        <div class="flex items-center">
+                            ${isScanned ? 
+                                '<i class="fas fa-check-circle text-green-500 text-xl"></i>' : 
+                                '<i class="fas fa-clock text-gray-500 text-xl"></i>'
+                            }
                         </div>
                     </div>
                 `;
             }).join('');
+
+            container.innerHTML = guestsHtml;
         }
 
-        // Update header info
-        function updateHeaderInfo() {
-            if (!currentClient) return;
-            
-            const validadeText = new Date(currentClient.validade).toLocaleDateString('pt-BR');
-            const scanInfo = `${currentClient.scans_usados}/${currentClient.limite_scans} scans`;
-            document.getElementById('event-info').textContent = `${validadeText} • ${scanInfo}`;
-        }
-
-        // Update progress display
-        function updateProgress() {
-            const total = allGuests.length;
-            const scanned = scannedGuests.size;
-            const percentage = total > 0 ? Math.round((scanned / total) * 100) : 0;
-            
-            // Update progress bar
-            const progressBar = document.getElementById('progress-bar');
-            progressBar.style.width = percentage + '%';
-            
-            // Update text
-            document.getElementById('progress-text').textContent = percentage + '%';
-            document.getElementById('scanned-count').textContent = scanned;
-            document.getElementById('total-count').textContent = total;
-            
-            // Update summary in report tab
-            document.getElementById('summary-scanned').textContent = scanned;
-            document.getElementById('summary-pending').textContent = total - scanned;
-            
-            // Update header info
-            updateHeaderInfo();
-        }
-
-        // Scanner functionality
-        let scannerSessionCount = 0;
-        let scannerPaused = false;
-
-        function startScanner() {
-            // Check connectivity before starting scanner
-            if (!isOnline) {
-                showToast('error', 'Sem Internet', 'Precisa de conexão para usar o scanner');
-                return;
-            }
-
-            const scannerArea = document.getElementById('scanner-area');
-            const startBtn = document.getElementById('start-scanner-btn');
-            
-            scannerArea.classList.remove('hidden');
-            startBtn.classList.add('hidden');
-            scannerSessionCount = 0;
-            scannerPaused = false;
-            
-            // Prevent body scroll when scanner is open
-            document.body.style.overflow = 'hidden';
-            
-            updateScannerCounter();
-
-            html5QrCode = new Html5Qrcode("qr-reader");
-            
-            const config = {
-                fps: 10,
-                qrbox: { width: 200, height: 200 },
-                aspectRatio: 1.0
-            };
-
-            html5QrCode.start(
-                { facingMode: "environment" },
-                config,
-                onScanSuccess,
-                onScanFailure
-            ).catch(err => {
-                console.error('Scanner start error:', err);
-                showToast('error', 'Erro', 'Erro ao iniciar câmara');
-                stopScanner();
-            });
-        }
-
-        function stopScanner() {
-            if (html5QrCode) {
-                html5QrCode.stop().then(() => {
-                    html5QrCode.clear();
-                    html5QrCode = null;
-                }).catch(err => {
-                    console.error('Scanner stop error:', err);
-                });
-            }
-            
-            // Restore body scroll
-            document.body.style.overflow = 'auto';
-            
-            document.getElementById('scanner-area').classList.add('hidden');
-            document.getElementById('start-scanner-btn').classList.remove('hidden');
-            document.getElementById('scan-result-overlay').classList.add('hidden');
-            scannerPaused = false;
-        }
-
-        function updateScannerCounter() {
-            document.getElementById('scanner-counter').textContent = `${scannerSessionCount} escaneados nesta sessão`;
-        }
-
-        function showScanResult(type, guestName, timestamp = null) {
-            const overlay = document.getElementById('scan-result-overlay');
-            const nextButtonArea = document.getElementById('next-button-area');
-            const statusEl = document.getElementById('result-status');
-            const nameEl = document.getElementById('result-name');
-            const timeEl = document.getElementById('result-time');
-            const timestampEl = document.getElementById('result-timestamp');
-            
-            // Set current timestamp
-            const now = new Date();
-            const currentTime = now.toLocaleString('pt-BR', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
-            
-            if (!fastMode) {
-                scannerPaused = true;
-            }
-            
-            if (type === 'success') {
-                statusEl.textContent = 'PERMITIDO';
-                statusEl.className = 'text-5xl font-bold mb-3 text-green-400';
-                nameEl.textContent = guestName;
-                nameEl.className = 'text-xl text-white mb-2';
-                timeEl.textContent = '';
-                timeEl.className = 'text-sm text-gray-300 mb-1';
-                timestampEl.textContent = `Validado: ${currentTime}`;
-                timestampEl.className = 'text-xs text-gray-400';
-                
-                playSound('success');
-                vibrate('success');
-                
-            } else if (type === 'used') {
-                statusEl.textContent = 'USADO';
-                statusEl.className = 'text-5xl font-bold mb-3 text-red-400';
-                nameEl.textContent = guestName;
-                nameEl.className = 'text-xl text-white mb-2';
-                timeEl.textContent = timestamp ? `Primeira entrada: ${timestamp}` : '';
-                timeEl.className = 'text-sm text-gray-300 mb-1';
-                timestampEl.textContent = `Tentativa: ${currentTime}`;
-                timestampEl.className = 'text-xs text-gray-400';
-                
-                playSound('used');
-                vibrate('used');
-                
-            } else if (type === 'invalid') {
-                statusEl.textContent = 'CÓDIGO INVÁLIDO';
-                statusEl.className = 'text-4xl font-bold mb-3 text-red-400';
-                nameEl.textContent = guestName || 'Código não reconhecido';
-                nameEl.className = 'text-xl text-red-300 mb-2';
-                timeEl.textContent = '';
-                timeEl.className = 'text-sm text-gray-300 mb-1';
-                timestampEl.textContent = `Tentativa: ${currentTime}`;
-                timestampEl.className = 'text-xs text-gray-400';
-                
-                playSound('error');
-                vibrate('error');
-            }
-            
-            // Show message above scanner
-            overlay.classList.remove('hidden');
-            
-            // Show next button below scanner (only if not in fast mode)
-            if (!fastMode) {
-                nextButtonArea.classList.remove('hidden');
-            }
-            
-            // Auto-hide in fast mode
-            if (fastMode) {
-                setTimeout(() => {
-                    hideResultAndContinue();
-                }, 1500);
-            }
-        }
-
-        function hideResultAndContinue() {
-            document.getElementById('scan-result-overlay').classList.add('hidden');
-            document.getElementById('next-button-area').classList.add('hidden');
-            scannerPaused = false;
-        }
-
-        // Handle successful QR scan
-        async function onScanSuccess(decodedText, decodedResult) {
-            // Ignore scans when paused (waiting for user to click "PRÓXIMO")
-            if (scannerPaused) {
-                return;
-            }
-
-            // Check connectivity before processing scan
-            if (!isOnline) {
-                showScanResult('invalid', 'Sem conexão com a internet');
-                stopScanner();
-                return;
-            }
-
-            try {
-                // Track scan attempt
-                const currentAttempts = scanAttempts.get(decodedText) || 0;
-                scanAttempts.set(decodedText, currentAttempts + 1);
-
-                // Validate QR code in Supabase
-                const validationResult = await validateQRCode(decodedText);
-                
-                if (!validationResult.valid) {
-                    showScanResult('invalid', validationResult.message);
-                    await logScan(decodedText, 'scan_error');
-                    updateDetailedList(); // Update to show attempt count
-                    return;
-                }
-
-                const guest = validationResult.guest;
-
-                // Check if already scanned locally (for UI feedback)
-                if (scannedGuests.has(guest.codigo)) {
-                    // Get timestamp from logs for when it was first scanned
-                    const timestamp = await getFirstScanTimestamp(guest.codigo);
-                    showScanResult('used', guest.nome, timestamp);
-                    await logScan(guest.codigo, 'scan_duplicate');
-                    updateDetailedList(); // Update to show attempt count
-                    return;
-                }
-
-                // Add to local scanned set
-                scannedGuests.add(guest.codigo);
-                scannerSessionCount++;
-
-                // Update client scan count in Supabase
-                await updateClientScanCount();
-
-                // Log successful scan to Supabase
-                await logScan(guest.codigo, 'scan_success');
-
-                // Update displays
-                updateGuestsList();
-                updateProgress();
-                updateDetailedList();
-                updateScannerCounter();
-
-                // Show success result
-                showScanResult('success', guest.nome);
-
-            } catch (error) {
-                console.error('Scan processing error:', error);
-                
-                // Track failed attempt
-                const currentAttempts = scanAttempts.get(decodedText) || 0;
-                scanAttempts.set(decodedText, currentAttempts + 1);
-                
-                // Check if error is due to connectivity
-                if (!isOnline) {
-                    showScanResult('invalid', 'Conexão perdida durante o scan');
-                    stopScanner();
-                } else {
-                    showScanResult('invalid', 'Erro ao processar: ' + error.message);
-                }
-                
-                // Try to log error to Supabase if online
-                if (isOnline) {
-                    await logScan(decodedText, 'scan_error');
-                }
-                
-                updateDetailedList(); // Update to show attempt count
-            }
-        }
-
-        function onScanFailure(error) {
-            // Silent - scanning failures are normal
-        }
-
-        // Validate QR code against Supabase
-        async function validateQRCode(codigo) {
-            try {
-                // Check if guest exists and is active
-                const { data: guest, error: guestError } = await supabase
-                    .from('convidados')
-                    .select('*')
-                    .eq('codigo', codigo)
-                    .eq('token_cliente', currentClient.token)
-                    .eq('status', 'ativo')
-                    .single();
-
-                if (guestError || !guest) {
-                    return {
-                        valid: false,
-                        message: 'Convidado não encontrado ou inativo'
-                    };
-                }
-
-                // Check if client has reached scan limit
-                if (currentClient.scans_usados >= currentClient.limite_scans) {
-                    return {
-                        valid: false,
-                        message: 'Limite de scans atingido para este evento'
-                    };
-                }
-
-                // Check if event is still valid
-                if (currentClient.validade < Date.now()) {
-                    return {
-                        valid: false,
-                        message: 'Evento expirado'
-                    };
-                }
-
-                // Check for duplicate scans in database (global check)
-                const { data: existingScans, error: scanError } = await supabase
-                    .from('logs')
-                    .select('*')
-                    .eq('token', codigo)
-                    .eq('status', 'scan_success');
-
-                if (scanError) {
-                    console.error('Error checking existing scans:', scanError);
-                }
-
-                // Allow multiple scans but warn if already scanned globally
-                if (existingScans && existingScans.length > 0) {
-                    console.log(`⚠️ Código ${codigo} já foi escaneado ${existingScans.length} vez(es) anteriormente`);
-                }
-
-                return {
-                    valid: true,
-                    guest: guest,
-                    previousScans: existingScans ? existingScans.length : 0
-                };
-
-            } catch (error) {
-                console.error('QR validation error:', error);
-                return {
-                    valid: false,
-                    message: 'Erro ao validar código: ' + error.message
-                };
-            }
-        }
-
-        // Update client scan count
-        async function updateClientScanCount() {
-            try {
-                const newScanCount = currentClient.scans_usados + 1;
-                
-                const { error } = await supabase
-                    .from('clientes')
-                    .update({ scans_usados: newScanCount })
-                    .eq('id', currentClient.id);
-
-                if (error) {
-                    console.error('Error updating scan count:', error);
-                    throw error;
-                }
-
-                // Update local client data
-                currentClient.scans_usados = newScanCount;
-
-            } catch (error) {
-                console.error('Error updating client scan count:', error);
-                throw error;
-            }
-        }
-
-        // Log scan to Supabase
-        async function logScan(codigo, status = 'scan') {
-            try {
-                const { error } = await supabase
-                    .from('logs')
-                    .insert([{
-                        token: codigo,
-                        status: status,
-                        dispositivo: deviceId
-                    }]);
-
-                if (error) {
-                    console.error('Log error:', error);
-                    throw error;
-                }
-            } catch (error) {
-                console.error('Log error:', error);
-                throw error;
-            }
-        }
-
-        // Get first scan timestamp for a guest
-        async function getFirstScanTimestamp(codigo) {
-            try {
-                const { data: logs, error } = await supabase
-                    .from('logs')
-                    .select('created_at')
-                    .eq('token', codigo)
-                    .eq('status', 'scan_success')
-                    .order('created_at', { ascending: true })
-                    .limit(1);
-
-                if (error || !logs || logs.length === 0) {
-                    return null;
-                }
-
-                const timestamp = new Date(logs[0].created_at);
-                return timestamp.toLocaleString('pt-BR', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-
-            } catch (error) {
-                console.error('Error getting timestamp:', error);
-                return null;
-            }
-        }
-
-        // Clear all scanned (local only)
-        function clearAllScans() {
-            if (confirm('Desmarcar todos os convidados escaneados? (Apenas no dispositivo)')) {
-                scannedGuests.clear();
-                scanAttempts.clear();
-                updateGuestsList();
-                updateProgress();
-                updateDetailedList();
-                showToast('info', 'Limpo', 'Todos os scans foram desmarcados localmente');
-            }
-        }
-
-        // Update detailed list for report
-        function updateDetailedList() {
-            const detailedList = document.getElementById('detailed-list');
-            
-            const scannedGuestsList = allGuests.filter(guest => scannedGuests.has(guest.codigo));
-            const pendingGuestsList = allGuests.filter(guest => !scannedGuests.has(guest.codigo));
-            
-            // Get all codes that have been attempted (including invalid ones)
-            const attemptedCodes = Array.from(scanAttempts.keys());
-            const invalidAttempts = attemptedCodes.filter(code => 
-                !allGuests.some(guest => guest.codigo === code)
+        function filterGuests() {
+            const searchTerm = document.getElementById('guest-search').value.toLowerCase();
+            const filteredGuests = guests.filter(guest => 
+                guest.nome.toLowerCase().includes(searchTerm) || 
+                guest.codigo.toLowerCase().includes(searchTerm)
             );
             
-            let html = '';
-            
-            if (scannedGuestsList.length > 0) {
-                html += '<div class="p-4 bg-green-50 border-b"><h4 class="font-medium text-green-800">✅ Escaneados (' + scannedGuestsList.length + ')</h4></div>';
-                html += scannedGuestsList.map(guest => {
-                    const attempts = scanAttempts.get(guest.codigo) || 1;
-                    const attemptsText = attempts > 1 ? ` (${attempts}x tentativas)` : '';
-                    return `
-                        <div class="p-3 border-b last:border-b-0 bg-green-50">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <p class="font-medium text-green-800">${guest.nome}</p>
-                                    <p class="text-sm text-green-600">${guest.codigo}</p>
-                                </div>
-                                ${attempts > 1 ? `<span class="text-xs bg-green-200 text-green-800 px-2 py-1 rounded">${attempts}x</span>` : ''}
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            }
-            
-            if (pendingGuestsList.length > 0) {
-                html += '<div class="p-4 bg-orange-50 border-b"><h4 class="font-medium text-orange-800">⏳ Pendentes (' + pendingGuestsList.length + ')</h4></div>';
-                html += pendingGuestsList.map(guest => {
-                    const attempts = scanAttempts.get(guest.codigo) || 0;
-                    return `
-                        <div class="p-3 border-b last:border-b-0">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <p class="font-medium">${guest.nome}</p>
-                                    <p class="text-sm text-gray-600">${guest.codigo}</p>
-                                </div>
-                                ${attempts > 0 ? `<span class="text-xs bg-orange-200 text-orange-800 px-2 py-1 rounded">${attempts}x tentativas</span>` : ''}
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            }
-            
-            // Show invalid attempts
-            if (invalidAttempts.length > 0) {
-                html += '<div class="p-4 bg-red-50 border-b"><h4 class="font-medium text-red-800">❌ Códigos Inválidos (' + invalidAttempts.length + ')</h4></div>';
-                html += invalidAttempts.map(code => {
-                    const attempts = scanAttempts.get(code);
-                    return `
-                        <div class="p-3 border-b last:border-b-0 bg-red-50">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <p class="font-medium text-red-800">Código Inválido</p>
-                                    <p class="text-sm text-red-600">${code}</p>
-                                </div>
-                                <span class="text-xs bg-red-200 text-red-800 px-2 py-1 rounded">${attempts}x tentativas</span>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            }
-            
-            if (html === '') {
-                html = '<div class="p-4 text-center text-gray-500">Nenhum convidado encontrado</div>';
-            }
-            
-            detailedList.innerHTML = html;
+            // Temporarily replace guests array for rendering
+            const originalGuests = guests;
+            guests = filteredGuests;
+            renderGuests();
+            guests = originalGuests;
         }
 
-        // Generate PDF report
-        function generatePDF() {
+        function filterGuestsByStatus(status) {
+            // Update filter buttons
+            document.querySelectorAll('[id^="filter-"]').forEach(btn => {
+                btn.className = 'flex-1 py-3 px-4 rounded-lg bg-gray-700 text-gray-300 text-sm min-h-[44px] active:bg-gray-600';
+            });
+            document.getElementById(`filter-${status}`).className = 'flex-1 py-3 px-4 rounded-lg bg-blue-600 text-white text-sm min-h-[44px] active:bg-blue-700';
+
+            let filteredGuests;
+            switch (status) {
+                case 'scanned':
+                    filteredGuests = guests.filter(guest => scannedGuests.has(guest.codigo));
+                    break;
+                case 'pending':
+                    filteredGuests = guests.filter(guest => !scannedGuests.has(guest.codigo));
+                    break;
+                default:
+                    filteredGuests = guests;
+            }
+
+            // Temporarily replace guests array for rendering
+            const originalGuests = guests;
+            guests = filteredGuests;
+            renderGuests();
+            guests = originalGuests;
+        }
+
+        // Reports
+        function updateRecentScans() {
+            const container = document.getElementById('recent-scans');
+            const recentScans = Array.from(scannedGuests).slice(-5).reverse();
+            
+            if (recentScans.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-4 text-gray-400">
+                        <p>Nenhuma validação ainda</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const scansHtml = recentScans.map(code => {
+                const guest = guests.find(g => g.codigo === code);
+                return `
+                    <div class="bg-gray-800 rounded-lg p-3 flex items-center justify-between">
+                        <div>
+                            <h4 class="font-medium text-green-400">${guest ? guest.nome : 'Desconhecido'}</h4>
+                            <p class="text-sm text-gray-400">${code}</p>
+                        </div>
+                        <i class="fas fa-check-circle text-green-500"></i>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = scansHtml;
+        }
+
+        async function generatePDFReport() {
             try {
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
                 
                 // Header
                 doc.setFontSize(20);
-                doc.text('Relatório de Validação', 20, 30);
+                doc.text('Relatório InvitesQR', 20, 30);
                 
                 doc.setFontSize(12);
-                doc.text(`Evento: ${currentClient.nome}`, 20, 45);
-                doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 20, 55);
-                doc.text(`Dispositivo: ${deviceId}`, 20, 65);
-                
-                // Summary
-                doc.setFontSize(14);
-                doc.text('Resumo:', 20, 85);
-                doc.setFontSize(12);
-                doc.text(`Total de Convidados: ${allGuests.length}`, 20, 95);
-                doc.text(`Escaneados: ${scannedGuests.size}`, 20, 105);
-                doc.text(`Pendentes: ${allGuests.length - scannedGuests.size}`, 20, 115);
-                doc.text(`Taxa de Comparência: ${Math.round((scannedGuests.size / allGuests.length) * 100)}%`, 20, 125);
-                
-                // Calculate total attempts
-                const totalAttempts = Array.from(scanAttempts.values()).reduce((sum, attempts) => sum + attempts, 0);
-                const invalidCodes = Array.from(scanAttempts.keys()).filter(code => 
-                    !allGuests.some(guest => guest.codigo === code)
-                ).length;
-                
-                doc.text(`Total de Tentativas de Scan: ${totalAttempts}`, 20, 135);
-                doc.text(`Códigos Inválidos Tentados: ${invalidCodes}`, 20, 145);
+                doc.text(`Evento: ${currentClient.nome}`, 20, 50);
+                doc.text(`Data: ${new Date().toLocaleDateString('pt-PT')}`, 20, 60);
+                doc.text(`Total de Convidados: ${guests.length}`, 20, 70);
+                doc.text(`Validados: ${scannedGuests.size}`, 20, 80);
+                doc.text(`Pendentes: ${guests.length - scannedGuests.size}`, 20, 90);
                 
                 // Scanned guests list
-                let yPos = 165;
-                doc.setFontSize(14);
-                doc.text('Convidados Escaneados:', 20, yPos);
-                yPos += 10;
+                doc.text('Convidados Validados:', 20, 110);
                 
-                doc.setFontSize(10);
-                const scannedList = allGuests.filter(guest => scannedGuests.has(guest.codigo));
-                
-                scannedList.forEach((guest, index) => {
-                    if (yPos > 270) {
-                        doc.addPage();
-                        yPos = 20;
+                let yPosition = 120;
+                Array.from(scannedGuests).forEach((code, index) => {
+                    const guest = guests.find(g => g.codigo === code);
+                    if (guest && yPosition < 280) {
+                        doc.text(`${index + 1}. ${guest.nome} (${code})`, 25, yPosition);
+                        yPosition += 10;
                     }
-                    const attempts = scanAttempts.get(guest.codigo) || 1;
-                    const attemptsText = attempts > 1 ? ` [${attempts}x tentativas]` : '';
-                    doc.text(`${index + 1}. ${guest.nome} (${guest.codigo})${attemptsText}`, 20, yPos);
-                    yPos += 8;
                 });
                 
-                // Add invalid attempts section if any
-                const invalidAttempts = Array.from(scanAttempts.keys()).filter(code => 
-                    !allGuests.some(guest => guest.codigo === code)
-                );
-                
-                if (invalidAttempts.length > 0) {
-                    if (yPos > 250) {
-                        doc.addPage();
-                        yPos = 20;
-                    }
-                    
-                    yPos += 10;
-                    doc.setFontSize(14);
-                    doc.text('Códigos Inválidos Tentados:', 20, yPos);
-                    yPos += 10;
-                    
-                    doc.setFontSize(10);
-                    invalidAttempts.forEach((code, index) => {
-                        if (yPos > 270) {
-                            doc.addPage();
-                            yPos = 20;
-                        }
-                        const attempts = scanAttempts.get(code);
-                        doc.text(`${index + 1}. ${code} [${attempts}x tentativas]`, 20, yPos);
-                        yPos += 8;
-                    });
-                }
-                
                 // Save PDF
-                const fileName = `relatorio_${currentClient.token}_${new Date().toISOString().split('T')[0]}.pdf`;
-                doc.save(fileName);
+                doc.save(`relatorio-${currentClient.token}-${new Date().toISOString().split('T')[0]}.pdf`);
                 
-                showToast('success', 'PDF Gerado', 'Relatório baixado com sucesso');
+                showToast('Relatório PDF gerado com sucesso', 'success');
                 
             } catch (error) {
-                console.error('PDF generation error:', error);
-                showToast('error', 'Erro', 'Erro ao gerar PDF');
+                showToast('Erro ao gerar relatório PDF', 'error');
             }
         }
 
-        // Tab management
-        function initTabs() {
-            const tabBtns = document.querySelectorAll('.tab-btn');
-            const tabContents = document.querySelectorAll('.tab-content');
-
-            tabBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const targetTab = btn.dataset.tab;
-                    
-                    // Update tab buttons
-                    tabBtns.forEach(b => {
-                        b.classList.remove('tab-active');
-                        b.classList.add('text-gray-600', 'hover:text-blue-600');
+        async function shareReport() {
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: 'Relatório InvitesQR',
+                        text: `Evento: ${currentClient.nome}\nValidados: ${scannedGuests.size}/${guests.length}`,
+                        url: window.location.href
                     });
-                    btn.classList.add('tab-active');
-                    btn.classList.remove('text-gray-600', 'hover:text-blue-600');
-
-                    // Update tab contents
-                    tabContents.forEach(content => {
-                        content.classList.add('hidden');
-                    });
-                    document.getElementById(targetTab).classList.remove('hidden');
-
-                    // Stop scanner when switching tabs
-                    if (targetTab !== 'scanner' && html5QrCode) {
-                        stopScanner();
-                    }
-
-                    // Update detailed list when switching to options
-                    if (targetTab === 'opcoes') {
-                        updateDetailedList();
-                    }
-                });
-            });
+                } catch (error) {
+                    console.log('Share cancelled');
+                }
+            } else {
+                // Fallback: copy to clipboard
+                const reportText = `Relatório InvitesQR\nEvento: ${currentClient.nome}\nValidados: ${scannedGuests.size}/${guests.length}\nData: ${new Date().toLocaleDateString('pt-PT')}`;
+                
+                try {
+                    await navigator.clipboard.writeText(reportText);
+                    showToast('Relatório copiado para a área de transferência', 'success');
+                } catch (error) {
+                    showToast('Erro ao partilhar relatório', 'error');
+                }
+            }
         }
 
-        // Logout functionality
-        function logout() {
-            if (confirm('Tem certeza que deseja sair?')) {
-                // Stop scanner
-                if (html5QrCode) {
-                    stopScanner();
+        // Clear saved token function
+        function clearSavedTokenAndNotify() {
+            if (confirm('Tem certeza que deseja limpar o token guardado? Terá que inserir novamente na próxima sessão.')) {
+                clearSavedToken();
+                showToast('Token guardado removido com sucesso', 'success');
+            }
+        }
+
+        // Logout
+        async function logout() {
+            if (confirm('Tem certeza que deseja terminar a sessão?')) {
+                if (isScanning) {
+                    await stopScanner();
                 }
                 
-                // Stop connectivity monitoring
-                stopConnectivityMonitoring();
+                // Clear saved token
+                clearSavedToken();
                 
-                // Clear data
+                // Reset state
                 currentClient = null;
-                allGuests = [];
+                guests = [];
                 scannedGuests.clear();
+                sessionScans = 0;
                 scanAttempts.clear();
-                
-                // Hide offline overlay if visible
-                hideOfflineOverlay();
                 
                 // Show login screen
                 document.getElementById('main-app').classList.add('hidden');
                 document.getElementById('login-screen').classList.remove('hidden');
-                document.getElementById('login-error').classList.add('hidden');
-                document.getElementById('token-input').value = '';
                 
-                showToast('info', 'Logout', 'Sessão encerrada');
+                // Reset form
+                document.getElementById('login-form').reset();
+                
+                showToast('Sessão terminada', 'info');
             }
         }
 
-        // Initialize app
-        document.addEventListener('DOMContentLoaded', async () => {
-            initTabs();
-            await loadSavedToken();
-            loadSettings();
+        // Toast notifications
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `bg-gray-800 border-l-4 ${
+                type === 'success' ? 'border-green-500' : 
+                type === 'error' ? 'border-red-500' : 
+                'border-blue-500'
+            } p-4 shadow-lg rounded-r-lg max-w-sm slide-up`;
             
-            // Initial connectivity check
-            checkConnectivity().then(online => {
-                isOnline = online;
-                if (!online) {
-                    showToast('error', 'Sem Internet', 'Este app precisa de conexão com a internet');
-                }
-            });
-            
-            // Settings toggles
-            document.getElementById('fast-mode-toggle').addEventListener('change', (e) => {
-                fastMode = e.target.checked;
-                saveSettings();
-            });
-            
-            document.getElementById('sound-toggle').addEventListener('change', (e) => {
-                soundEnabled = e.target.checked;
-                saveSettings();
-            });
-            
-            document.getElementById('vibration-toggle').addEventListener('change', (e) => {
-                vibrationEnabled = e.target.checked;
-                saveSettings();
-            });
-            
-            document.getElementById('dark-mode-toggle').addEventListener('change', (e) => {
-                darkMode = e.target.checked;
-                if (darkMode) {
-                    document.body.classList.add('dark-mode');
-                } else {
-                    document.body.classList.remove('dark-mode');
-                }
-                saveSettings();
-            });
-            
-            // Login form
-            document.getElementById('login-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const token = document.getElementById('token-input').value.trim();
-                if (token) {
-                    document.getElementById('login-error').classList.add('hidden');
-                    const loginBtn = document.getElementById('login-btn');
-                    loginBtn.textContent = 'Entrando...';
-                    loginBtn.disabled = true;
-                    
-                    try {
-                        await handleLogin(token);
-                    } finally {
-                        loginBtn.textContent = 'Entrar';
-                        loginBtn.disabled = false;
-                    }
-                }
-            });
+            toast.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${
+                        type === 'success' ? 'check-circle text-green-500' : 
+                        type === 'error' ? 'exclamation-circle text-red-500' : 
+                        'info-circle text-blue-500'
+                    } mr-3"></i>
+                    <span class="text-white">${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-gray-400 hover:text-white">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
 
-            // Scanner controls
-            document.getElementById('start-scanner-btn').addEventListener('click', startScanner);
-            document.getElementById('close-scanner-btn').addEventListener('click', stopScanner);
-            document.getElementById('next-scan-btn').addEventListener('click', hideResultAndContinue);
+            document.getElementById('toast-container').appendChild(toast);
 
-            // Report controls
-            document.getElementById('clear-scans-btn').addEventListener('click', clearAllScans);
-            document.getElementById('download-pdf-btn').addEventListener('click', generatePDF);
-
-            // Logout
-            document.getElementById('logout-btn').addEventListener('click', logout);
-
-            // Prevent accidental page refresh
-            window.addEventListener('beforeunload', (e) => {
-                if (currentClient && scannedGuests.size > 0) {
-                    e.preventDefault();
-                    e.returnValue = '';
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.remove();
                 }
-            });
+            }, 5000);
+        }
+
+        // Handle page visibility changes
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden && isScanning) {
+                // Pause scanner when app goes to background
+                stopScanner();
+            }
         });
+
+        // Handle online/offline events
+        window.addEventListener('online', checkConnectivity);
+        window.addEventListener('offline', checkConnectivity);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96732430569177d9',t:'MTc1Mzg2MDUyOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967aeb9c016177da',t:'MTc1Mzk0MjA5OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
