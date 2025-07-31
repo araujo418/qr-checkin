@@ -492,8 +492,8 @@
 
                         <!-- Inline Scanner Area -->
                         <div id="inline-scanner-container" class="hidden">
-                            <div class="relative bg-black rounded-lg mx-4 mb-4" style="height: 300px;">
-                                <div id="qr-reader-inline" class="w-full h-full rounded-lg overflow-hidden"></div>
+                            <div class="relative bg-black rounded-lg mx-4 mb-4" style="height: 300px; touch-action: none;">
+                                <div id="qr-reader-inline" class="w-full h-full rounded-lg overflow-hidden" style="touch-action: none;"></div>
                                 
                                 <!-- Scanner Overlay -->
                                 <div class="absolute inset-0 pointer-events-none">
@@ -2400,29 +2400,78 @@ Progresso: ${guests.length > 0 ? Math.round((scannedGuests.size / guests.length)
             if (!swipeContent || !mainContent) return;
             
             let startX = 0;
+            let startY = 0;
             let currentX = 0;
+            let currentY = 0;
             let isDragging = false;
+            let isHorizontalSwipe = false;
             
             mainContent.addEventListener('touchstart', (e) => {
+                // Don't interfere with scanner area
+                if (e.target.closest('#inline-scanner-container') || 
+                    e.target.closest('#qr-reader-inline') ||
+                    isScanning) {
+                    return;
+                }
+                
                 startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
                 isDragging = true;
-            });
+                isHorizontalSwipe = false;
+            }, { passive: true });
             
             mainContent.addEventListener('touchmove', (e) => {
                 if (!isDragging) return;
                 
-                currentX = e.touches[0].clientX;
-                const diffX = currentX - startX;
-                const translateX = -currentTab * 50 + (diffX / window.innerWidth) * 50;
+                // Don't interfere with scanner area
+                if (e.target.closest('#inline-scanner-container') || 
+                    e.target.closest('#qr-reader-inline') ||
+                    isScanning) {
+                    return;
+                }
                 
-                swipeContent.style.transform = `translateX(${translateX}%)`;
-            });
+                currentX = e.touches[0].clientX;
+                currentY = e.touches[0].clientY;
+                
+                const diffX = Math.abs(currentX - startX);
+                const diffY = Math.abs(currentY - startY);
+                
+                // Only start horizontal swipe if movement is more horizontal than vertical
+                if (!isHorizontalSwipe && diffX > 10) {
+                    if (diffX > diffY * 1.5) {
+                        isHorizontalSwipe = true;
+                        e.preventDefault(); // Prevent scrolling only for horizontal swipes
+                    } else {
+                        isDragging = false; // Cancel swipe if it's more vertical
+                        return;
+                    }
+                }
+                
+                if (isHorizontalSwipe) {
+                    const diffX = currentX - startX;
+                    const translateX = -currentTab * 50 + (diffX / window.innerWidth) * 50;
+                    swipeContent.style.transform = `translateX(${translateX}%)`;
+                }
+            }, { passive: false });
             
             mainContent.addEventListener('touchend', (e) => {
-                if (!isDragging) return;
+                if (!isDragging || !isHorizontalSwipe) {
+                    isDragging = false;
+                    isHorizontalSwipe = false;
+                    return;
+                }
+                
+                // Don't interfere with scanner area
+                if (e.target.closest('#inline-scanner-container') || 
+                    e.target.closest('#qr-reader-inline') ||
+                    isScanning) {
+                    isDragging = false;
+                    isHorizontalSwipe = false;
+                    return;
+                }
                 
                 const diffX = currentX - startX;
-                const threshold = window.innerWidth * 0.2;
+                const threshold = window.innerWidth * 0.25; // Increased threshold
                 
                 if (Math.abs(diffX) > threshold) {
                     if (diffX > 0 && currentTab > 0) {
@@ -2436,7 +2485,8 @@ Progresso: ${guests.length > 0 ? Math.round((scannedGuests.size / guests.length)
                 }
                 
                 isDragging = false;
-            });
+                isHorizontalSwipe = false;
+            }, { passive: true });
         }
 
         function loadCameras() {
@@ -2540,5 +2590,5 @@ Progresso: ${guests.length > 0 ? Math.round((scannedGuests.size / guests.length)
             }
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967cbbf7b60a77dd',t:'MTc1Mzk2MTExNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967cc1b3430977dd',t:'MTc1Mzk2MTM1Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
