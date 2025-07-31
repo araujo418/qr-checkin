@@ -42,7 +42,7 @@
             overscroll-behavior: none;
         }
 
-        /* Prevent zoom and scroll */
+        /* Prevent zoom but allow scroll in content areas */
         * {
             -webkit-user-select: none;
             -moz-user-select: none;
@@ -52,7 +52,31 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* Hide scrollbars completely */
+        /* Allow scrolling in specific containers */
+        .swipe-tab, .tab-content, #guests-list, #content-options, #content-reports, #content-settings {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+        }
+
+        /* Show scrollbars in content areas */
+        .swipe-tab::-webkit-scrollbar, .tab-content::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .swipe-tab::-webkit-scrollbar-track, .tab-content::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.1);
+        }
+
+        .swipe-tab::-webkit-scrollbar-thumb, .tab-content::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 2px;
+        }
+
+        /* Hide scrollbars elsewhere */
         ::-webkit-scrollbar {
             display: none;
             width: 0;
@@ -2168,38 +2192,66 @@
         }
 
         function enableNextScan() {
+            console.log('🎯 Enabling next scan...');
             canScan = true;
             
             // Update main tab button
             const nextBtn = document.getElementById('next-scan-btn');
-            nextBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Aguardando QR Code...';
-            nextBtn.disabled = true;
+            if (nextBtn) {
+                nextBtn.disabled = true;
+                nextBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Aguardando QR...';
+                console.log('✅ Next button disabled and updated');
+            }
             
             // Update inline status
-            updateInlineScanStatus('active', 'Pronto para escanear');
+            updateInlineScanStatus('active', 'PRONTO - Aponte para o QR code');
+            console.log('📱 Scanner status updated to active');
             
             // Hide instructions if visible
             const instructions = document.getElementById('inline-scanner-instructions');
-            if (!instructions.classList.contains('hidden')) {
+            if (instructions && !instructions.classList.contains('hidden')) {
                 instructions.classList.add('fade-out');
                 setTimeout(() => {
                     instructions.classList.add('hidden');
                 }, 300);
             }
             
-            // Auto-disable after 15 seconds if no scan
+            // Show result display area to give feedback
+            const resultDisplay = document.getElementById('inline-scan-result-display');
+            if (resultDisplay) {
+                resultDisplay.classList.remove('hidden');
+                const statusText = document.getElementById('inline-scan-status-text');
+                const guestName = document.getElementById('inline-scan-guest-name-display');
+                const timeText = document.getElementById('inline-scan-time-display');
+                
+                if (statusText) statusText.textContent = 'AGUARDANDO';
+                if (guestName) guestName.textContent = 'Posicione o QR code na câmera';
+                if (timeText) timeText.textContent = 'Scanner ativo e pronto';
+                
+                statusText.className = 'text-2xl font-bold mb-2 text-blue-400';
+            }
+            
+            // Auto-disable after 20 seconds if no scan
             setTimeout(() => {
                 if (canScan) {
+                    console.log('⏰ Auto-disabling scan after timeout');
                     canScan = false;
                     
                     // Reset main button
-                    nextBtn.innerHTML = '<i class="fas fa-arrow-right mr-2"></i>Próximo Convidado';
-                    nextBtn.disabled = false;
+                    if (nextBtn) {
+                        nextBtn.disabled = false;
+                        nextBtn.innerHTML = '<i class="fas fa-arrow-right mr-2"></i>Próximo Convidado';
+                    }
                     
-                    // Update status (no message)
-                    updateInlineScanStatus('disabled', '');
+                    // Update status
+                    updateInlineScanStatus('disabled', 'Timeout - clique novamente');
+                    
+                    // Hide result display
+                    if (resultDisplay) {
+                        resultDisplay.classList.add('hidden');
+                    }
                 }
-            }, 15000);
+            }, 20000);
         }
 
 
@@ -2318,19 +2370,14 @@
                     }, 300);
                 }, 4000);
                 
-                // Update status to waiting after 4 seconds
+                // Update status to waiting after 4 seconds - no message
                 setTimeout(() => {
-                    updateInlineScanStatus('waiting', 'Clique para escanear');
+                    updateInlineScanStatus('waiting', '');
                     
-                    // Hide status message after another 4 seconds
-                    setTimeout(() => {
-                        updateInlineScanStatus('disabled', '');
-                        
-                        // Provide contextual help for new users
-                        if (userBehavior.scannerStarts === 1 && sessionScans === 0) {
-                            provideContextualHelp();
-                        }
-                    }, 4000);
+                    // Provide contextual help for new users
+                    if (userBehavior.scannerStarts === 1 && sessionScans === 0) {
+                        provideContextualHelp();
+                    }
                 }, 4000);
                 
                 // Smart success message based on experience
@@ -2396,39 +2443,48 @@
 
         // QR Code scan handlers
         async function onScanSuccess(decodedText, decodedResult) {
-            // Only process if scanning is enabled
-            if (!canScan) {
-                return;
-            }
+            console.log('🔍 QR Code detected:', decodedText);
+            console.log('📊 Can scan:', canScan);
+            console.log('⏰ Last scan time:', lastScanTime);
+            console.log('🎯 Current time:', Date.now());
+            
+            // ALWAYS process QR codes for debugging - remove the canScan check temporarily
+            console.log('✅ Processing QR code regardless of canScan state for debugging');
 
             const now = Date.now();
             
-            // Prevent rapid duplicate scans
-            if (now - lastScanTime < 1000) {
+            // Reduce duplicate scan prevention to 500ms for better responsiveness
+            if (now - lastScanTime < 500) {
+                console.log('⚠️ Too soon since last scan, ignoring');
                 return;
             }
             lastScanTime = now;
 
-            // Disable scanning after successful read
-            canScan = false;
+            // Don't disable scanning immediately - let it process first
+            console.log('🚀 Processing QR code:', decodedText);
 
             // Track scan attempts
             const attempts = scanAttempts.get(decodedText) || 0;
             scanAttempts.set(decodedText, attempts + 1);
+            console.log('📈 Scan attempts for this code:', attempts + 1);
 
+            // Process the QR code
             await processQRCode(decodedText);
+            
+            // Now disable scanning after processing
+            canScan = false;
+            console.log('🛑 Scanning disabled after processing');
             
             // Reset buttons
             const nextBtn = document.getElementById('next-scan-btn');
-            nextBtn.innerHTML = '<i class="fas fa-arrow-right mr-2"></i>Próximo Convidado';
-            nextBtn.disabled = false;
+            if (nextBtn) {
+                nextBtn.innerHTML = '<i class="fas fa-arrow-right mr-2"></i>Próximo Convidado';
+                nextBtn.disabled = false;
+                console.log('🔄 Next button reset');
+            }
             
-            const fullscreenBtn = document.getElementById('fullscreen-next-btn');
-            fullscreenBtn.innerHTML = '<i class="fas fa-arrow-right mr-3 text-xl"></i><span>Próximo Convidado</span>';
-            fullscreenBtn.disabled = false;
-            
-            // Update status (no message)
-            updateScanStatus('disabled', '');
+            // Update status
+            updateInlineScanStatus('disabled', 'Processado - clique Próximo');
         }
 
         function onScanFailure(error) {
@@ -2440,12 +2496,17 @@
 
         async function processQRCode(code) {
             const scanStartTime = Date.now();
+            console.log('🔄 Processing QR Code:', code);
+            console.log('👥 Total guests loaded:', guests.length);
+            console.log('📋 Guests list sample:', guests.slice(0, 3).map(g => g.codigo));
             
             try {
                 // Find guest by code
                 const guest = guests.find(g => g.codigo === code);
+                console.log('🔍 Guest found:', guest ? guest.nome : 'NOT FOUND');
                 
                 if (!guest) {
+                    console.log('❌ Invalid code - guest not found');
                     // Track failed attempts for intelligence
                     scanningPatterns.failedAttempts.push({
                         code: code,
@@ -2469,7 +2530,11 @@
                     return;
                 }
 
+                console.log('🔄 Checking if already scanned...');
+                console.log('📊 Scanned guests:', Array.from(scannedGuests));
+                
                 if (scannedGuests.has(code)) {
+                    console.log('⚠️ Duplicate scan detected');
                     // Track duplicate attempts
                     scanningPatterns.failedAttempts.push({
                         code: code,
@@ -2481,6 +2546,8 @@
                     return;
                 }
 
+                console.log('✅ Valid new scan - processing...');
+                
                 // Valid scan - track success metrics
                 const scanTime = Date.now() - scanStartTime;
                 scanningPatterns.successfulScans.push({
@@ -2495,16 +2562,28 @@
                 scannedGuests.add(code);
                 sessionScans++;
                 
+                console.log('📈 Session scans now:', sessionScans);
+                console.log('👥 Total scanned guests:', scannedGuests.size);
+                
                 // Log to Supabase
                 if (isOnline) {
-                    await supabase.from('logs').insert([{
-                        token: code,
-                        status: 'scan',
-                        dispositivo: deviceName
-                    }]);
+                    console.log('💾 Logging to Supabase...');
+                    try {
+                        await supabase.from('logs').insert([{
+                            token: code,
+                            status: 'scan',
+                            dispositivo: deviceName
+                        }]);
+                        console.log('✅ Logged to Supabase successfully');
+                    } catch (logError) {
+                        console.error('❌ Supabase logging failed:', logError);
+                    }
                 }
 
+                console.log('🎯 Handling scan result...');
                 await handleScanResult('success', guest, code);
+                
+                console.log('📊 Updating stats...');
                 updateStats();
                 renderGuests();
                 updateRecentScans();
@@ -2515,7 +2594,10 @@
                 // Adapt communication level
                 adaptCommunicationLevel();
                 
+                console.log('✅ QR Code processing completed successfully');
+                
             } catch (error) {
+                console.error('❌ Error processing QR code:', error);
                 scanningPatterns.failedAttempts.push({
                     code: code,
                     timestamp: Date.now(),
@@ -2984,8 +3066,9 @@
 
         function updateDebugInfo() {
             const debugContent = document.getElementById('debug-content');
+            const cameraSelect = document.getElementById('camera-select');
             const info = [
-                `User Agent: ${navigator.userAgent}`,
+                `User Agent: ${navigator.userAgent.substring(0, 50)}...`,
                 `Screen: ${screen.width}x${screen.height}`,
                 `Viewport: ${window.innerWidth}x${window.innerHeight}`,
                 `Online: ${navigator.onLine}`,
@@ -2995,10 +3078,14 @@
                 `Scanner State: ${isScanning ? 'Active' : 'Stopped'}`,
                 `Can Scan: ${canScan}`,
                 `HTML5QrCode: ${!!html5QrCode}`,
-                `Cameras Available: ${document.getElementById('camera-select').options.length - 1}`,
+                `Cameras Available: ${cameraSelect ? cameraSelect.options.length - 1 : 0}`,
+                `Selected Camera: ${cameraSelect ? cameraSelect.value || 'Auto' : 'None'}`,
                 `Current Client: ${currentClient ? currentClient.nome : 'None'}`,
                 `Guests Loaded: ${guests.length}`,
-                `Scanned Count: ${scannedGuests.size}`
+                `Scanned Count: ${scannedGuests.size}`,
+                `Session Scans: ${sessionScans}`,
+                `Last Scan Time: ${lastScanTime ? new Date(lastScanTime).toLocaleTimeString() : 'Never'}`,
+                `Is Online: ${isOnline}`
             ];
             
             debugContent.innerHTML = info.join('<br>');
@@ -3016,5 +3103,5 @@
         window.addEventListener('online', checkConnectivity);
         window.addEventListener('offline', checkConnectivity);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967b6a3b743477dd',t:'MTc1Mzk0NzI4NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967b79b9553477da',t:'MTc1Mzk0NzkxOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
