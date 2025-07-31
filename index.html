@@ -240,13 +240,28 @@
             }
         }
         
-        /* Prevent text selection on buttons */
+        /* Prevent text selection on buttons and improve mobile touch */
         button {
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            touch-action: manipulation;
+            cursor: pointer;
+        }
+        
+        /* Improve button touch targets for mobile */
+        button {
+            min-height: 44px;
+            min-width: 44px;
+        }
+        
+        /* Better mobile button states */
+        button:active {
+            transform: scale(0.98);
+            transition: transform 0.1s ease;
         }
         
         /* Smooth scrolling */
@@ -862,7 +877,7 @@
         // Audio contexts for feedback
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         
-        // Initialize app
+        // Initialize app with mobile-friendly delays
         document.addEventListener('DOMContentLoaded', function() {
             console.log('App initializing...');
             
@@ -872,130 +887,162 @@
             // Prevent browser UI
             preventBrowserUI();
             
-            // Initialize all components
-            checkConnectivity();
-            setupLoginForm();
-            setupEventListeners();
-            loadCameras();
-            checkSavedToken(); // Check for saved token
-            initializeTheme();
-            setupSwipeNavigation();
+            // Initialize all components with delays for mobile
+            setTimeout(() => {
+                checkConnectivity();
+                setupLoginForm();
+                initializeTheme();
+                setupSwipeNavigation();
+            }, 100);
+            
+            // Setup event listeners after DOM is fully ready
+            setTimeout(() => {
+                setupEventListeners();
+                loadCameras();
+            }, 300);
+            
+            // Check saved token last
+            setTimeout(() => {
+                checkSavedToken();
+            }, 500);
+            
             setInterval(checkConnectivity, 30000); // Check every 30 seconds
             
             console.log('App initialized successfully');
         });
 
-        // Setup all event listeners
+        // Setup all event listeners with mobile-friendly approach
         function setupEventListeners() {
             console.log('Setting up event listeners...');
             
-            // Scanner toggle button
-            const scannerToggle = document.getElementById('scanner-toggle');
-            if (scannerToggle) {
-                scannerToggle.addEventListener('click', toggleScanner);
+            // Use both click and touchend for better mobile support
+            function addMobileClickListener(element, handler) {
+                if (!element) {
+                    console.log('Element not found for mobile click listener');
+                    return;
+                }
+                
+                console.log('Adding mobile click listener to:', element.id || element.className);
+                
+                // Remove any existing onclick attributes
+                element.removeAttribute('onclick');
+                
+                // Add touchstart for immediate feedback
+                element.addEventListener('touchstart', function(e) {
+                    console.log('Touch start on:', element.id || element.className);
+                    element.style.opacity = '0.7';
+                }, { passive: true });
+                
+                // Add touchend for actual action
+                element.addEventListener('touchend', function(e) {
+                    console.log('Touch end on:', element.id || element.className);
+                    e.preventDefault();
+                    e.stopPropagation();
+                    element.style.opacity = '1';
+                    
+                    // Small delay to ensure touch is processed
+                    setTimeout(() => {
+                        console.log('Executing handler for:', element.id || element.className);
+                        handler();
+                    }, 50);
+                }, { passive: false });
+                
+                // Fallback click event for desktop
+                element.addEventListener('click', function(e) {
+                    console.log('Click on:', element.id || element.className);
+                    // Only execute if not a touch device or if touchend didn't fire
+                    if (!('ontouchstart' in window)) {
+                        handler();
+                    }
+                }, { passive: true });
+                
+                // Reset opacity on touch cancel
+                element.addEventListener('touchcancel', function(e) {
+                    element.style.opacity = '1';
+                }, { passive: true });
             }
+            
+            // Scanner toggle button
+            addMobileClickListener(document.getElementById('scanner-toggle'), toggleScanner);
             
             // Next scan button
-            const nextScanBtn = document.getElementById('next-scan-btn');
-            if (nextScanBtn) {
-                nextScanBtn.addEventListener('click', enableNextScan);
-            }
+            addMobileClickListener(document.getElementById('next-scan-btn'), enableNextScan);
             
             // Tab buttons
-            const tabScanner = document.getElementById('tab-scanner');
-            const tabOptions = document.getElementById('tab-options');
-            if (tabScanner) {
-                tabScanner.addEventListener('click', () => showTab('scanner'));
-            }
-            if (tabOptions) {
-                tabOptions.addEventListener('click', () => showTab('options'));
-            }
+            addMobileClickListener(document.getElementById('tab-scanner'), () => showTab('scanner'));
+            addMobileClickListener(document.getElementById('tab-options'), () => showTab('options'));
             
-            // Theme toggle - use more specific selector
+            // Theme and logout buttons in header
             const headerButtons = document.querySelectorAll('header .flex.items-center.space-x-3 button');
             if (headerButtons.length >= 2) {
-                headerButtons[0].addEventListener('click', toggleTheme);
-                headerButtons[1].addEventListener('click', logout);
+                addMobileClickListener(headerButtons[0], toggleTheme);
+                addMobileClickListener(headerButtons[1], logout);
             }
             
-            // Options menu buttons - use more specific selectors
+            // Options menu buttons
             const optionsButtons = document.querySelectorAll('#content-options .space-y-3 button');
             if (optionsButtons.length >= 4) {
-                optionsButtons[0].addEventListener('click', () => showSubTab('guests'));
-                optionsButtons[1].addEventListener('click', () => showSubTab('reports'));
-                optionsButtons[2].addEventListener('click', () => showSubTab('settings'));
-                optionsButtons[3].addEventListener('click', clearAllScans);
+                addMobileClickListener(optionsButtons[0], () => showSubTab('guests'));
+                addMobileClickListener(optionsButtons[1], () => showSubTab('reports'));
+                addMobileClickListener(optionsButtons[2], () => showSubTab('settings'));
+                addMobileClickListener(optionsButtons[3], clearAllScans);
             }
             
-            // Back buttons
-            document.querySelectorAll('[onclick="showTab(\'options\')"]').forEach(btn => {
-                btn.removeAttribute('onclick');
-                btn.addEventListener('click', () => showTab('options'));
+            // Back buttons - find all buttons with back functionality
+            document.querySelectorAll('button').forEach(btn => {
+                const text = btn.textContent.toLowerCase();
+                if (text.includes('voltar') || text.includes('back')) {
+                    addMobileClickListener(btn, () => showTab('options'));
+                }
             });
             
             // Filter buttons
-            const filterAll = document.getElementById('filter-all');
-            const filterScanned = document.getElementById('filter-scanned');
-            const filterPending = document.getElementById('filter-pending');
-            
-            if (filterAll) {
-                filterAll.addEventListener('click', () => filterGuestsByStatus('all'));
-            }
-            if (filterScanned) {
-                filterScanned.addEventListener('click', () => filterGuestsByStatus('scanned'));
-            }
-            if (filterPending) {
-                filterPending.addEventListener('click', () => filterGuestsByStatus('pending'));
-            }
+            addMobileClickListener(document.getElementById('filter-all'), () => filterGuestsByStatus('all'));
+            addMobileClickListener(document.getElementById('filter-scanned'), () => filterGuestsByStatus('scanned'));
+            addMobileClickListener(document.getElementById('filter-pending'), () => filterGuestsByStatus('pending'));
             
             // Search input
             const guestSearch = document.getElementById('guest-search');
             if (guestSearch) {
+                guestSearch.addEventListener('input', filterGuests);
                 guestSearch.addEventListener('keyup', filterGuests);
             }
             
             // Report buttons
-            const pdfBtn = document.querySelector('[onclick="generatePDFReport()"]');
-            const shareBtn = document.querySelector('[onclick="shareReport()"]');
-            
-            if (pdfBtn) {
-                pdfBtn.removeAttribute('onclick');
-                pdfBtn.addEventListener('click', generatePDFReport);
-            }
-            if (shareBtn) {
-                shareBtn.removeAttribute('onclick');
-                shareBtn.addEventListener('click', shareReport);
-            }
-            
-            // Settings buttons
-            const clearTokenBtn = document.querySelector('[onclick="clearSavedTokenAndNotify()"]');
-            if (clearTokenBtn) {
-                clearTokenBtn.removeAttribute('onclick');
-                clearTokenBtn.addEventListener('click', clearSavedTokenAndNotify);
-            }
+            document.querySelectorAll('button').forEach(btn => {
+                const text = btn.textContent.toLowerCase();
+                if (text.includes('exportar relatório pdf')) {
+                    addMobileClickListener(btn, generatePDFReport);
+                } else if (text.includes('partilhar relatório')) {
+                    addMobileClickListener(btn, shareReport);
+                } else if (text.includes('limpar token guardado')) {
+                    addMobileClickListener(btn, clearSavedTokenAndNotify);
+                } else if (text.includes('terminar sessão')) {
+                    addMobileClickListener(btn, logout);
+                }
+            });
             
             // Fullscreen scanner close button
-            const closeBtn = document.querySelector('[onclick="closeFullscreenScanner()"]');
+            const closeBtn = document.querySelector('#fullscreen-scanner button');
             if (closeBtn) {
-                closeBtn.removeAttribute('onclick');
-                closeBtn.addEventListener('click', closeFullscreenScanner);
+                addMobileClickListener(closeBtn, closeFullscreenScanner);
             }
             
             // Debug toggle
-            const debugBtn = document.querySelector('[onclick="toggleDebug()"]');
-            if (debugBtn) {
-                debugBtn.removeAttribute('onclick');
-                debugBtn.addEventListener('click', toggleDebug);
-            }
+            document.querySelectorAll('button').forEach(btn => {
+                if (btn.textContent.includes('Toggle Debug')) {
+                    addMobileClickListener(btn, toggleDebug);
+                }
+            });
             
             // Connectivity check button
-            const connectivityBtn = document.querySelector('[onclick="checkConnectivity()"]');
-            if (connectivityBtn) {
-                connectivityBtn.removeAttribute('onclick');
-                connectivityBtn.addEventListener('click', checkConnectivity);
-            }
+            document.querySelectorAll('button').forEach(btn => {
+                if (btn.textContent.includes('Tentar Novamente')) {
+                    addMobileClickListener(btn, checkConnectivity);
+                }
+            });
             
-            console.log('Event listeners setup complete');
+            console.log('Event listeners setup complete with mobile support');
         }
 
         // Fullscreen and browser UI prevention
@@ -2241,5 +2288,5 @@
         window.addEventListener('online', checkConnectivity);
         window.addEventListener('offline', checkConnectivity);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967b2098b40477d7',t:'MTc1Mzk0NDI2OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967b27b236f377d7',t:'MTc1Mzk0NDU1OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
