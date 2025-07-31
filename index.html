@@ -60,6 +60,15 @@
             user-select: text;
             overflow-y: auto !important;
             -webkit-overflow-scrolling: touch !important;
+            touch-action: pan-y !important;
+        }
+
+        /* Ensure main content areas can scroll */
+        #content-scanner, #content-options {
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            touch-action: pan-y !important;
+            height: 100% !important;
         }
 
         /* Show scrollbars in content areas */
@@ -297,7 +306,7 @@
         .swipe-container {
             position: relative;
             overflow: hidden;
-            touch-action: pan-y;
+            touch-action: manipulation;
             height: 100%;
         }
 
@@ -311,10 +320,11 @@
         .swipe-tab {
             width: 50%;
             flex-shrink: 0;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch !important;
             overscroll-behavior: contain;
-            height: 100%;
+            height: 100% !important;
+            touch-action: pan-y !important;
         }
 
         /* Enable scrolling for all tab content */
@@ -588,10 +598,7 @@
                         <i class="fas fa-play mr-2"></i>Iniciar Scanner
                     </button>
 
-                    <div id="scan-status-info" class="bg-gray-800 rounded-lg p-4 text-center hidden">
-                        <p class="text-gray-400 text-sm mb-2">Scanner ativo - aguardando próximo comando</p>
-                        <p class="text-xs text-gray-500">Clique em "Próximo Convidado" para escanear</p>
-                    </div>
+
                 </div>
 
                 <!-- Inline Scanner Area -->
@@ -2014,8 +2021,9 @@
             const diffX = swipeStartX - currentX;
             const diffY = swipeStartY - currentY;
 
-            // Prevent vertical scrolling during horizontal swipe
-            if (Math.abs(diffX) > Math.abs(diffY)) {
+            // Only prevent default for significant horizontal swipes
+            // Allow vertical scrolling in all other cases
+            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 30) {
                 e.preventDefault();
             }
         }
@@ -2359,7 +2367,6 @@
                 // Update UI - change button to "Fechar Scanner"
                 document.getElementById('scanner-toggle').innerHTML = '<i class="fas fa-stop mr-2"></i>Fechar Scanner';
                 document.getElementById('next-scan-btn').classList.remove('hidden');
-                document.getElementById('scan-status-info').classList.remove('hidden');
                 
                 // Show initial instructions for 4 seconds, then hide
                 setTimeout(() => {
@@ -2420,7 +2427,6 @@
                     // Update UI - change button back to "Iniciar Scanner"
                     document.getElementById('scanner-toggle').innerHTML = '<i class="fas fa-play mr-2"></i>Iniciar Scanner';
                     document.getElementById('next-scan-btn').classList.add('hidden');
-                    document.getElementById('scan-status-info').classList.add('hidden');
                     
                     // Reset next button
                     const nextBtn = document.getElementById('next-scan-btn');
@@ -3103,5 +3109,5 @@
         window.addEventListener('online', checkConnectivity);
         window.addEventListener('offline', checkConnectivity);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967b79b9553477da',t:'MTc1Mzk0NzkxOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967b82fb77cb77da',t:'MTc1Mzk0ODI5Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
