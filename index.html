@@ -1106,9 +1106,8 @@
                 }
             });
             
-            // Fullscreen scanner buttons
-            addMobileClickListener(document.getElementById('close-scanner-btn'), closeFullscreenScanner);
-            addMobileClickListener(document.getElementById('fullscreen-next-btn'), enableNextScan);
+            // Inline scanner buttons
+            addMobileClickListener(document.getElementById('close-inline-scanner'), closeInlineScanner);
             
             // Debug toggle
             document.querySelectorAll('button').forEach(btn => {
@@ -1731,11 +1730,14 @@
             // Update status
             updateScanStatus('active', 'Pronto para escanear');
             
-            // Hide instructions, show scanning area clearly
-            document.getElementById('scanner-instructions').classList.add('fade-out');
-            setTimeout(() => {
-                document.getElementById('scanner-instructions').classList.add('hidden');
-            }, 300);
+            // Hide instructions if visible
+            const instructions = document.getElementById('scanner-instructions');
+            if (!instructions.classList.contains('hidden')) {
+                instructions.classList.add('fade-out');
+                setTimeout(() => {
+                    instructions.classList.add('hidden');
+                }, 300);
+            }
             
             // Auto-disable after 15 seconds if no scan
             setTimeout(() => {
@@ -1753,12 +1755,8 @@
                     // Ensure close button stays visible
                     closeBtn.classList.remove('hidden');
                     
-                    // Update status
-                    updateScanStatus('waiting', 'Clique para escanear');
-                    
-                    // Show instructions again
-                    document.getElementById('scanner-instructions').classList.remove('hidden', 'fade-out');
-                    document.getElementById('scanner-instructions').classList.add('fade-in');
+                    // Update status (no message)
+                    updateScanStatus('disabled', '');
                 }
             }, 15000);
         }
@@ -1771,12 +1769,12 @@
             document.getElementById('close-scanner-btn').classList.remove('hidden');
             
             // Show scanner instructions initially
-            document.getElementById('scanner-instructions').classList.remove('hidden');
+            document.getElementById('scanner-instructions').classList.remove('hidden', 'fade-out');
             document.getElementById('scan-result-display').classList.add('hidden');
             document.getElementById('fullscreen-next-btn').classList.add('hidden');
             
-            // Set initial status
-            updateScanStatus('disabled', 'Scanner iniciando...');
+            // Set initial status (no message initially)
+            updateScanStatus('disabled', '');
         }
 
         function closeFullscreenScanner() {
@@ -1863,8 +1861,24 @@
                 // Ensure close button is always visible
                 document.getElementById('close-scanner-btn').classList.remove('hidden');
                 
-                // Update status
-                updateScanStatus('waiting', 'Clique para escanear');
+                // Show initial instructions for 4 seconds, then hide
+                setTimeout(() => {
+                    const instructions = document.getElementById('scanner-instructions');
+                    instructions.classList.add('fade-out');
+                    setTimeout(() => {
+                        instructions.classList.add('hidden');
+                    }, 300);
+                }, 4000);
+                
+                // Update status to waiting after 4 seconds
+                setTimeout(() => {
+                    updateScanStatus('waiting', 'Clique para escanear');
+                    
+                    // Hide status message after another 4 seconds
+                    setTimeout(() => {
+                        updateScanStatus('disabled', '');
+                    }, 4000);
+                }, 4000);
                 
                 showToast('Scanner iniciado com sucesso', 'success');
                 
@@ -1945,8 +1959,8 @@
             fullscreenBtn.innerHTML = '<i class="fas fa-arrow-right mr-3 text-xl"></i><span>Próximo Convidado</span>';
             fullscreenBtn.disabled = false;
             
-            // Update status
-            updateScanStatus('waiting', 'Clique para escanear');
+            // Update status (no message)
+            updateScanStatus('disabled', '');
         }
 
         function onScanFailure(error) {
@@ -2065,19 +2079,14 @@
                 document.getElementById('close-scanner-btn').classList.remove('hidden');
             }, 300);
 
-            // Auto-hide after 4 seconds and show instructions again
+            // Auto-hide after 4 seconds (don't show instructions again)
             setTimeout(() => {
                 resultDisplay.classList.add('fade-out');
                 setTimeout(() => {
                     resultDisplay.classList.add('hidden');
                     resultDisplay.classList.remove('fade-out', 'fade-in');
-                    instructions.classList.remove('hidden', 'fade-out');
-                    instructions.classList.add('fade-in');
                     // Ensure close button stays visible
                     document.getElementById('close-scanner-btn').classList.remove('hidden');
-                    setTimeout(() => {
-                        instructions.classList.remove('fade-in');
-                    }, 300);
                 }, 300);
             }, 4000);
         }
@@ -2459,5 +2468,5 @@
         window.addEventListener('online', checkConnectivity);
         window.addEventListener('offline', checkConnectivity);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967b3dfd171b77d7',t:'MTc1Mzk0NTQ3MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967b488cb5bf77d7',t:'MTc1Mzk0NTkwNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
