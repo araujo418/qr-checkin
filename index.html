@@ -20,126 +20,27 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* Hide browser UI elements */
+        /* Normal page layout - allow browser UI */
         html {
-            overflow: hidden;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-            -webkit-touch-callout: none;
-            -webkit-tap-highlight-color: transparent;
+            scroll-behavior: smooth;
         }
 
         body {
             margin: 0;
             padding: 0;
-            overflow: hidden;
-            position: fixed;
-            width: 100vw;
-            height: 100vh;
+            min-height: 100vh;
             -webkit-overflow-scrolling: touch;
-            overscroll-behavior: none;
         }
 
-        /* Prevent zoom but allow scroll in content areas */
+        /* Allow normal text selection */
         * {
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-            -webkit-touch-callout: none;
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* Allow scrolling in specific containers */
-        .swipe-tab, .tab-content, #guests-list, #content-options, #content-reports, #content-settings {
-            -webkit-user-select: text;
-            -moz-user-select: text;
-            -ms-user-select: text;
-            user-select: text;
-            overflow-y: auto !important;
-            -webkit-overflow-scrolling: touch !important;
-            touch-action: pan-y !important;
-        }
-
-        /* Ensure main content areas can scroll */
-        #content-scanner, #content-options, #content-guests, #content-reports, #content-settings {
-            overflow-y: auto !important;
-            -webkit-overflow-scrolling: touch !important;
-            touch-action: pan-y !important;
-            height: 100% !important;
-        }
-
-        /* Allow scrolling in lists and containers */
-        .space-y-3, .space-y-4, .space-y-6 {
-            overflow-y: auto !important;
-            -webkit-overflow-scrolling: touch !important;
-            touch-action: pan-y !important;
-        }
-
-        /* Show scrollbars in content areas */
-        .swipe-tab::-webkit-scrollbar, .tab-content::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        .swipe-tab::-webkit-scrollbar-track, .tab-content::-webkit-scrollbar-track {
-            background: rgba(0,0,0,0.1);
-        }
-
-        .swipe-tab::-webkit-scrollbar-thumb, .tab-content::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.3);
-            border-radius: 2px;
-        }
-
-        /* Hide scrollbars elsewhere */
-        ::-webkit-scrollbar {
-            display: none;
-            width: 0;
-            height: 0;
-        }
-
-        /* Firefox */
-        html {
-            scrollbar-width: none;
-        }
-
-        /* Prevent context menu */
-        body {
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            -khtml-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-        }
-
-        /* Prevent text selection on all elements */
-        *, *:before, *:after {
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-        }
-
-        /* Allow text selection in input fields and scrollable content */
-        input, textarea, .swipe-tab *, .tab-content *, #guests-list *, .space-y-3 *, .space-y-4 *, .space-y-6 * {
-            -webkit-user-select: text;
-            -moz-user-select: text;
-            -ms-user-select: text;
-            user-select: text;
-        }
-
-        /* Fullscreen styles */
+        /* Normal container - not fixed */
         .app-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden;
+            min-height: 100vh;
+            width: 100%;
         }
 
         /* Theme variables */
@@ -452,32 +353,10 @@
             transform: translateY(0);
         }
 
-        /* Hide address bar on mobile */
+        /* Normal mobile behavior */
         @media screen and (max-width: 768px) {
-            body {
-                height: 100vh;
-                height: -webkit-fill-available;
-            }
-            
             .app-container {
-                height: 100vh;
-                height: -webkit-fill-available;
-            }
-        }
-
-        /* Prevent pull-to-refresh */
-        body {
-            overscroll-behavior-y: contain;
-        }
-
-        /* Hide any browser chrome */
-        @media all and (display-mode: standalone) {
-            body {
-                -webkit-app-region: drag;
-            }
-            
-            button, input, select, textarea {
-                -webkit-app-region: no-drag;
+                min-height: 100vh;
             }
         }
     </style>
@@ -574,10 +453,10 @@
             </div>
 
             <!-- Main Content with Swipe -->
-            <div id="main-content" class="swipe-container flex-1">
+            <div id="main-content" class="swipe-container flex-1 overflow-auto">
                 <div id="swipe-content" class="swipe-content">
                     <!-- Scanner Tab -->
-                    <div id="content-scanner" class="swipe-tab">
+                    <div id="content-scanner" class="swipe-tab overflow-auto">
                 <!-- Progress Bar -->
                 <div class="bg-gray-800 p-4">
                     <div class="flex justify-between items-center mb-2">
@@ -673,7 +552,7 @@
                     </div>
 
                     <!-- Options Tab -->
-                    <div id="content-options" class="swipe-tab">
+                    <div id="content-options" class="swipe-tab overflow-auto">
                         <div class="p-4">
                             <!-- Stats Overview -->
                             <div class="bg-gray-800 rounded-lg p-4 mb-6">
@@ -1366,12 +1245,6 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('App initializing...');
             
-            // Force fullscreen mode
-            enterFullscreenMode();
-            
-            // Prevent browser UI
-            preventBrowserUI();
-            
             // Initialize immediately - no delays
             console.log('Setting up login form...');
             setupLoginForm();
@@ -1542,112 +1415,7 @@
             console.log('Event listeners setup complete with mobile support');
         }
 
-        // Fullscreen and browser UI prevention
-        function enterFullscreenMode() {
-            // Try to enter fullscreen
-            if (document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen().catch(() => {});
-            } else if (document.documentElement.webkitRequestFullscreen) {
-                document.documentElement.webkitRequestFullscreen().catch(() => {});
-            } else if (document.documentElement.msRequestFullscreen) {
-                document.documentElement.msRequestFullscreen().catch(() => {});
-            }
-        }
-
-        function preventBrowserUI() {
-            // Prevent context menu
-            document.addEventListener('contextmenu', function(e) {
-                e.preventDefault();
-                return false;
-            });
-
-            // Prevent text selection
-            document.addEventListener('selectstart', function(e) {
-                if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-                    e.preventDefault();
-                    return false;
-                }
-            });
-
-            // Prevent drag
-            document.addEventListener('dragstart', function(e) {
-                e.preventDefault();
-                return false;
-            });
-
-            // Prevent zoom with keyboard shortcuts
-            document.addEventListener('keydown', function(e) {
-                // Prevent Ctrl+/Cmd+ zoom shortcuts
-                if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '-' || e.key === '0')) {
-                    e.preventDefault();
-                    return false;
-                }
-                
-                // Prevent F11 fullscreen toggle
-                if (e.key === 'F11') {
-                    e.preventDefault();
-                    return false;
-                }
-                
-                // Prevent F12 developer tools
-                if (e.key === 'F12') {
-                    e.preventDefault();
-                    return false;
-                }
-                
-                // Prevent Ctrl+Shift+I developer tools
-                if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'I') {
-                    e.preventDefault();
-                    return false;
-                }
-            });
-
-            // Prevent pinch zoom on touch devices
-            document.addEventListener('touchstart', function(e) {
-                if (e.touches.length > 1) {
-                    e.preventDefault();
-                }
-            }, { passive: false });
-
-            document.addEventListener('touchmove', function(e) {
-                if (e.touches.length > 1) {
-                    e.preventDefault();
-                }
-            }, { passive: false });
-
-            // Hide address bar on mobile
-            window.addEventListener('load', function() {
-                setTimeout(function() {
-                    window.scrollTo(0, 1);
-                }, 100);
-            });
-
-            // Prevent pull-to-refresh
-            document.body.addEventListener('touchstart', function(e) {
-                if (e.touches.length === 1 && window.scrollY === 0) {
-                    e.preventDefault();
-                }
-            }, { passive: false });
-
-            document.body.addEventListener('touchmove', function(e) {
-                if (e.touches.length === 1 && window.scrollY === 0) {
-                    e.preventDefault();
-                }
-            }, { passive: false });
-        }
-
-        // Re-enter fullscreen if user exits
-        document.addEventListener('fullscreenchange', function() {
-            if (!document.fullscreenElement) {
-                setTimeout(enterFullscreenMode, 1000);
-            }
-        });
-
-        document.addEventListener('webkitfullscreenchange', function() {
-            if (!document.webkitFullscreenElement) {
-                setTimeout(enterFullscreenMode, 1000);
-            }
-        });
+        // Normal browser behavior - no restrictions
 
         // Token storage management
         function saveToken(token) {
@@ -2500,22 +2268,22 @@
         async function onScanSuccess(decodedText, decodedResult) {
             console.log('🔍 QR Code detected:', decodedText);
             console.log('📊 Can scan:', canScan);
-            console.log('⏰ Last scan time:', lastScanTime);
-            console.log('🎯 Current time:', Date.now());
             
-            // ALWAYS process QR codes for debugging - remove the canScan check temporarily
-            console.log('✅ Processing QR code regardless of canScan state for debugging');
+            // Only process if scanning is enabled
+            if (!canScan) {
+                console.log('🚫 Scanning disabled - ignoring QR code');
+                return;
+            }
 
             const now = Date.now();
             
-            // Reduce duplicate scan prevention to 500ms for better responsiveness
-            if (now - lastScanTime < 500) {
+            // Prevent duplicate scans within 1 second
+            if (now - lastScanTime < 1000) {
                 console.log('⚠️ Too soon since last scan, ignoring');
                 return;
             }
             lastScanTime = now;
 
-            // Don't disable scanning immediately - let it process first
             console.log('🚀 Processing QR code:', decodedText);
 
             // Track scan attempts
@@ -2526,20 +2294,20 @@
             // Process the QR code
             await processQRCode(decodedText);
             
-            // Now disable scanning after processing
+            // Disable scanning after processing - user must click "Próximo" to scan again
             canScan = false;
-            console.log('🛑 Scanning disabled after processing');
+            console.log('🛑 Scanning disabled - user must click "Próximo Convidado"');
             
             // Reset buttons
             const nextBtn = document.getElementById('next-scan-btn');
             if (nextBtn) {
                 nextBtn.innerHTML = '<i class="fas fa-arrow-right mr-2"></i>Próximo Convidado';
                 nextBtn.disabled = false;
-                console.log('🔄 Next button reset');
+                console.log('🔄 Next button enabled for next scan');
             }
             
             // Update status
-            updateInlineScanStatus('disabled', '');
+            updateInlineScanStatus('waiting', 'Clique "Próximo Convidado" para continuar');
         }
 
         function onScanFailure(error) {
@@ -3177,5 +2945,5 @@
         window.addEventListener('online', checkConnectivity);
         window.addEventListener('offline', checkConnectivity);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967b9fb883bc77dd',t:'MTc1Mzk0OTQ3NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967bb169c78c77d9',t:'MTc1Mzk1MDE5OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
