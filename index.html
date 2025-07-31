@@ -151,6 +151,16 @@
             50% { background-color: rgba(239, 68, 68, 0.3); }
             100% { background-color: rgba(239, 68, 68, 0); }
         }
+        .vip-flash {
+            animation: vipFlash 0.8s ease-out;
+        }
+        @keyframes vipFlash {
+            0% { background-color: rgba(251, 191, 36, 0); box-shadow: none; }
+            25% { background-color: rgba(251, 191, 36, 0.4); box-shadow: 0 0 20px rgba(251, 191, 36, 0.6); }
+            50% { background-color: rgba(251, 191, 36, 0.2); box-shadow: 0 0 30px rgba(251, 191, 36, 0.8); }
+            75% { background-color: rgba(251, 191, 36, 0.4); box-shadow: 0 0 20px rgba(251, 191, 36, 0.6); }
+            100% { background-color: rgba(251, 191, 36, 0); box-shadow: none; }
+        }
         
         /* Mobile optimizations */
         @media (max-width: 768px) {
@@ -1164,6 +1174,13 @@
                 }
                 
                 guests = data || [];
+                
+                // Add VIP status if not present (default to false)
+                guests = guests.map(guest => ({
+                    ...guest,
+                    is_vip: guest.is_vip || false
+                }));
+                
                 console.log(`✅ Loaded ${guests.length} guests for current client`);
                 
                 // Sync scanned guests from database
@@ -1692,11 +1709,17 @@
                 // Show scanner container
                 document.getElementById('inline-scanner-container').classList.remove('hidden');
                 
-                // Configure scanner
+                // Configure scanner for faster detection
                 const config = {
-                    fps: 10,
-                    qrbox: { width: 250, height: 250 },
-                    aspectRatio: 1.0
+                    fps: 30, // Increased from 10 to 30 for faster scanning
+                    qrbox: { width: 280, height: 280 }, // Larger scan area
+                    aspectRatio: 1.0,
+                    supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+                    experimentalFeatures: {
+                        useBarCodeDetectorIfSupported: true
+                    },
+                    rememberLastUsedCamera: true,
+                    showTorchButtonIfSupported: true
                 };
 
                 await html5QrCode.start(
@@ -1790,19 +1813,54 @@
             canScan = false; // Prevent multiple scans
             
             const now = Date.now();
-            if (now - lastScanTime < 1000) {
+            if (now - lastScanTime < 300) { // Reduced from 1000ms to 300ms for faster scanning
                 console.log('⚠️ Scan too fast, ignoring');
-                setTimeout(() => canScan = true, 1000);
+                setTimeout(() => canScan = true, 300);
                 return;
             }
             lastScanTime = now;
             
             try {
-                // Find guest by QR code
-                const guest = guests.find(g => g.qr_code === decodedText);
+                // Try multiple ways to find the guest
+                let guest = null;
+                
+                // Method 1: Direct QR code match
+                guest = guests.find(g => g.qr_code === decodedText);
+                
+                // Method 2: Try with trimmed spaces
+                if (!guest) {
+                    guest = guests.find(g => g.qr_code && g.qr_code.trim() === decodedText.trim());
+                }
+                
+                // Method 3: Case insensitive match
+                if (!guest) {
+                    guest = guests.find(g => g.qr_code && g.qr_code.toLowerCase() === decodedText.toLowerCase());
+                }
+                
+                // Method 4: Try to find by ID if QR code is numeric
+                if (!guest && /^\d+$/.test(decodedText)) {
+                    guest = guests.find(g => g.id.toString() === decodedText);
+                }
+                
+                // Method 5: Try to find by name if QR contains name
+                if (!guest) {
+                    guest = guests.find(g => g.nome.toLowerCase().includes(decodedText.toLowerCase()) || 
+                                           decodedText.toLowerCase().includes(g.nome.toLowerCase()));
+                }
+                
+                // Method 6: Try partial matches
+                if (!guest) {
+                    guest = guests.find(g => g.qr_code && (
+                        g.qr_code.includes(decodedText) || 
+                        decodedText.includes(g.qr_code)
+                    ));
+                }
+                
+                console.log('🔍 Guest search result:', guest ? `Found: ${guest.nome}` : 'Not found');
+                console.log('🔍 Available QR codes:', guests.map(g => g.qr_code).slice(0, 5));
                 
                 if (!guest) {
-                    await handleScanError('QR code não encontrado');
+                    await handleScanError(`QR "${decodedText}" não encontrado na lista`);
                     return;
                 }
                 
@@ -1841,8 +1899,9 @@
                     dispositivo: deviceName
                 }]);
                 
-                // Show success
-                await showScanResult('success', guest.nome, '✅ Validado com sucesso!');
+                // Show success with VIP status
+                const vipMessage = guest.is_vip ? '👑 VIP Validado!' : '✅ Validado com sucesso!';
+                await showScanResult('success', guest.nome, vipMessage, guest.is_vip);
                 
                 // Update stats
                 updateStats();
@@ -1852,9 +1911,14 @@
                 // Save data
                 saveAppData();
                 
-                // Play success sound and vibrate
-                playSuccessSound();
-                vibrate([100]);
+                // Play success sound and vibrate (different for VIP)
+                if (guest.is_vip) {
+                    playVIPSound();
+                    vibrate([100, 50, 100, 50, 100]); // Special VIP vibration pattern
+                } else {
+                    playSuccessSound();
+                    vibrate([100]);
+                }
                 
                 console.log('✅ Guest validated successfully');
                 
@@ -1880,7 +1944,7 @@
             }, 2000);
         }
 
-        async function showScanResult(type, guestName, message) {
+        async function showScanResult(type, guestName, message, isVip = false) {
             const resultDisplay = document.getElementById('inline-scan-result-display');
             const statusText = document.getElementById('inline-scan-status-text');
             const guestNameDisplay = document.getElementById('inline-scan-guest-name-display');
@@ -1890,10 +1954,17 @@
             if (resultDisplay && statusText) {
                 // Update content
                 statusText.textContent = message;
-                statusText.className = `text-2xl font-bold mb-2 ${type === 'success' ? 'text-green-400' : 'text-red-400'}`;
+                statusText.className = `text-2xl font-bold mb-2 ${
+                    type === 'success' ? 
+                        (isVip ? 'text-yellow-400' : 'text-green-400') : 
+                        'text-red-400'
+                }`;
                 
                 if (guestNameDisplay) {
                     guestNameDisplay.textContent = guestName;
+                    guestNameDisplay.className = `text-lg mb-1 ${
+                        isVip ? 'text-yellow-300 font-bold' : 'text-white'
+                    }`;
                 }
                 
                 if (timeDisplay) {
@@ -1906,15 +1977,29 @@
                 // Show next button for success
                 if (type === 'success' && nextBtn) {
                     nextBtn.classList.remove('hidden');
+                    if (isVip) {
+                        nextBtn.className = 'w-full bg-yellow-600 hover:bg-yellow-700 active:bg-yellow-800 text-white font-medium py-4 px-6 rounded-lg transition-colors text-lg min-h-[56px]';
+                        nextBtn.innerHTML = '<i class="fas fa-crown mr-2"></i>Próximo Convidado';
+                    } else {
+                        nextBtn.className = 'w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium py-4 px-6 rounded-lg transition-colors text-lg min-h-[56px]';
+                        nextBtn.innerHTML = '<i class="fas fa-arrow-right mr-2"></i>Próximo Convidado';
+                    }
                 }
                 
-                // Flash effect
+                // Flash effect (golden for VIP)
                 const scanner = document.getElementById('inline-scanner-container');
                 if (scanner) {
-                    scanner.classList.add(type === 'success' ? 'success-flash' : 'error-flash');
-                    setTimeout(() => {
-                        scanner.classList.remove('success-flash', 'error-flash');
-                    }, 500);
+                    if (type === 'success' && isVip) {
+                        scanner.classList.add('vip-flash');
+                        setTimeout(() => {
+                            scanner.classList.remove('vip-flash');
+                        }, 800);
+                    } else {
+                        scanner.classList.add(type === 'success' ? 'success-flash' : 'error-flash');
+                        setTimeout(() => {
+                            scanner.classList.remove('success-flash', 'error-flash');
+                        }, 500);
+                    }
                 }
             }
         }
@@ -1950,6 +2035,36 @@
                 
                 oscillator.start(audioContext.currentTime);
                 oscillator.stop(audioContext.currentTime + 0.2);
+            } catch (error) {
+                console.log('Audio not supported');
+            }
+        }
+
+        function playVIPSound() {
+            if (!document.getElementById('success-sound').checked) return;
+            
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Create a more elaborate VIP sound with multiple tones
+                const times = [0, 0.1, 0.2, 0.3];
+                const frequencies = [800, 1000, 1200, 1000];
+                
+                times.forEach((time, index) => {
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.setValueAtTime(frequencies[index], audioContext.currentTime + time);
+                    
+                    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime + time);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + time + 0.15);
+                    
+                    oscillator.start(audioContext.currentTime + time);
+                    oscillator.stop(audioContext.currentTime + time + 0.15);
+                });
             } catch (error) {
                 console.log('Audio not supported');
             }
@@ -2005,17 +2120,25 @@
             
             const guestsHtml = guests.map(guest => {
                 const isScanned = scannedGuests.has(guest.id.toString());
+                const isVip = guest.is_vip;
                 return `
-                    <div class="bg-gray-800 rounded-lg p-4 flex items-center justify-between">
+                    <div class="bg-gray-800 rounded-lg p-4 flex items-center justify-between ${isVip ? 'border-l-4 border-yellow-500' : ''}">
                         <div class="flex-1">
-                            <h4 class="font-medium text-white">${guest.nome}</h4>
+                            <div class="flex items-center">
+                                <h4 class="font-medium ${isVip ? 'text-yellow-300' : 'text-white'}">${guest.nome}</h4>
+                                ${isVip ? '<i class="fas fa-crown text-yellow-500 ml-2"></i>' : ''}
+                            </div>
                             <p class="text-sm text-gray-400">${guest.email || 'Sem email'}</p>
+                            ${isVip ? '<p class="text-xs text-yellow-400 font-medium">VIP</p>' : ''}
                         </div>
-                        <div class="flex items-center">
+                        <div class="flex items-center space-x-2">
                             ${isScanned ? 
-                                '<i class="fas fa-check-circle text-green-500 text-xl"></i>' : 
+                                `<i class="fas fa-check-circle ${isVip ? 'text-yellow-500' : 'text-green-500'} text-xl"></i>` : 
                                 '<i class="fas fa-clock text-gray-500 text-xl"></i>'
                             }
+                            <button onclick="toggleVipStatus(${guest.id})" class="text-xs px-2 py-1 rounded ${isVip ? 'bg-yellow-600 text-white' : 'bg-gray-600 text-gray-300'} hover:opacity-80">
+                                ${isVip ? 'VIP' : 'Normal'}
+                            </button>
                         </div>
                     </div>
                 `;
@@ -2300,6 +2423,40 @@ Progresso: ${guests.length > 0 ? Math.round((scannedGuests.size / guests.length)
                 showToast(smartMessagesEnabled ? 'Mensagens inteligentes ativadas' : 'Mensagens inteligentes desativadas', 'info');
             }
         }
+
+        async function toggleVipStatus(guestId) {
+            try {
+                const guest = guests.find(g => g.id === guestId);
+                if (!guest) return;
+                
+                // Toggle VIP status
+                guest.is_vip = !guest.is_vip;
+                
+                // Update in database (if you want to persist VIP status)
+                try {
+                    await supabase
+                        .from('convidados')
+                        .update({ is_vip: guest.is_vip })
+                        .eq('id', guestId);
+                } catch (dbError) {
+                    console.warn('Could not update VIP status in database:', dbError);
+                }
+                
+                // Re-render guests list
+                renderGuests();
+                
+                // Save data locally
+                saveAppData();
+                
+                // Show notification
+                const status = guest.is_vip ? 'VIP' : 'Normal';
+                showToast(`${guest.nome} marcado como ${status}`, 'success');
+                
+            } catch (error) {
+                console.error('Error toggling VIP status:', error);
+                showToast('Erro ao alterar status VIP', 'error');
+            }
+        }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967c9f16313877e0',t:'MTc1Mzk1OTkzNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967cabfbe36677e0',t:'MTc1Mzk2MDQ2Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
