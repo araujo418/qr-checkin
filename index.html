@@ -64,11 +64,18 @@
         }
 
         /* Ensure main content areas can scroll */
-        #content-scanner, #content-options {
+        #content-scanner, #content-options, #content-guests, #content-reports, #content-settings {
             overflow-y: auto !important;
             -webkit-overflow-scrolling: touch !important;
             touch-action: pan-y !important;
             height: 100% !important;
+        }
+
+        /* Allow scrolling in lists and containers */
+        .space-y-3, .space-y-4, .space-y-6 {
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            touch-action: pan-y !important;
         }
 
         /* Show scrollbars in content areas */
@@ -115,8 +122,8 @@
             user-select: none;
         }
 
-        /* Allow text selection only in input fields */
-        input, textarea {
+        /* Allow text selection in input fields and scrollable content */
+        input, textarea, .swipe-tab *, .tab-content *, #guests-list *, .space-y-3 *, .space-y-4 *, .space-y-6 * {
             -webkit-user-select: text;
             -moz-user-select: text;
             -ms-user-select: text;
@@ -2055,8 +2062,16 @@
             const diffX = swipeStartX - currentX;
             const diffY = swipeStartY - currentY;
 
-            // Only prevent default for significant horizontal swipes
-            // Allow vertical scrolling in all other cases
+            // Check if we're in a scrollable area
+            const target = e.target;
+            const scrollableParent = target.closest('.swipe-tab, .tab-content, #guests-list, .space-y-3, .space-y-4, .space-y-6');
+            
+            // If in a scrollable area and it's primarily vertical movement, allow scrolling
+            if (scrollableParent && Math.abs(diffY) > Math.abs(diffX)) {
+                return; // Allow default scrolling behavior
+            }
+
+            // Only prevent default for significant horizontal swipes outside scrollable areas
             if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 30) {
                 e.preventDefault();
             }
@@ -2524,7 +2539,7 @@
             }
             
             // Update status
-            updateInlineScanStatus('disabled', 'Processado - clique Próximo');
+            updateInlineScanStatus('disabled', '');
         }
 
         function onScanFailure(error) {
@@ -3162,5 +3177,5 @@
         window.addEventListener('online', checkConnectivity);
         window.addEventListener('offline', checkConnectivity);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967b8c3ea7a277da',t:'MTc1Mzk0ODY3Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967b9fb883bc77dd',t:'MTc1Mzk0OTQ3NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
