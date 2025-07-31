@@ -877,6 +877,17 @@
         let swipeStartX = 0;
         let swipeStartY = 0;
 
+        // Data persistence keys
+        const STORAGE_KEYS = {
+            SCANNED_GUESTS: 'invitesqr_scanned_guests',
+            SCAN_ATTEMPTS: 'invitesqr_scan_attempts',
+            SESSION_SCANS: 'invitesqr_session_scans',
+            SCAN_HISTORY: 'invitesqr_scan_history',
+            CLIENT_DATA: 'invitesqr_client_data',
+            GUESTS_DATA: 'invitesqr_guests_data',
+            LAST_SYNC: 'invitesqr_last_sync'
+        };
+
         // Intelligence and communication variables
         let sessionStartTime = Date.now();
         let scanningPatterns = {
@@ -1245,6 +1256,10 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('App initializing...');
             
+            // Load saved data first
+            console.log('Loading saved data...');
+            const dataLoaded = loadAppData();
+            
             // Initialize immediately - no delays
             console.log('Setting up login form...');
             setupLoginForm();
@@ -1268,7 +1283,7 @@
             // Check saved token after connectivity is established
             setTimeout(() => {
                 console.log('Checking saved token...');
-                checkSavedToken();
+                checkSavedTokenWithData();
             }, 200);
             
             // Initialize intelligent system after everything else
@@ -1276,6 +1291,9 @@
                 console.log('Initializing intelligent system...');
                 initializeIntelligentSystem();
             }, 300);
+            
+            // Auto-save data every 30 seconds
+            setInterval(saveAppData, 30000);
             
             setInterval(checkConnectivity, 30000); // Check every 30 seconds
             setInterval(analyzeUserBehavior, 60000); // Analyze behavior every minute
@@ -1417,6 +1435,141 @@
 
         // Normal browser behavior - no restrictions
 
+        // ===== DATA PERSISTENCE SYSTEM =====
+        
+        function saveAppData() {
+            try {
+                console.log('💾 Saving app data to localStorage...');
+                
+                // Save scanned guests as array
+                localStorage.setItem(STORAGE_KEYS.SCANNED_GUESTS, JSON.stringify(Array.from(scannedGuests)));
+                
+                // Save scan attempts as object
+                const attemptsObj = {};
+                scanAttempts.forEach((value, key) => {
+                    attemptsObj[key] = value;
+                });
+                localStorage.setItem(STORAGE_KEYS.SCAN_ATTEMPTS, JSON.stringify(attemptsObj));
+                
+                // Save session scans count
+                localStorage.setItem(STORAGE_KEYS.SESSION_SCANS, sessionScans.toString());
+                
+                // Save scan history with timestamps
+                const scanHistory = Array.from(scannedGuests).map(code => {
+                    const guest = guests.find(g => g.codigo === code);
+                    return {
+                        code: code,
+                        guestName: guest ? guest.nome : 'Desconhecido',
+                        timestamp: Date.now(), // We'll use current time as fallback
+                        deviceName: deviceName
+                    };
+                });
+                localStorage.setItem(STORAGE_KEYS.SCAN_HISTORY, JSON.stringify(scanHistory));
+                
+                // Save client data
+                if (currentClient) {
+                    localStorage.setItem(STORAGE_KEYS.CLIENT_DATA, JSON.stringify(currentClient));
+                }
+                
+                // Save guests data
+                localStorage.setItem(STORAGE_KEYS.GUESTS_DATA, JSON.stringify(guests));
+                
+                // Save last sync timestamp
+                localStorage.setItem(STORAGE_KEYS.LAST_SYNC, Date.now().toString());
+                
+                console.log('✅ App data saved successfully');
+                console.log(`📊 Saved: ${scannedGuests.size} scanned guests, ${sessionScans} session scans`);
+                
+            } catch (error) {
+                console.error('❌ Error saving app data:', error);
+            }
+        }
+        
+        function loadAppData() {
+            try {
+                console.log('📂 Loading app data from localStorage...');
+                
+                // Load scanned guests
+                const savedScannedGuests = localStorage.getItem(STORAGE_KEYS.SCANNED_GUESTS);
+                if (savedScannedGuests) {
+                    const scannedArray = JSON.parse(savedScannedGuests);
+                    scannedGuests = new Set(scannedArray);
+                    console.log(`📋 Loaded ${scannedGuests.size} scanned guests`);
+                }
+                
+                // Load scan attempts
+                const savedScanAttempts = localStorage.getItem(STORAGE_KEYS.SCAN_ATTEMPTS);
+                if (savedScanAttempts) {
+                    const attemptsObj = JSON.parse(savedScanAttempts);
+                    scanAttempts = new Map(Object.entries(attemptsObj));
+                    console.log(`🔄 Loaded ${scanAttempts.size} scan attempts`);
+                }
+                
+                // Load session scans
+                const savedSessionScans = localStorage.getItem(STORAGE_KEYS.SESSION_SCANS);
+                if (savedSessionScans) {
+                    sessionScans = parseInt(savedSessionScans) || 0;
+                    console.log(`📈 Loaded session scans: ${sessionScans}`);
+                }
+                
+                // Load client data
+                const savedClientData = localStorage.getItem(STORAGE_KEYS.CLIENT_DATA);
+                if (savedClientData) {
+                    currentClient = JSON.parse(savedClientData);
+                    console.log(`👤 Loaded client: ${currentClient.nome}`);
+                }
+                
+                // Load guests data
+                const savedGuestsData = localStorage.getItem(STORAGE_KEYS.GUESTS_DATA);
+                if (savedGuestsData) {
+                    guests = JSON.parse(savedGuestsData);
+                    console.log(`👥 Loaded ${guests.length} guests`);
+                }
+                
+                // Check last sync time
+                const lastSync = localStorage.getItem(STORAGE_KEYS.LAST_SYNC);
+                if (lastSync) {
+                    const syncTime = new Date(parseInt(lastSync));
+                    console.log(`🕒 Last sync: ${syncTime.toLocaleString('pt-PT')}`);
+                }
+                
+                console.log('✅ App data loaded successfully');
+                return true;
+                
+            } catch (error) {
+                console.error('❌ Error loading app data:', error);
+                return false;
+            }
+        }
+        
+        function clearAppData() {
+            try {
+                console.log('🗑️ Clearing app data...');
+                
+                Object.values(STORAGE_KEYS).forEach(key => {
+                    localStorage.removeItem(key);
+                });
+                
+                // Reset variables
+                scannedGuests = new Set();
+                scanAttempts = new Map();
+                sessionScans = 0;
+                currentClient = null;
+                guests = [];
+                
+                console.log('✅ App data cleared successfully');
+                
+            } catch (error) {
+                console.error('❌ Error clearing app data:', error);
+            }
+        }
+        
+        function syncDataWithServer() {
+            // This function could be used to sync local data with server
+            // For now, we'll just save locally after each scan
+            saveAppData();
+        }
+
         // Token storage management
         function saveToken(token) {
             try {
@@ -1488,8 +1641,64 @@
             }
         }
 
-        async function checkSavedToken() {
+        async function checkSavedTokenWithData() {
             const savedToken = getSavedToken();
+            
+            // If we have saved client data and it matches the token, restore session
+            if (currentClient && savedToken === currentClient.token) {
+                console.log('🔄 Restoring session with saved data...');
+                
+                // Check if event is still valid
+                const eventDate = new Date(currentClient.validade * 1000);
+                const now = new Date();
+                
+                if (eventDate < now) {
+                    console.log('❌ Saved event expired, clearing data');
+                    clearAppData();
+                    clearSavedToken();
+                    return;
+                }
+                
+                // Restore UI immediately with saved data
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('main-app').classList.remove('hidden');
+                
+                updateHeader();
+                updateStats();
+                renderGuests();
+                updateRecentScans();
+                
+                // Show welcome back message
+                const lastSync = localStorage.getItem(STORAGE_KEYS.LAST_SYNC);
+                if (lastSync) {
+                    const syncTime = new Date(parseInt(lastSync));
+                    const timeDiff = Math.round((Date.now() - parseInt(lastSync)) / (1000 * 60)); // minutes
+                    
+                    if (timeDiff < 60) {
+                        showSmartToast(`🔄 Bem-vindo de volta! Dados restaurados (${timeDiff}min atrás)`, 'success', 'restore');
+                    } else {
+                        const hours = Math.round(timeDiff / 60);
+                        showSmartToast(`🔄 Sessão restaurada! Última sincronização há ${hours}h`, 'success', 'restore');
+                    }
+                }
+                
+                // Try to refresh data in background if online
+                if (isOnline) {
+                    try {
+                        console.log('🔄 Refreshing data in background...');
+                        await loadGuests(); // This will update with fresh data
+                        updateStats();
+                        renderGuests();
+                        console.log('✅ Data refreshed successfully');
+                    } catch (error) {
+                        console.warn('⚠️ Failed to refresh data, using cached data');
+                    }
+                }
+                
+                return;
+            }
+            
+            // Original token check logic
             if (savedToken && isOnline) {
                 document.getElementById('event-token').value = savedToken;
                 
@@ -1505,12 +1714,18 @@
                     } catch (error) {
                         // If auto-login fails, clear the saved token and show login form
                         clearSavedToken();
+                        clearAppData();
                         loginBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Entrar';
                         loginBtn.disabled = false;
                         showToast('Token expirado. Faça login novamente.', 'info');
                     }
                 }, 1000);
             }
+        }
+
+        async function checkSavedToken() {
+            // Keep original function for compatibility
+            await checkSavedTokenWithData();
         }
 
         // Connectivity management
@@ -1664,6 +1879,10 @@
                 // Load guests
                 console.log('Loading guests...');
                 await loadGuests();
+                
+                // Save data after successful login
+                console.log('💾 Saving data after login...');
+                saveAppData();
                 
                 // Switch to main app
                 console.log('Switching to main app...');
@@ -2286,6 +2505,10 @@
 
             console.log('🚀 Processing QR code:', decodedText);
 
+            // IMMEDIATELY disable scanning after detecting a QR code
+            canScan = false;
+            console.log('🛑 Scanning IMMEDIATELY disabled after QR detection');
+
             // Track scan attempts
             const attempts = scanAttempts.get(decodedText) || 0;
             scanAttempts.set(decodedText, attempts + 1);
@@ -2294,11 +2517,7 @@
             // Process the QR code
             await processQRCode(decodedText);
             
-            // Disable scanning after processing - user must click "Próximo" to scan again
-            canScan = false;
-            console.log('🛑 Scanning disabled - user must click "Próximo Convidado"');
-            
-            // Reset buttons
+            // Reset buttons after processing
             const nextBtn = document.getElementById('next-scan-btn');
             if (nextBtn) {
                 nextBtn.innerHTML = '<i class="fas fa-arrow-right mr-2"></i>Próximo Convidado';
@@ -2307,7 +2526,7 @@
             }
             
             // Update status
-            updateInlineScanStatus('waiting', 'Clique "Próximo Convidado" para continuar');
+            updateInlineScanStatus('disabled', 'Clique "Próximo Convidado" para continuar');
         }
 
         function onScanFailure(error) {
@@ -2410,6 +2629,10 @@
                 updateStats();
                 renderGuests();
                 updateRecentScans();
+                
+                // Save data immediately after successful scan
+                console.log('💾 Saving data after successful scan...');
+                saveAppData();
                 
                 // Celebrate achievements
                 checkAndCelebrateAchievements();
@@ -2822,6 +3045,10 @@
                     const clearedCount = scannedGuests.size;
                     scannedGuests.clear();
                     scanAttempts.clear();
+                    sessionScans = 0; // Reset session scans too
+                    
+                    // Save cleared state immediately
+                    saveAppData();
                     
                     // Update UI
                     updateStats();
@@ -2838,29 +3065,27 @@
 
         // Logout
         async function logout() {
-            if (confirm('Tem certeza que deseja terminar a sessão?')) {
+            const confirmMessage = `Tem certeza que deseja terminar a sessão?\n\n⚠️ ATENÇÃO: Todos os dados escaneados serão mantidos para a próxima sessão.\n\nPara limpar completamente os dados, use "Desmarcar Scaneados" antes de fazer logout.`;
+            
+            if (confirm(confirmMessage)) {
                 if (isScanning) {
                     await stopScanner();
                 }
                 
-                // Clear saved token
+                // Save current state before logout
+                saveAppData();
+                
+                // Only clear the token, keep all other data
                 clearSavedToken();
                 
-                // Reset state
-                currentClient = null;
-                guests = [];
-                scannedGuests.clear();
-                sessionScans = 0;
-                scanAttempts.clear();
-                
-                // Show login screen
+                // Show login screen but keep data
                 document.getElementById('main-app').classList.add('hidden');
                 document.getElementById('login-screen').classList.remove('hidden');
                 
                 // Reset form
                 document.getElementById('login-form').reset();
                 
-                showToast('Sessão terminada', 'info');
+                showToast('Sessão terminada - dados mantidos para próxima sessão', 'info');
             }
         }
 
@@ -2935,15 +3160,37 @@
 
         // Handle page visibility changes
         document.addEventListener('visibilitychange', function() {
-            if (document.hidden && isScanning) {
-                // Pause scanner when app goes to background
-                stopScanner();
+            if (document.hidden) {
+                // Save data when app goes to background
+                console.log('📱 App going to background, saving data...');
+                saveAppData();
+                
+                if (isScanning) {
+                    // Pause scanner when app goes to background
+                    stopScanner();
+                }
+            } else {
+                // App came back to foreground
+                console.log('📱 App back to foreground');
+                userBehavior.lastActiveTime = Date.now();
             }
+        });
+
+        // Save data before page unload
+        window.addEventListener('beforeunload', function() {
+            console.log('📱 Page unloading, saving data...');
+            saveAppData();
+        });
+
+        // Save data when page loses focus
+        window.addEventListener('blur', function() {
+            console.log('📱 Page lost focus, saving data...');
+            saveAppData();
         });
 
         // Handle online/offline events
         window.addEventListener('online', checkConnectivity);
         window.addEventListener('offline', checkConnectivity);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967bb169c78c77d9',t:'MTc1Mzk1MDE5OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967bca2fe2a677dd',t:'MTc1Mzk1MTIxNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
