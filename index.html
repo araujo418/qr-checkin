@@ -1832,10 +1832,18 @@
             if (!canScan) return;
             
             console.log('📱 QR Code scanned:', decodedText);
+            console.log('📊 Total guests loaded:', guests.length);
+            console.log('🔍 Sample QR codes from database:', guests.slice(0, 3).map(g => ({
+                id: g.id,
+                nome: g.nome,
+                qr_code: g.qr_code,
+                email: g.email
+            })));
+            
             canScan = false; // Prevent multiple scans
             
             const now = Date.now();
-            if (now - lastScanTime < 300) { // Reduced from 1000ms to 300ms for faster scanning
+            if (now - lastScanTime < 300) {
                 console.log('⚠️ Scan too fast, ignoring');
                 setTimeout(() => canScan = true, 300);
                 return;
@@ -1843,61 +1851,107 @@
             lastScanTime = now;
             
             try {
-                // Try multiple ways to find the guest
+                // Clean the scanned text
+                const cleanScannedText = decodedText.toString().trim();
+                console.log('🧹 Cleaned scanned text:', cleanScannedText);
+                
                 let guest = null;
                 
-                // Method 1: Direct QR code match
-                guest = guests.find(g => g.qr_code === decodedText);
+                // Method 1: Direct exact match
+                guest = guests.find(g => g.qr_code && g.qr_code.toString().trim() === cleanScannedText);
+                console.log('🔍 Method 1 (exact):', guest ? `Found: ${guest.nome}` : 'Not found');
                 
-                // Method 2: Try with trimmed spaces
+                // Method 2: Case insensitive match
                 if (!guest) {
-                    guest = guests.find(g => g.qr_code && g.qr_code.trim() === decodedText.trim());
+                    guest = guests.find(g => g.qr_code && 
+                        g.qr_code.toString().trim().toLowerCase() === cleanScannedText.toLowerCase());
+                    console.log('🔍 Method 2 (case insensitive):', guest ? `Found: ${guest.nome}` : 'Not found');
                 }
                 
-                // Method 3: Case insensitive match
-                if (!guest) {
-                    guest = guests.find(g => g.qr_code && g.qr_code.toLowerCase() === decodedText.toLowerCase());
+                // Method 3: Try by ID if scanned text is numeric
+                if (!guest && /^\d+$/.test(cleanScannedText)) {
+                    guest = guests.find(g => g.id.toString() === cleanScannedText);
+                    console.log('🔍 Method 3 (by ID):', guest ? `Found: ${guest.nome}` : 'Not found');
                 }
                 
-                // Method 4: Try to find by ID if QR code is numeric
-                if (!guest && /^\d+$/.test(decodedText)) {
-                    guest = guests.find(g => g.id.toString() === decodedText);
+                // Method 4: Try by email if it looks like an email
+                if (!guest && cleanScannedText.includes('@')) {
+                    guest = guests.find(g => g.email && 
+                        g.email.toLowerCase().trim() === cleanScannedText.toLowerCase());
+                    console.log('🔍 Method 4 (by email):', guest ? `Found: ${guest.nome}` : 'Not found');
                 }
                 
-                // Method 5: Try to find by name if QR contains name
+                // Method 5: Try by name (exact match)
                 if (!guest) {
-                    guest = guests.find(g => g.nome.toLowerCase().includes(decodedText.toLowerCase()) || 
-                                           decodedText.toLowerCase().includes(g.nome.toLowerCase()));
+                    guest = guests.find(g => g.nome && 
+                        g.nome.toLowerCase().trim() === cleanScannedText.toLowerCase());
+                    console.log('🔍 Method 5 (by name exact):', guest ? `Found: ${guest.nome}` : 'Not found');
                 }
                 
-                // Method 6: Try partial matches
-                if (!guest) {
-                    guest = guests.find(g => g.qr_code && (
-                        g.qr_code.includes(decodedText) || 
-                        decodedText.includes(g.qr_code)
-                    ));
+                // Method 6: Try partial name match
+                if (!guest && cleanScannedText.length > 3) {
+                    guest = guests.find(g => g.nome && 
+                        g.nome.toLowerCase().includes(cleanScannedText.toLowerCase()));
+                    console.log('🔍 Method 6 (partial name):', guest ? `Found: ${guest.nome}` : 'Not found');
                 }
                 
-                console.log('🔍 Guest search result:', guest ? `Found: ${guest.nome}` : 'Not found');
-                console.log('🔍 Available QR codes:', guests.map(g => g.qr_code).slice(0, 5));
+                // Method 7: Try to find any field that contains the scanned text
+                if (!guest && cleanScannedText.length > 2) {
+                    guest = guests.find(g => {
+                        const searchFields = [
+                            g.qr_code?.toString(),
+                            g.nome?.toString(),
+                            g.email?.toString(),
+                            g.id?.toString()
+                        ].filter(Boolean);
+                        
+                        return searchFields.some(field => 
+                            field.toLowerCase().includes(cleanScannedText.toLowerCase()) ||
+                            cleanScannedText.toLowerCase().includes(field.toLowerCase())
+                        );
+                    });
+                    console.log('🔍 Method 7 (any field contains):', guest ? `Found: ${guest.nome}` : 'Not found');
+                }
+                
+                // Debug: Show what we're comparing against
+                if (!guest) {
+                    console.log('❌ QR Code not found. Debugging info:');
+                    console.log('Scanned:', cleanScannedText);
+                    console.log('Available QR codes:', guests.map(g => g.qr_code).filter(Boolean).slice(0, 10));
+                    console.log('Available IDs:', guests.map(g => g.id).slice(0, 10));
+                    console.log('Available names:', guests.map(g => g.nome).slice(0, 5));
+                    
+                    // Show detailed comparison for first few guests
+                    guests.slice(0, 3).forEach((g, index) => {
+                        console.log(`Guest ${index + 1}:`, {
+                            id: g.id,
+                            nome: g.nome,
+                            qr_code: g.qr_code,
+                            qr_matches: g.qr_code === cleanScannedText,
+                            id_matches: g.id.toString() === cleanScannedText
+                        });
+                    });
+                }
                 
                 if (!guest) {
-                    await handleScanError(`QR "${decodedText}" não encontrado na lista`);
+                    await handleScanError(`QR "${cleanScannedText}" não encontrado na lista de ${guests.length} convidados`);
                     return;
                 }
                 
                 // Check if already scanned
                 if (scannedGuests.has(guest.id.toString())) {
-                    await handleScanError(`${guest.nome} já foi validado`);
+                    await handleScanError(`${guest.nome} já foi validado anteriormente`);
                     return;
                 }
+                
+                console.log('✅ Guest found and will be validated:', guest.nome);
                 
                 // Validate guest
                 await validateGuest(guest);
                 
             } catch (error) {
                 console.error('❌ Error processing scan:', error);
-                await handleScanError('Erro ao processar scan');
+                await handleScanError('Erro ao processar QR code');
             }
         }
 
@@ -2486,5 +2540,5 @@ Progresso: ${guests.length > 0 ? Math.round((scannedGuests.size / guests.length)
             }
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967cb37380a477e0',t:'MTc1Mzk2MDc2OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967cbbf7b60a77dd',t:'MTc1Mzk2MTExNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
