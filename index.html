@@ -585,10 +585,7 @@
                         <span id="scanner-total-count">de 0 convidados</span>
                     </div>
                     
-                    <!-- Smart Status Message -->
-                    <div id="smart-status-display" class="mt-3 p-2 bg-gray-700 rounded-lg text-center hidden">
-                        <span id="smart-status-text" class="text-sm text-blue-400"></span>
-                    </div>
+
                 </div>
 
                 <!-- Controls -->
@@ -903,6 +900,21 @@
                         </div>
                     </div>
 
+                    <!-- Smart Messages Settings -->
+                    <div class="bg-gray-800 rounded-lg p-4">
+                        <h3 class="text-lg font-medium mb-4">Mensagens Inteligentes</h3>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="font-medium">Dicas e Sugestões</h4>
+                                <p class="text-sm text-gray-400">Mostrar mensagens de ajuda e progresso</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="smart-messages" class="sr-only peer" checked onchange="toggleSmartMessages()">
+                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                    </div>
+
                     <!-- Scanner Settings -->
                     <div class="bg-gray-800 rounded-lg p-4">
                         <h3 class="text-lg font-medium mb-4">Scanner</h3>
@@ -1004,6 +1016,9 @@
             errorRate: 0,
             efficiency: 100
         };
+        let smartMessagesEnabled = true;
+        let messageQueue = [];
+        let isShowingMessage = false;
 
         // Audio contexts for feedback
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -1020,10 +1035,12 @@
             else if (hour < 18) greeting = 'Boa tarde';
             else greeting = 'Boa noite';
             
-            // Show contextual welcome
+            // Show contextual welcome only if messages are enabled
             setTimeout(() => {
-                showSmartToast(`${greeting}! 👋 Sistema InvitesQR pronto para uso.`, 'info', 'welcome');
-            }, 2000);
+                if (smartMessagesEnabled) {
+                    showSmartToast(`${greeting}! 👋 Sistema InvitesQR pronto para uso.`, 'info', 'welcome');
+                }
+            }, 3000);
             
             // Track user activity
             trackUserActivity();
@@ -1161,10 +1178,24 @@
         }
 
         function showSmartToast(message, type = 'info', category = 'general', action = null) {
-            // Prevent spam - limit communications
-            const now = Date.now();
-            if (now - lastCommunication < 10000 && category !== 'welcome') return; // 10 second cooldown
-            lastCommunication = now;
+            // Check if smart messages are disabled
+            if (!smartMessagesEnabled && category !== 'error' && category !== 'success') {
+                return;
+            }
+            
+            // Add to queue instead of showing immediately
+            messageQueue.push({ message, type, category, action });
+            processMessageQueue();
+        }
+        
+        function processMessageQueue() {
+            // Don't show if already showing a message or queue is empty
+            if (isShowingMessage || messageQueue.length === 0) {
+                return;
+            }
+            
+            const { message, type, category, action } = messageQueue.shift();
+            isShowingMessage = true;
             
             const toast = document.createElement('div');
             toast.className = `bg-gray-800 border-l-4 ${
@@ -1175,7 +1206,7 @@
             } p-4 shadow-lg rounded-r-lg max-w-sm slide-up smart-toast`;
             
             const actionButton = action ? `
-                <button onclick="(${action.toString()})(); this.closest('.smart-toast').remove();" 
+                <button onclick="(${action.toString()})(); removeSmartToast(this.closest('.smart-toast'));" 
                         class="ml-2 bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded">
                     Ver
                 </button>
@@ -1193,7 +1224,7 @@
                         <span class="text-white text-sm">${message}</span>
                         ${actionButton}
                     </div>
-                    <button onclick="this.closest('.smart-toast').remove()" class="ml-2 text-gray-400 hover:text-white">
+                    <button onclick="removeSmartToast(this.closest('.smart-toast'))" class="ml-2 text-gray-400 hover:text-white">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
@@ -1204,9 +1235,20 @@
             // Auto-remove with longer duration for smart toasts
             setTimeout(() => {
                 if (toast.parentElement) {
-                    toast.remove();
+                    removeSmartToast(toast);
                 }
             }, category === 'welcome' ? 8000 : 12000);
+        }
+        
+        function removeSmartToast(toast) {
+            if (toast && toast.parentElement) {
+                toast.remove();
+                isShowingMessage = false;
+                // Process next message in queue after a short delay
+                setTimeout(() => {
+                    processMessageQueue();
+                }, 1000);
+            }
         }
 
         function provideScanningGuidance(errorType) {
@@ -1645,6 +1687,16 @@
             const savedTheme = localStorage.getItem('invitesqr_theme') || 'dark';
             currentTheme = savedTheme;
             applyTheme(currentTheme);
+            
+            // Load smart messages setting
+            const savedSmartMessages = localStorage.getItem('invitesqr_smart_messages');
+            if (savedSmartMessages !== null) {
+                smartMessagesEnabled = savedSmartMessages === 'true';
+                const smartMessagesToggle = document.getElementById('smart-messages');
+                if (smartMessagesToggle) {
+                    smartMessagesToggle.checked = smartMessagesEnabled;
+                }
+            }
         }
 
         function toggleTheme() {
@@ -1846,20 +1898,26 @@
                 updateHeader();
                 updateStats();
                 
-                // Smart welcome message based on event details
-                const isToday = eventDate.toDateString() === new Date().toDateString();
-                const daysUntilEvent = Math.ceil((eventDate - new Date()) / (1000 * 60 * 60 * 24));
-                
-                let welcomeMessage = 'Login realizado com sucesso';
-                if (isToday) {
-                    welcomeMessage = '🎉 Evento é hoje! Sistema pronto para validações';
-                } else if (daysUntilEvent === 1) {
-                    welcomeMessage = '⏰ Evento é amanhã! Tudo preparado para o grande dia';
-                } else if (daysUntilEvent > 1) {
-                    welcomeMessage = `📅 Faltam ${daysUntilEvent} dias para o evento. Sistema configurado!`;
+                // Smart welcome message based on event details - only if enabled
+                if (smartMessagesEnabled) {
+                    const isToday = eventDate.toDateString() === new Date().toDateString();
+                    const daysUntilEvent = Math.ceil((eventDate - new Date()) / (1000 * 60 * 60 * 24));
+                    
+                    let welcomeMessage = 'Login realizado com sucesso';
+                    if (isToday) {
+                        welcomeMessage = '🎉 Evento é hoje! Sistema pronto para validações';
+                    } else if (daysUntilEvent === 1) {
+                        welcomeMessage = '⏰ Evento é amanhã! Tudo preparado para o grande dia';
+                    } else if (daysUntilEvent > 1) {
+                        welcomeMessage = `📅 Faltam ${daysUntilEvent} dias para o evento. Sistema configurado!`;
+                    }
+                    
+                    setTimeout(() => {
+                        showSmartToast(welcomeMessage, 'success', 'login_success');
+                    }, 1000);
+                } else {
+                    showToast('Login realizado com sucesso', 'success');
                 }
-                
-                showSmartToast(welcomeMessage, 'success', 'login_success');
                 console.log('Login completed successfully');
                 
             } catch (error) {
@@ -1963,31 +2021,7 @@
                 }
             });
             
-            // Update smart status display
-            const smartStatusDisplay = document.getElementById('smart-status-display');
-            const smartStatusText = document.getElementById('smart-status-text');
-            
-            if (smartStatusDisplay && smartStatusText && communicationLevel !== 'minimal') {
-                const message = getSmartStatusMessage();
-                smartStatusText.textContent = message;
-                
-                // Show/hide based on progress and activity
-                if (progressPercentage > 0 || sessionScans > 0) {
-                    smartStatusDisplay.classList.remove('hidden');
-                } else {
-                    smartStatusDisplay.classList.add('hidden');
-                }
-                
-                // Update color based on progress
-                smartStatusText.className = 'text-sm ';
-                if (progressPercentage === 100) {
-                    smartStatusText.className += 'text-green-400';
-                } else if (progressPercentage >= 50) {
-                    smartStatusText.className += 'text-blue-400';
-                } else {
-                    smartStatusText.className += 'text-yellow-400';
-                }
-            }
+
         }
 
         // Swipe navigation setup
@@ -2961,6 +2995,25 @@
             }
         }
 
+        // Toggle smart messages function
+        function toggleSmartMessages() {
+            smartMessagesEnabled = document.getElementById('smart-messages').checked;
+            localStorage.setItem('invitesqr_smart_messages', smartMessagesEnabled.toString());
+            
+            if (smartMessagesEnabled) {
+                showToast('Mensagens inteligentes ativadas', 'success');
+            } else {
+                showToast('Mensagens inteligentes desativadas', 'info');
+                // Clear message queue
+                messageQueue = [];
+                isShowingMessage = false;
+                // Remove any existing smart toasts
+                document.querySelectorAll('.smart-toast').forEach(toast => {
+                    toast.remove();
+                });
+            }
+        }
+
         // Clear all scans function
         async function clearAllScans() {
             if (scannedGuests.size === 0) {
@@ -3109,5 +3162,5 @@
         window.addEventListener('online', checkConnectivity);
         window.addEventListener('offline', checkConnectivity);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967b82fb77cb77da',t:'MTc1Mzk0ODI5Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967b8c3ea7a277da',t:'MTc1Mzk0ODY3Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
