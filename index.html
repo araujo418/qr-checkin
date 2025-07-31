@@ -559,8 +559,57 @@
                         <p class="text-gray-400 text-sm mb-2">Scanner ativo - aguardando próximo comando</p>
                         <p class="text-xs text-gray-500">Clique em "Próximo Convidado" para escanear</p>
                     </div>
+                </div>
 
-                    <!-- Debug Info -->
+                <!-- Inline Scanner Area -->
+                <div id="inline-scanner-container" class="hidden">
+                    <div class="relative bg-black rounded-lg mx-4 mb-4" style="height: 300px;">
+                        <div id="qr-reader-inline" class="w-full h-full rounded-lg overflow-hidden"></div>
+                        
+                        <!-- Scanner Overlay -->
+                        <div class="absolute inset-0 pointer-events-none">
+                            <!-- QR Code targeting frame -->
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <div class="relative w-48 h-48">
+                                    <!-- Corner brackets -->
+                                    <div class="absolute top-0 left-0 w-6 h-6 border-l-4 border-t-4 border-green-400"></div>
+                                    <div class="absolute top-0 right-0 w-6 h-6 border-r-4 border-t-4 border-green-400"></div>
+                                    <div class="absolute bottom-0 left-0 w-6 h-6 border-l-4 border-b-4 border-green-400"></div>
+                                    <div class="absolute bottom-0 right-0 w-6 h-6 border-r-4 border-b-4 border-green-400"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Status Indicator -->
+                            <div class="absolute top-4 left-1/2 transform -translate-x-1/2">
+                                <div class="bg-black bg-opacity-70 rounded-full px-4 py-2 flex items-center">
+                                    <div id="inline-scan-status-dot" class="w-2 h-2 bg-gray-500 rounded-full mr-2"></div>
+                                    <span id="inline-scan-status-label" class="text-white text-sm font-medium">Aguardando...</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Instructions -->
+                            <div id="inline-scanner-instructions" class="absolute inset-0 flex items-center justify-center">
+                                <div class="bg-black bg-opacity-70 rounded-xl p-4 text-center max-w-xs">
+                                    <i class="fas fa-qrcode text-2xl text-green-400 mb-2"></i>
+                                    <p class="text-white text-sm font-medium mb-1">Posicione o QR code no centro</p>
+                                    <p class="text-gray-300 text-xs">Alinhe com as bordas verdes</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Scan Result Display -->
+                            <div id="inline-scan-result-display" class="absolute inset-0 flex items-center justify-center hidden">
+                                <div class="bg-black bg-opacity-90 rounded-xl p-4 text-center max-w-xs">
+                                    <div id="inline-scan-status-text" class="text-2xl font-bold mb-2"></div>
+                                    <div id="inline-scan-guest-name-display" class="text-lg text-white mb-1"></div>
+                                    <div id="inline-scan-time-display" class="text-xs text-gray-300"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Debug Info -->
+                <div class="p-4">
                     <div id="debug-info" class="bg-gray-800 rounded-lg p-4 text-xs text-gray-400 hidden">
                         <h4 class="font-medium text-white mb-2">Debug Info:</h4>
                         <div id="debug-content">Clique em "Iniciar Scanner" para ver informações de debug</div>
@@ -644,83 +693,7 @@
                 </div>
             </div>
 
-            <!-- Fullscreen Scanner -->
-            <div id="fullscreen-scanner" class="fixed inset-0 bg-black z-50 hidden flex flex-col">
-                <!-- Camera Area - Takes most of the screen -->
-                <div class="flex-1 relative overflow-hidden">
-                    <div id="qr-reader-fullscreen" class="w-full h-full object-cover"></div>
-                    
-                    <!-- Enhanced Scanner Overlay with QR-optimized corners -->
-                    <div class="scanner-overlay">
-                        <!-- QR Code targeting frame -->
-                        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                            <div class="relative w-64 h-64 md:w-80 md:h-80">
-                                <!-- Corner brackets for QR code alignment -->
-                                <div class="absolute top-0 left-0 w-8 h-8 border-l-4 border-t-4 border-green-400"></div>
-                                <div class="absolute top-0 right-0 w-8 h-8 border-r-4 border-t-4 border-green-400"></div>
-                                <div class="absolute bottom-0 left-0 w-8 h-8 border-l-4 border-b-4 border-green-400"></div>
-                                <div class="absolute bottom-0 right-0 w-8 h-8 border-r-4 border-b-4 border-green-400"></div>
-                                
-                                <!-- Center crosshair for precise alignment -->
-                                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-6 h-6">
-                                    <div class="absolute top-1/2 left-0 right-0 h-0.5 bg-green-400 transform -translate-y-1/2"></div>
-                                    <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-green-400 transform -translate-x-1/2"></div>
-                                </div>
-                                
-                                <!-- Scanning line animation -->
-                                <div id="scan-line" class="absolute top-0 left-0 right-0 h-0.5 bg-green-400 opacity-80 animate-pulse"></div>
-                            </div>
-                        </div>
-                        
-                        <!-- Semi-transparent overlay to darken areas outside scan zone -->
-                        <div class="absolute inset-0 bg-black bg-opacity-40 pointer-events-none">
-                            <!-- Transparent center area for QR scanning -->
-                            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 md:w-80 md:h-80 bg-transparent border border-green-400 border-opacity-30 rounded-lg"></div>
-                        </div>
-                    </div>
-                    
-                    <!-- Close Button - Top Right Corner -->
-                    <button id="close-scanner-btn" class="absolute top-6 right-6 z-60 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white p-4 rounded-full shadow-lg transition-colors min-w-[56px] min-h-[56px] flex items-center justify-center">
-                        <i class="fas fa-times text-xl"></i>
-                    </button>
-                    
-                    <!-- Scan Status Indicator - Top Center -->
-                    <div id="scan-status-indicator" class="absolute top-6 left-1/2 transform -translate-x-1/2 z-30">
-                        <div class="bg-black bg-opacity-70 rounded-full px-6 py-3 flex items-center">
-                            <div id="scan-status-dot" class="w-3 h-3 bg-gray-500 rounded-full mr-3"></div>
-                            <span id="scan-status-label" class="text-white text-sm font-medium">Aguardando...</span>
-                        </div>
-                    </div>
-                    
-                    <!-- Scan Result Display - Center -->
-                    <div id="scan-result-display" class="absolute top-1/2 left-4 right-4 transform -translate-y-1/2 text-center hidden z-40">
-                        <div class="bg-black bg-opacity-90 rounded-xl p-6 shadow-2xl border border-gray-600">
-                            <div id="scan-status-text" class="text-4xl font-bold mb-3"></div>
-                            <div id="scan-guest-name-display" class="text-2xl text-white mb-2"></div>
-                            <div id="scan-time-display" class="text-sm text-gray-300"></div>
-                        </div>
-                    </div>
-                    
-                    <!-- Scanner Instructions - Center -->
-                    <div id="scanner-instructions" class="absolute top-1/2 left-4 right-4 transform -translate-y-1/2 text-center z-30">
-                        <div class="bg-black bg-opacity-70 rounded-xl p-6 shadow-lg">
-                            <i class="fas fa-qrcode text-4xl text-green-400 mb-4"></i>
-                            <p class="text-white text-xl font-medium mb-2">Posicione o QR code no centro</p>
-                            <p class="text-gray-300 text-sm">Alinhe com as bordas verdes para melhor leitura</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Bottom Control Panel -->
-                <div class="bg-black bg-opacity-90 backdrop-blur-sm p-6 flex-shrink-0">
-                    <div class="flex justify-center">
-                        <button id="fullscreen-next-btn" class="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-4 px-8 rounded-full shadow-lg transition-colors min-h-[64px] flex items-center justify-center text-lg hidden">
-                            <i class="fas fa-arrow-right mr-3 text-xl"></i>
-                            <span>Próximo Convidado</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
+
 
             <!-- Guests Sub-Tab -->
             <div id="content-guests" class="tab-content hidden h-full flex flex-col">
@@ -1661,7 +1634,7 @@
                 if (html5QrCode) {
                     return; // Already initialized
                 }
-                html5QrCode = new Html5Qrcode("qr-reader-fullscreen");
+                html5QrCode = new Html5Qrcode("qr-reader-inline");
                 console.log('Scanner initialized successfully');
             } catch (error) {
                 console.error('Scanner initialization error:', error);
@@ -1717,21 +1690,11 @@
             nextBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Aguardando QR Code...';
             nextBtn.disabled = true;
             
-            // Update fullscreen button
-            const fullscreenBtn = document.getElementById('fullscreen-next-btn');
-            fullscreenBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-3 text-xl"></i><span>Aguardando QR Code...</span>';
-            fullscreenBtn.disabled = true;
-            fullscreenBtn.classList.remove('hidden');
-            
-            // Ensure close button stays visible
-            const closeBtn = document.getElementById('close-scanner-btn');
-            closeBtn.classList.remove('hidden');
-            
-            // Update status
-            updateScanStatus('active', 'Pronto para escanear');
+            // Update inline status
+            updateInlineScanStatus('active', 'Pronto para escanear');
             
             // Hide instructions if visible
-            const instructions = document.getElementById('scanner-instructions');
+            const instructions = document.getElementById('inline-scanner-instructions');
             if (!instructions.classList.contains('hidden')) {
                 instructions.classList.add('fade-out');
                 setTimeout(() => {
@@ -1748,43 +1711,13 @@
                     nextBtn.innerHTML = '<i class="fas fa-arrow-right mr-2"></i>Próximo Convidado';
                     nextBtn.disabled = false;
                     
-                    // Reset fullscreen button
-                    fullscreenBtn.innerHTML = '<i class="fas fa-arrow-right mr-3 text-xl"></i><span>Próximo Convidado</span>';
-                    fullscreenBtn.disabled = false;
-                    
-                    // Ensure close button stays visible
-                    closeBtn.classList.remove('hidden');
-                    
                     // Update status (no message)
-                    updateScanStatus('disabled', '');
+                    updateInlineScanStatus('disabled', '');
                 }
             }, 15000);
         }
 
-        function openFullscreenScanner() {
-            document.getElementById('fullscreen-scanner').classList.remove('hidden');
-            document.body.classList.add('fullscreen-scanner-active');
-            
-            // Ensure close button is always visible
-            document.getElementById('close-scanner-btn').classList.remove('hidden');
-            
-            // Show scanner instructions initially
-            document.getElementById('scanner-instructions').classList.remove('hidden', 'fade-out');
-            document.getElementById('scan-result-display').classList.add('hidden');
-            document.getElementById('fullscreen-next-btn').classList.add('hidden');
-            
-            // Set initial status (no message initially)
-            updateScanStatus('disabled', '');
-        }
 
-        function closeFullscreenScanner() {
-            document.getElementById('fullscreen-scanner').classList.add('hidden');
-            document.body.classList.remove('fullscreen-scanner-active');
-            
-            if (isScanning) {
-                stopScanner();
-            }
-        }
         
         function updateScanStatus(status, message) {
             const indicator = document.getElementById('scan-status-indicator');
@@ -1795,6 +1728,31 @@
             
             // Add current status class
             indicator.classList.add(`scan-status-${status}`);
+            
+            // Update label
+            if (label) {
+                label.textContent = message;
+            }
+        }
+
+        function updateInlineScanStatus(status, message) {
+            const dot = document.getElementById('inline-scan-status-dot');
+            const label = document.getElementById('inline-scan-status-label');
+            
+            // Update dot color based on status
+            if (dot) {
+                dot.className = 'w-2 h-2 rounded-full mr-2';
+                switch (status) {
+                    case 'active':
+                        dot.className += ' bg-green-500';
+                        break;
+                    case 'waiting':
+                        dot.className += ' bg-yellow-500';
+                        break;
+                    default:
+                        dot.className += ' bg-gray-500';
+                }
+            }
             
             // Update label
             if (label) {
@@ -1825,8 +1783,8 @@
                     await initializeScanner();
                 }
 
-                // Open fullscreen scanner
-                openFullscreenScanner();
+                // Show inline scanner container
+                document.getElementById('inline-scanner-container').classList.remove('hidden');
 
                 // Get camera configuration
                 const cameraSelect = document.getElementById('camera-select');
@@ -1836,7 +1794,7 @@
                 
                 const config = {
                     fps: 10,
-                    qrbox: { width: 250, height: 250 },
+                    qrbox: { width: 200, height: 200 },
                     aspectRatio: 1.0
                 };
 
@@ -1852,18 +1810,14 @@
                 
                 console.log('Scanner started successfully');
                 
-                // Update UI
-                document.getElementById('scanner-toggle').innerHTML = '<i class="fas fa-stop mr-2"></i>Parar Scanner';
+                // Update UI - change button to "Fechar Scanner"
+                document.getElementById('scanner-toggle').innerHTML = '<i class="fas fa-stop mr-2"></i>Fechar Scanner';
                 document.getElementById('next-scan-btn').classList.remove('hidden');
                 document.getElementById('scan-status-info').classList.remove('hidden');
-                document.getElementById('fullscreen-next-btn').classList.remove('hidden');
-                
-                // Ensure close button is always visible
-                document.getElementById('close-scanner-btn').classList.remove('hidden');
                 
                 // Show initial instructions for 4 seconds, then hide
                 setTimeout(() => {
-                    const instructions = document.getElementById('scanner-instructions');
+                    const instructions = document.getElementById('inline-scanner-instructions');
                     instructions.classList.add('fade-out');
                     setTimeout(() => {
                         instructions.classList.add('hidden');
@@ -1872,11 +1826,11 @@
                 
                 // Update status to waiting after 4 seconds
                 setTimeout(() => {
-                    updateScanStatus('waiting', 'Clique para escanear');
+                    updateInlineScanStatus('waiting', 'Clique para escanear');
                     
                     // Hide status message after another 4 seconds
                     setTimeout(() => {
-                        updateScanStatus('disabled', '');
+                        updateInlineScanStatus('disabled', '');
                     }, 4000);
                 }, 4000);
                 
@@ -1885,7 +1839,9 @@
             } catch (error) {
                 console.error('Scanner start error:', error);
                 showToast('Erro ao iniciar scanner: ' + error.message, 'error');
-                closeFullscreenScanner();
+                
+                // Hide scanner container
+                document.getElementById('inline-scanner-container').classList.add('hidden');
                 
                 // Reset button state
                 document.getElementById('scanner-toggle').innerHTML = '<i class="fas fa-play mr-2"></i>Iniciar Scanner';
@@ -1899,7 +1855,10 @@
                     isScanning = false;
                     canScan = false;
                     
-                    // Update UI
+                    // Hide inline scanner container
+                    document.getElementById('inline-scanner-container').classList.add('hidden');
+                    
+                    // Update UI - change button back to "Iniciar Scanner"
                     document.getElementById('scanner-toggle').innerHTML = '<i class="fas fa-play mr-2"></i>Iniciar Scanner';
                     document.getElementById('next-scan-btn').classList.add('hidden');
                     document.getElementById('scan-status-info').classList.add('hidden');
@@ -1909,13 +1868,10 @@
                     nextBtn.innerHTML = '<i class="fas fa-arrow-right mr-2"></i>Próximo Convidado';
                     nextBtn.disabled = false;
                     
-                    // Reset fullscreen button
-                    const fullscreenBtn = document.getElementById('fullscreen-next-btn');
-                    fullscreenBtn.innerHTML = '<i class="fas fa-arrow-right mr-3 text-xl"></i><span>Próximo Convidado</span>';
-                    fullscreenBtn.disabled = false;
-                    fullscreenBtn.classList.add('hidden');
+                    // Reset inline scanner elements
+                    document.getElementById('inline-scanner-instructions').classList.remove('hidden', 'fade-out');
+                    document.getElementById('inline-scan-result-display').classList.add('hidden');
                     
-                    closeFullscreenScanner();
                 } catch (error) {
                     console.error('Error stopping scanner:', error);
                 }
@@ -2009,14 +1965,11 @@
         }
 
         async function handleScanResult(type, guest, code) {
-            const statusTextEl = document.getElementById('scan-status-text');
-            const guestNameEl = document.getElementById('scan-guest-name-display');
-            const timeEl = document.getElementById('scan-time-display');
-            const resultDisplay = document.getElementById('scan-result-display');
-            const instructions = document.getElementById('scanner-instructions');
-
-            // Ensure close button stays visible during all operations
-            document.getElementById('close-scanner-btn').classList.remove('hidden');
+            const statusTextEl = document.getElementById('inline-scan-status-text');
+            const guestNameEl = document.getElementById('inline-scan-guest-name-display');
+            const timeEl = document.getElementById('inline-scan-time-display');
+            const resultDisplay = document.getElementById('inline-scan-result-display');
+            const instructions = document.getElementById('inline-scanner-instructions');
 
             let statusText, statusColor, guestName, timeText;
             const currentTime = new Date().toLocaleTimeString('pt-PT', { 
@@ -2065,7 +2018,7 @@
             }
 
             statusTextEl.textContent = statusText;
-            statusTextEl.className = `text-4xl font-bold mb-2 ${statusColor}`;
+            statusTextEl.className = `text-2xl font-bold mb-2 ${statusColor}`;
             guestNameEl.textContent = guestName;
             timeEl.textContent = timeText;
 
@@ -2075,8 +2028,6 @@
                 instructions.classList.add('hidden');
                 resultDisplay.classList.remove('hidden');
                 resultDisplay.classList.add('fade-in');
-                // Ensure close button stays visible
-                document.getElementById('close-scanner-btn').classList.remove('hidden');
             }, 300);
 
             // Auto-hide after 4 seconds (don't show instructions again)
@@ -2085,8 +2036,6 @@
                 setTimeout(() => {
                     resultDisplay.classList.add('hidden');
                     resultDisplay.classList.remove('fade-out', 'fade-in');
-                    // Ensure close button stays visible
-                    document.getElementById('close-scanner-btn').classList.remove('hidden');
                 }, 300);
             }, 4000);
         }
@@ -2468,5 +2417,5 @@
         window.addEventListener('online', checkConnectivity);
         window.addEventListener('offline', checkConnectivity);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967b488cb5bf77d7',t:'MTc1Mzk0NTkwNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967b5b2885c077e0',t:'MTc1Mzk0NjY2Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
