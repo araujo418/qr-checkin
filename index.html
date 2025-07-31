@@ -484,7 +484,7 @@
 
                         <!-- Controls -->
                         <div class="p-4 space-y-4">
-                            <button id="scanner-toggle" onclick="toggleScanner()"
+                            <button id="scanner-toggle" onclick="toggleScanner(event)"
                                     class="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-medium py-4 px-6 rounded-lg transition-colors text-lg min-h-[56px]">
                                 <i class="fas fa-play mr-2"></i>Iniciar Scanner
                             </button>
@@ -497,14 +497,14 @@
                                 
                                 <!-- Scanner Overlay -->
                                 <div class="absolute inset-0 pointer-events-none">
-                                    <!-- QR Code targeting frame -->
-                                    <div class="absolute inset-0 flex items-center justify-center">
+                                    <!-- QR Code targeting frame - only show when scanning -->
+                                    <div id="scanner-targeting-frame" class="absolute inset-0 flex items-center justify-center hidden">
                                         <div class="relative w-64 h-64">
-                                            <!-- Corner brackets - much larger and more prominent -->
-                                            <div class="absolute top-0 left-0 w-16 h-16 border-l-4 border-t-4 border-green-400"></div>
-                                            <div class="absolute top-0 right-0 w-16 h-16 border-r-4 border-t-4 border-green-400"></div>
-                                            <div class="absolute bottom-0 left-0 w-16 h-16 border-l-4 border-b-4 border-green-400"></div>
-                                            <div class="absolute bottom-0 right-0 w-16 h-16 border-r-4 border-b-4 border-green-400"></div>
+                                            <!-- Corner brackets -->
+                                            <div class="absolute top-0 left-0 w-12 h-12 border-l-4 border-t-4 border-green-400"></div>
+                                            <div class="absolute top-0 right-0 w-12 h-12 border-r-4 border-t-4 border-green-400"></div>
+                                            <div class="absolute bottom-0 left-0 w-12 h-12 border-l-4 border-b-4 border-green-400"></div>
+                                            <div class="absolute bottom-0 right-0 w-12 h-12 border-r-4 border-b-4 border-green-400"></div>
                                         </div>
                                     </div>
                                     
@@ -538,7 +538,7 @@
                             
                             <!-- Next Scan Button - Below Camera -->
                             <div class="px-4 pb-4">
-                                <button id="next-scan-btn" onclick="enableNextScan()"
+                                <button id="next-scan-btn" onclick="enableNextScan(event)"
                                         class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium py-4 px-6 rounded-lg transition-colors text-lg min-h-[56px] hidden">
                                     <i class="fas fa-arrow-right mr-2"></i>Próximo Convidado
                                 </button>
@@ -1545,6 +1545,7 @@
             userBehavior.tabSwitches++;
             userBehavior.lastActiveTime = Date.now();
             
+            // Make sure main content is visible and sub-tabs are hidden
             document.getElementById('main-content').classList.remove('hidden');
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.add('hidden');
@@ -1555,6 +1556,7 @@
                 swipeContent.style.transform = `translateX(-${tabIndex * 50}%)`;
             }
             
+            // Update tab button styles
             document.querySelectorAll('[id^="tab-"]').forEach(btn => {
                 btn.className = btn.className.replace('bg-blue-600 text-white', 'text-gray-400 hover:text-white');
             });
@@ -1564,11 +1566,13 @@
                 activeBtn.className = activeBtn.className.replace('text-gray-400 hover:text-white', 'bg-blue-600 text-white');
             }
 
+            // Update swipe dots
             const dots = document.querySelectorAll('.swipe-dot');
             dots.forEach((dot, index) => {
                 dot.classList.toggle('active', index === tabIndex);
             });
             
+            // Initialize scanner if needed
             if (tabName === 'scanner' && !html5QrCode) {
                 initializeScanner();
             }
@@ -1681,7 +1685,13 @@
             }
         }
 
-        async function toggleScanner() {
+        async function toggleScanner(event) {
+            // Prevent any navigation or form submission
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
             if (isScanning) {
                 await stopScanner();
             } else {
@@ -1741,6 +1751,12 @@
                 // Update status
                 updateScanStatus('active', 'Escaneando...');
                 
+                // Show targeting frame when scanning starts
+                const targetingFrame = document.getElementById('scanner-targeting-frame');
+                if (targetingFrame) {
+                    targetingFrame.classList.remove('hidden');
+                }
+                
                 // Hide instructions after a moment
                 setTimeout(() => {
                     const instructions = document.getElementById('inline-scanner-instructions');
@@ -1780,6 +1796,12 @@
                 
                 // Hide scanner container
                 document.getElementById('inline-scanner-container').classList.add('hidden');
+                
+                // Hide targeting frame
+                const targetingFrame = document.getElementById('scanner-targeting-frame');
+                if (targetingFrame) {
+                    targetingFrame.classList.add('hidden');
+                }
                 
                 // Reset status
                 updateScanStatus('disabled', 'Scanner parado');
@@ -2004,7 +2026,13 @@
             }
         }
 
-        function enableNextScan() {
+        function enableNextScan(event) {
+            // Prevent any navigation
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
             const resultDisplay = document.getElementById('inline-scan-result-display');
             const nextBtn = document.getElementById('next-scan-btn');
             
@@ -2458,5 +2486,5 @@ Progresso: ${guests.length > 0 ? Math.round((scannedGuests.size / guests.length)
             }
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967cabfbe36677e0',t:'MTc1Mzk2MDQ2Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967cb37380a477e0',t:'MTc1Mzk2MDc2OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
