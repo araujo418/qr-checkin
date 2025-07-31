@@ -7,6 +7,12 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#1f2937">
+    <meta name="apple-mobile-web-app-title" content="InvitesQR Scanner">
+    <meta name="application-name" content="InvitesQR Scanner">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiSW52aXRlc1FSIFNjYW5uZXIiLCJzaG9ydF9uYW1lIjoiSW52aXRlc1FSIiwic3RhcnRfdXJsIjoiLyIsImRpc3BsYXkiOiJmdWxsc2NyZWVuIiwiYmFja2dyb3VuZF9jb2xvciI6IiMxMTE4MjciLCJ0aGVtZV9jb2xvciI6IiMxZjI5MzciLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCM2FXUjBhRDBpTVRJNElpQm9aV2xuYUhROUlqRXlPQ0lpSUhacFpYZENiM2c5SWpBZ01DQXhNamdnTVRJNElpQm1hV3hzUFNJak1URXhPREkzSWlCNGJXeHVjejBpYUhSMGNEb3ZMM2QzZHk1M015NXZjbWN2TWpBd01DOXpkbWNpUGp4eVpXTjBJSGRwWkhSb1BTSXhNamdpSUdobGFXZG9kRDBpTVRJNElpQm1hV3hzUFNJak1URXhPREkzSWk4K1BIUmxlSFFnZUQwaU5qUWlJSGs5SWpZMElpQm1hV3hzUFNJalptWm1abVptSWlCbWIyNTBMWE5wZW1VOUlqSTBJaUJtYjI1MExYZGxhV2RvZEQwaVltOXNaQ0krVVVJOEwzUmxlSFErUEM5emRtYysiLCJzaXplcyI6IjEyOHgxMjgiLCJ0eXBlIjoiaW1hZ2Uvc3ZnK3htbCJ9XX0=">
+    
     <title>InvitesQR Scanner</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -14,6 +20,124 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        /* Hide browser UI elements */
+        html {
+            overflow: hidden;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: none;
+        }
+
+        /* Prevent zoom and scroll */
+        * {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Hide scrollbars completely */
+        ::-webkit-scrollbar {
+            display: none;
+            width: 0;
+            height: 0;
+        }
+
+        /* Firefox */
+        html {
+            scrollbar-width: none;
+        }
+
+        /* Prevent context menu */
+        body {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        /* Prevent text selection on all elements */
+        *, *:before, *:after {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        /* Allow text selection only in input fields */
+        input, textarea {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+
+        /* Fullscreen styles */
+        .app-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Theme variables */
+        :root {
+            --bg-primary: #111827;
+            --bg-secondary: #1f2937;
+            --bg-tertiary: #374151;
+            --text-primary: #ffffff;
+            --text-secondary: #d1d5db;
+            --text-muted: #9ca3af;
+            --border-color: #4b5563;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f9fafb;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f3f4f6;
+            --text-primary: #111827;
+            --text-secondary: #374151;
+            --text-muted: #6b7280;
+            --border-color: #d1d5db;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .bg-gray-900 { background-color: var(--bg-primary) !important; }
+        .bg-gray-800 { background-color: var(--bg-secondary) !important; }
+        .bg-gray-700 { background-color: var(--bg-tertiary) !important; }
+        .text-white { color: var(--text-primary) !important; }
+        .text-gray-400 { color: var(--text-muted) !important; }
+        .text-gray-300 { color: var(--text-secondary) !important; }
+        .border-gray-700 { border-color: var(--border-color) !important; }
+        .border-gray-600 { border-color: var(--border-color) !important; }
+
         .scanner-overlay {
             position: absolute;
             top: 0;
@@ -129,424 +253,577 @@
         html {
             scroll-behavior: smooth;
         }
+        
+        /* Swipe navigation */
+        .swipe-container {
+            position: relative;
+            overflow: hidden;
+            touch-action: pan-y;
+            height: 100%;
+        }
+
+        .swipe-content {
+            display: flex;
+            transition: transform 0.3s ease;
+            width: 200%;
+            height: 100%;
+        }
+
+        .swipe-tab {
+            width: 50%;
+            flex-shrink: 0;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+        }
+
+        .swipe-indicator {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            space-x: 2px;
+            z-index: 20;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 8px 12px;
+            border-radius: 20px;
+            backdrop-filter: blur(4px);
+        }
+
+        .swipe-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4);
+            margin: 0 2px;
+            transition: background 0.3s ease;
+        }
+
+        .swipe-dot.active {
+            background: #3b82f6;
+        }
+
+        /* Fullscreen scanner styles */
+        .fullscreen-scanner-active {
+            overflow: hidden !important;
+            position: fixed !important;
+            width: 100% !important;
+            height: 100% !important;
+        }
+        
+        #fullscreen-scanner {
+            touch-action: none;
+            overscroll-behavior: none;
+        }
+        
+        /* Larger scanner corners for fullscreen */
+        #fullscreen-scanner .scanner-corner {
+            width: 40px;
+            height: 40px;
+            border-width: 4px;
+        }
+        
+        #fullscreen-scanner .scanner-corner.top-left,
+        #fullscreen-scanner .scanner-corner.top-right {
+            top: 25%;
+        }
+        
+        #fullscreen-scanner .scanner-corner.bottom-left,
+        #fullscreen-scanner .scanner-corner.bottom-right {
+            bottom: 25%;
+        }
+        
+        #fullscreen-scanner .scanner-corner.top-left,
+        #fullscreen-scanner .scanner-corner.bottom-left {
+            left: 15%;
+        }
+        
+        #fullscreen-scanner .scanner-corner.top-right,
+        #fullscreen-scanner .scanner-corner.bottom-right {
+            right: 15%;
+        }
+
+        /* Hide address bar on mobile */
+        @media screen and (max-width: 768px) {
+            body {
+                height: 100vh;
+                height: -webkit-fill-available;
+            }
+            
+            .app-container {
+                height: 100vh;
+                height: -webkit-fill-available;
+            }
+        }
+
+        /* Prevent pull-to-refresh */
+        body {
+            overscroll-behavior-y: contain;
+        }
+
+        /* Hide any browser chrome */
+        @media all and (display-mode: standalone) {
+            body {
+                -webkit-app-region: drag;
+            }
+            
+            button, input, select, textarea {
+                -webkit-app-region: no-drag;
+            }
+        }
     </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen">
-    <!-- Offline Overlay -->
-    <div id="offline-overlay" class="fixed inset-0 offline-overlay z-50 hidden flex items-center justify-center">
-        <div class="bg-white rounded-lg p-6 mx-4 text-center text-gray-900 max-w-sm">
-            <i class="fas fa-wifi-slash text-4xl text-red-500 mb-4"></i>
-            <h3 class="text-lg font-bold mb-2">Sem Conexão</h3>
-            <p class="text-gray-600 mb-4">Verifique sua conexão com a internet para continuar.</p>
-            <button onclick="checkConnectivity()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
-                <i class="fas fa-sync-alt mr-2"></i>Tentar Novamente
-            </button>
-        </div>
-    </div>
-
-    <!-- Login Screen -->
-    <div id="login-screen" class="min-h-screen flex items-center justify-center p-4">
-        <div class="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">
-            <div class="text-center mb-8">
-                <i class="fas fa-qrcode text-5xl text-blue-500 mb-4"></i>
-                <h1 class="text-2xl font-bold mb-2">InvitesQR Scanner</h1>
-                <p class="text-gray-400">Validação de Convidados</p>
-            </div>
-
-            <form id="login-form" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-2">Token do Evento</label>
-                    <input type="text" id="event-token" required 
-                           class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                           placeholder="evt-123456">
-                </div>
-
-                <button type="submit" id="login-btn" 
-                        class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium py-4 px-6 rounded-lg transition-colors text-lg min-h-[56px]">
-                    <i class="fas fa-sign-in-alt mr-2"></i>Entrar
+<body class="bg-gray-900 text-white">
+    <div class="app-container">
+        <!-- Offline Overlay -->
+        <div id="offline-overlay" class="fixed inset-0 offline-overlay z-50 hidden flex items-center justify-center">
+            <div class="bg-white rounded-lg p-6 mx-4 text-center text-gray-900 max-w-sm">
+                <i class="fas fa-wifi-slash text-4xl text-red-500 mb-4"></i>
+                <h3 class="text-lg font-bold mb-2">Sem Conexão</h3>
+                <p class="text-gray-600 mb-4">Verifique sua conexão com a internet para continuar.</p>
+                <button onclick="checkConnectivity()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                    <i class="fas fa-sync-alt mr-2"></i>Tentar Novamente
                 </button>
-            </form>
-
-            <div class="mt-6 text-center">
-                <div id="connection-status" class="flex items-center justify-center text-sm">
-                    <div class="w-2 h-2 bg-gray-500 rounded-full mr-2"></div>
-                    <span class="text-gray-400">Verificando conexão...</span>
-                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Main App -->
-    <div id="main-app" class="hidden">
-        <!-- Header -->
-        <header class="bg-gray-800 shadow-lg">
-            <div class="px-4 py-3">
-                <div class="flex items-center justify-between">
+        <!-- Login Screen -->
+        <div id="login-screen" class="h-full flex items-center justify-center p-4">
+            <div class="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">
+                <div class="text-center mb-8">
+                    <i class="fas fa-qrcode text-5xl text-blue-500 mb-4"></i>
+                    <h1 class="text-2xl font-bold mb-2">InvitesQR Scanner</h1>
+                    <p class="text-gray-400">Validação de Convidados</p>
+                </div>
+
+                <form id="login-form" class="space-y-4">
                     <div>
-                        <h1 id="event-name" class="text-lg font-bold">Carregando...</h1>
-                        <p id="event-info" class="text-sm text-gray-400">Preparando scanner...</p>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Token do Evento</label>
+                        <input type="text" id="event-token" required 
+                               class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               placeholder="evt-123456">
                     </div>
-                    <div class="flex items-center space-x-3">
-                        <div id="connection-indicator" class="flex items-center">
-                            <div class="w-2 h-2 bg-gray-500 rounded-full mr-2"></div>
-                        </div>
-                        <button onclick="logout()" class="text-gray-400 hover:text-white">
-                            <i class="fas fa-sign-out-alt text-xl"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </header>
 
-        <!-- Navigation -->
-        <nav class="bg-gray-800 border-t border-gray-700 fixed bottom-0 left-0 right-0 z-30">
-            <div class="flex">
-                <button onclick="showTab('scanner')" id="tab-scanner" class="flex-1 py-4 px-2 text-center bg-blue-600 text-white min-h-[60px] active:bg-blue-700">
-                    <i class="fas fa-qrcode block mb-1 text-lg"></i>
-                    <span class="text-xs">Scanner</span>
-                </button>
-                <button onclick="showTab('options')" id="tab-options" class="flex-1 py-4 px-2 text-center text-gray-400 hover:text-white min-h-[60px] active:bg-gray-700">
-                    <i class="fas fa-ellipsis-h block mb-1 text-lg"></i>
-                    <span class="text-xs">Opções</span>
-                </button>
-            </div>
-        </nav>
-
-        <!-- Scanner Tab -->
-        <div id="content-scanner" class="tab-content pb-20">
-            <!-- Progress Bar -->
-            <div class="bg-gray-800 p-4">
-                <div class="flex justify-between items-center mb-2">
-                    <span class="text-sm font-medium">Progresso do Evento</span>
-                    <span id="scanner-progress-percentage" class="text-sm text-gray-400">0%</span>
-                </div>
-                <div class="w-full bg-gray-700 rounded-full h-3">
-                    <div id="scanner-progress-bar" class="bg-green-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
-                </div>
-                <div class="flex justify-between items-center mt-2 text-xs text-gray-400">
-                    <span id="scanner-validated-count">0 validados</span>
-                    <span id="scanner-total-count">de 0 convidados</span>
-                </div>
-            </div>
-
-            <!-- Scanner Container -->
-            <div class="relative">
-                <div id="qr-reader" class="w-full" style="height: 50vh; min-height: 300px;"></div>
-                <div class="scanner-overlay">
-                    <div class="scanner-corner top-left"></div>
-                    <div class="scanner-corner top-right"></div>
-                    <div class="scanner-corner bottom-left"></div>
-                    <div class="scanner-corner bottom-right"></div>
-                </div>
-                
-                <!-- Scanner Status -->
-                <div id="scanner-status" class="absolute bottom-4 left-4 right-4 text-center">
-                    <div class="bg-black bg-opacity-50 rounded-lg p-3">
-                        <p class="text-sm text-white">Posicione o QR code na área de leitura</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Controls -->
-            <div class="p-4 space-y-4">
-                <div class="flex items-center justify-between bg-gray-800 rounded-lg p-4">
-                    <div>
-                        <h3 class="font-medium">Modo Rápido</h3>
-                        <p class="text-sm text-gray-400">Scan contínuo sem pausas</p>
-                    </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="fast-mode" class="sr-only peer" onchange="toggleFastMode()">
-                        <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                </div>
-
-                <button id="scanner-toggle" onclick="toggleScanner()" 
-                        class="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-medium py-4 px-6 rounded-lg transition-colors text-lg min-h-[56px]">
-                    <i class="fas fa-play mr-2"></i>Iniciar Scanner
-                </button>
-            </div>
-
-            <!-- Last Scan Result -->
-            <div id="last-scan-result" class="hidden mx-4 mb-4 p-4 rounded-lg">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h4 id="scan-guest-name" class="font-medium"></h4>
-                        <p id="scan-guest-code" class="text-sm text-gray-400"></p>
-                    </div>
-                    <div id="scan-status-icon" class="text-2xl"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Options Tab -->
-        <div id="content-options" class="tab-content hidden pb-20">
-            <div class="p-4">
-                <!-- Stats Overview -->
-                <div class="bg-gray-800 rounded-lg p-4 mb-6">
-                    <h3 class="text-lg font-medium mb-4">Estatísticas</h3>
-                    <div class="grid grid-cols-3 gap-4 text-center">
-                        <div>
-                            <div id="options-scanned-count" class="text-2xl font-bold text-green-500">0</div>
-                            <div class="text-xs text-gray-400">Validados</div>
-                        </div>
-                        <div>
-                            <div id="options-total-guests" class="text-2xl font-bold text-blue-500">0</div>
-                            <div class="text-xs text-gray-400">Total</div>
-                        </div>
-                        <div>
-                            <div id="options-session-scans" class="text-2xl font-bold text-purple-500">0</div>
-                            <div class="text-xs text-gray-400">Sessão</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Options Menu -->
-                <div class="space-y-3">
-                    <button onclick="showSubTab('guests')" class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-white font-medium py-4 px-6 rounded-lg transition-colors text-left flex items-center justify-between min-h-[56px]">
-                        <div class="flex items-center">
-                            <i class="fas fa-users text-blue-500 mr-4 text-xl"></i>
-                            <div>
-                                <h3 class="font-medium">Convidados</h3>
-                                <p class="text-sm text-gray-400">Ver lista de convidados</p>
-                            </div>
-                        </div>
-                        <i class="fas fa-chevron-right text-gray-400"></i>
+                    <button type="submit" id="login-btn" 
+                            class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium py-4 px-6 rounded-lg transition-colors text-lg min-h-[56px]">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Entrar
                     </button>
+                </form>
 
-                    <button onclick="showSubTab('reports')" class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-white font-medium py-4 px-6 rounded-lg transition-colors text-left flex items-center justify-between min-h-[56px]">
-                        <div class="flex items-center">
-                            <i class="fas fa-chart-bar text-green-500 mr-4 text-xl"></i>
-                            <div>
-                                <h3 class="font-medium">Relatórios</h3>
-                                <p class="text-sm text-gray-400">Estatísticas e exportação</p>
-                            </div>
-                        </div>
-                        <i class="fas fa-chevron-right text-gray-400"></i>
-                    </button>
-
-                    <button onclick="showSubTab('settings')" class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-white font-medium py-4 px-6 rounded-lg transition-colors text-left flex items-center justify-between min-h-[56px]">
-                        <div class="flex items-center">
-                            <i class="fas fa-cog text-purple-500 mr-4 text-xl"></i>
-                            <div>
-                                <h3 class="font-medium">Configurações</h3>
-                                <p class="text-sm text-gray-400">Ajustes do aplicativo</p>
-                            </div>
-                        </div>
-                        <i class="fas fa-chevron-right text-gray-400"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Guests Sub-Tab -->
-        <div id="content-guests" class="tab-content hidden pb-20">
-            <!-- Back Button -->
-            <div class="bg-gray-800 p-4 flex items-center border-b border-gray-700">
-                <button onclick="showTab('options')" class="flex items-center text-blue-500 hover:text-blue-400">
-                    <i class="fas fa-arrow-left mr-2"></i>
-                    <span>Voltar</span>
-                </button>
-                <h2 class="ml-4 text-lg font-medium">Convidados</h2>
-            </div>
-            <div class="p-4">
-                <!-- Search -->
-                <div class="mb-4">
-                    <div class="relative">
-                        <input type="text" id="guest-search" placeholder="Buscar convidado..." 
-                               class="w-full bg-gray-800 border border-gray-600 rounded-lg pl-10 pr-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               onkeyup="filterGuests()">
-                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                    </div>
-                </div>
-
-                <!-- Filters -->
-                <div class="flex space-x-2 mb-4">
-                    <button onclick="filterGuestsByStatus('all')" id="filter-all" 
-                            class="flex-1 py-3 px-4 rounded-lg bg-blue-600 text-white text-sm min-h-[44px] active:bg-blue-700">
-                        Todos
-                    </button>
-                    <button onclick="filterGuestsByStatus('scanned')" id="filter-scanned" 
-                            class="flex-1 py-3 px-4 rounded-lg bg-gray-700 text-gray-300 text-sm min-h-[44px] active:bg-gray-600">
-                        Validados
-                    </button>
-                    <button onclick="filterGuestsByStatus('pending')" id="filter-pending" 
-                            class="flex-1 py-3 px-4 rounded-lg bg-gray-700 text-gray-300 text-sm min-h-[44px] active:bg-gray-600">
-                        Pendentes
-                    </button>
-                </div>
-
-                <!-- Guest List -->
-                <div id="guests-list" class="space-y-3">
-                    <div class="text-center py-8 text-gray-400">
-                        <i class="fas fa-users text-3xl mb-2"></i>
-                        <p>Carregando convidados...</p>
+                <div class="mt-6 text-center">
+                    <div id="connection-status" class="flex items-center justify-center text-sm">
+                        <div class="w-2 h-2 bg-gray-500 rounded-full mr-2"></div>
+                        <span class="text-gray-400">Verificando conexão...</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Reports Tab -->
-        <div id="content-reports" class="tab-content hidden pb-20">
-            <!-- Back Button -->
-            <div class="bg-gray-800 p-4 flex items-center border-b border-gray-700">
-                <button onclick="showTab('options')" class="flex items-center text-blue-500 hover:text-blue-400">
-                    <i class="fas fa-arrow-left mr-2"></i>
-                    <span>Voltar</span>
-                </button>
-                <h2 class="ml-4 text-lg font-medium">Relatórios</h2>
-            </div>
-            <div class="p-4">
-                <!-- Summary Cards -->
-                <div class="grid grid-cols-2 gap-4 mb-6">
-                    <div class="bg-gray-800 rounded-lg p-4 text-center">
-                        <div id="report-validated" class="text-2xl font-bold text-green-500">0</div>
-                        <div class="text-sm text-gray-400">Validados</div>
-                    </div>
-                    <div class="bg-gray-800 rounded-lg p-4 text-center">
-                        <div id="report-pending" class="text-2xl font-bold text-orange-500">0</div>
-                        <div class="text-sm text-gray-400">Pendentes</div>
-                    </div>
-                </div>
-
-                <!-- Progress Bar -->
-                <div class="bg-gray-800 rounded-lg p-4 mb-6">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-sm font-medium">Progresso do Evento</span>
-                        <span id="progress-percentage" class="text-sm text-gray-400">0%</span>
-                    </div>
-                    <div class="w-full bg-gray-700 rounded-full h-2">
-                        <div id="progress-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
-                    </div>
-                </div>
-
-                <!-- Export Options -->
-                <div class="space-y-3">
-                    <button onclick="generatePDFReport()" 
-                            class="w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-medium py-4 px-6 rounded-lg transition-colors min-h-[56px]">
-                        <i class="fas fa-file-pdf mr-2"></i>Exportar Relatório PDF
-                    </button>
-                    
-                    <button onclick="shareReport()" 
-                            class="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-medium py-4 px-6 rounded-lg transition-colors min-h-[56px]">
-                        <i class="fas fa-share mr-2"></i>Partilhar Relatório
-                    </button>
-                </div>
-
-                <!-- Recent Scans -->
-                <div class="mt-6">
-                    <h3 class="text-lg font-medium mb-4">Últimas Validações</h3>
-                    <div id="recent-scans" class="space-y-3">
-                        <div class="text-center py-4 text-gray-400">
-                            <p>Nenhuma validação ainda</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Settings Tab -->
-        <div id="content-settings" class="tab-content hidden pb-20">
-            <!-- Back Button -->
-            <div class="bg-gray-800 p-4 flex items-center border-b border-gray-700">
-                <button onclick="showTab('options')" class="flex items-center text-blue-500 hover:text-blue-400">
-                    <i class="fas fa-arrow-left mr-2"></i>
-                    <span>Voltar</span>
-                </button>
-                <h2 class="ml-4 text-lg font-medium">Configurações</h2>
-            </div>
-            <div class="p-4 space-y-6">
-                <!-- Sound Settings -->
-                <div class="bg-gray-800 rounded-lg p-4">
-                    <h3 class="text-lg font-medium mb-4">Áudio</h3>
-                    <div class="space-y-4">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h4 class="font-medium">Som de Sucesso</h4>
-                                <p class="text-sm text-gray-400">Reproduzir som ao validar</p>
-                            </div>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" id="success-sound" class="sr-only peer" checked>
-                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                            </label>
-                        </div>
-                        
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h4 class="font-medium">Som de Erro</h4>
-                                <p class="text-sm text-gray-400">Reproduzir som em caso de erro</p>
-                            </div>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" id="error-sound" class="sr-only peer" checked>
-                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Vibration Settings -->
-                <div class="bg-gray-800 rounded-lg p-4">
-                    <h3 class="text-lg font-medium mb-4">Vibração</h3>
+        <!-- Main App -->
+        <div id="main-app" class="hidden h-full flex flex-col">
+            <!-- Header -->
+            <header class="bg-gray-800 shadow-lg flex-shrink-0">
+                <div class="px-4 py-3">
                     <div class="flex items-center justify-between">
                         <div>
-                            <h4 class="font-medium">Feedback Tátil</h4>
-                            <p class="text-sm text-gray-400">Vibrar ao escanear</p>
+                            <h1 id="event-name" class="text-lg font-bold">Carregando...</h1>
+                            <p id="event-info" class="text-sm text-gray-400">Preparando scanner...</p>
                         </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="vibration" class="sr-only peer" checked>
-                            <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Scanner Settings -->
-                <div class="bg-gray-800 rounded-lg p-4">
-                    <h3 class="text-lg font-medium mb-4">Scanner</h3>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-2">Câmera</label>
-                            <select id="camera-select" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white">
-                                <option value="">Selecionar câmera...</option>
-                            </select>
+                        <div class="flex items-center space-x-3">
+                            <div id="connection-indicator" class="flex items-center">
+                                <div class="w-2 h-2 bg-gray-500 rounded-full mr-2"></div>
+                            </div>
+                            <button onclick="toggleTheme()" class="text-gray-400 hover:text-white" title="Alternar tema">
+                                <i id="theme-icon" class="fas fa-moon text-xl"></i>
+                            </button>
+                            <button onclick="logout()" class="text-gray-400 hover:text-white">
+                                <i class="fas fa-sign-out-alt text-xl"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
+            </header>
 
-                <!-- App Info -->
-                <div class="bg-gray-800 rounded-lg p-4">
-                    <h3 class="text-lg font-medium mb-4">Informações</h3>
-                    <div class="space-y-2 text-sm text-gray-400">
-                        <div class="flex justify-between">
-                            <span>Versão:</span>
-                            <span>1.0.0</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span>Dispositivo:</span>
-                            <span id="device-info">-</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span>Evento:</span>
-                            <span id="current-token">-</span>
-                        </div>
+            <!-- Navigation -->
+            <nav class="bg-gray-800 border-b border-gray-700 flex-shrink-0">
+                <div class="flex">
+                    <button onclick="showTab('scanner')" id="tab-scanner" class="flex-1 py-4 px-2 text-center bg-blue-600 text-white min-h-[60px] active:bg-blue-700">
+                        <i class="fas fa-qrcode block mb-1 text-lg"></i>
+                        <span class="text-xs">Scanner</span>
+                    </button>
+                    <button onclick="showTab('options')" id="tab-options" class="flex-1 py-4 px-2 text-center text-gray-400 hover:text-white min-h-[60px] active:bg-gray-700">
+                        <i class="fas fa-ellipsis-h block mb-1 text-lg"></i>
+                        <span class="text-xs">Opções</span>
+                    </button>
+                </div>
+            </nav>
+
+            <!-- Swipe Indicator -->
+            <div id="swipe-indicator" class="swipe-indicator">
+                <div class="swipe-dot active"></div>
+                <div class="swipe-dot"></div>
+            </div>
+
+            <!-- Main Content with Swipe -->
+            <div id="main-content" class="swipe-container flex-1">
+                <div id="swipe-content" class="swipe-content">
+                    <!-- Scanner Tab -->
+                    <div id="content-scanner" class="swipe-tab">
+                <!-- Progress Bar -->
+                <div class="bg-gray-800 p-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-medium">Progresso do Evento</span>
+                        <span id="scanner-progress-percentage" class="text-sm text-gray-400">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-700 rounded-full h-3">
+                        <div id="scanner-progress-bar" class="bg-green-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    <div class="flex justify-between items-center mt-2 text-xs text-gray-400">
+                        <span id="scanner-validated-count">0 validados</span>
+                        <span id="scanner-total-count">de 0 convidados</span>
                     </div>
                 </div>
 
-                <!-- Clear Saved Token -->
-                <button onclick="clearSavedTokenAndNotify()" 
-                        class="w-full bg-orange-600 hover:bg-orange-700 active:bg-orange-800 text-white font-medium py-4 px-6 rounded-lg transition-colors min-h-[56px] mb-3">
-                    <i class="fas fa-trash mr-2"></i>Limpar Token Guardado
+                <!-- Controls -->
+                <div class="p-4 space-y-4">
+                    <button id="scanner-toggle" onclick="toggleScanner()" 
+                            class="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-medium py-4 px-6 rounded-lg transition-colors text-lg min-h-[56px]">
+                        <i class="fas fa-play mr-2"></i>Iniciar Scanner
+                    </button>
+
+                    <button id="next-scan-btn" onclick="enableNextScan()" 
+                            class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium py-4 px-6 rounded-lg transition-colors text-lg min-h-[56px] hidden">
+                        <i class="fas fa-arrow-right mr-2"></i>Próximo Convidado
+                    </button>
+
+                    <div id="scan-status-info" class="bg-gray-800 rounded-lg p-4 text-center hidden">
+                        <p class="text-gray-400 text-sm mb-2">Scanner ativo - aguardando próximo comando</p>
+                        <p class="text-xs text-gray-500">Clique em "Próximo Convidado" para escanear</p>
+                    </div>
+                </div>
+                    </div>
+
+                    <!-- Options Tab -->
+                    <div id="content-options" class="swipe-tab">
+                        <div class="p-4">
+                            <!-- Stats Overview -->
+                            <div class="bg-gray-800 rounded-lg p-4 mb-6">
+                                <h3 class="text-lg font-medium mb-4">Estatísticas</h3>
+                                <div class="grid grid-cols-3 gap-4 text-center">
+                                    <div>
+                                        <div id="options-scanned-count" class="text-2xl font-bold text-green-500">0</div>
+                                        <div class="text-xs text-gray-400">Validados</div>
+                                    </div>
+                                    <div>
+                                        <div id="options-total-guests" class="text-2xl font-bold text-blue-500">0</div>
+                                        <div class="text-xs text-gray-400">Total</div>
+                                    </div>
+                                    <div>
+                                        <div id="options-session-scans" class="text-2xl font-bold text-purple-500">0</div>
+                                        <div class="text-xs text-gray-400">Sessão</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Options Menu -->
+                            <div class="space-y-3">
+                                <button onclick="showSubTab('guests')" class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-white font-medium py-4 px-6 rounded-lg transition-colors text-left flex items-center justify-between min-h-[56px]">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-users text-blue-500 mr-4 text-xl"></i>
+                                        <div>
+                                            <h3 class="font-medium">Convidados</h3>
+                                            <p class="text-sm text-gray-400">Ver lista de convidados</p>
+                                        </div>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-gray-400"></i>
+                                </button>
+
+                                <button onclick="showSubTab('reports')" class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-white font-medium py-4 px-6 rounded-lg transition-colors text-left flex items-center justify-between min-h-[56px]">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-chart-bar text-green-500 mr-4 text-xl"></i>
+                                        <div>
+                                            <h3 class="font-medium">Relatórios</h3>
+                                            <p class="text-sm text-gray-400">Estatísticas e exportação</p>
+                                        </div>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-gray-400"></i>
+                                </button>
+
+                                <button onclick="showSubTab('settings')" class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-white font-medium py-4 px-6 rounded-lg transition-colors text-left flex items-center justify-between min-h-[56px]">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-cog text-purple-500 mr-4 text-xl"></i>
+                                        <div>
+                                            <h3 class="font-medium">Configurações</h3>
+                                            <p class="text-sm text-gray-400">Ajustes do aplicativo</p>
+                                        </div>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-gray-400"></i>
+                                </button>
+
+                                <button onclick="clearAllScans()" class="w-full bg-orange-600 hover:bg-orange-700 active:bg-orange-800 text-white font-medium py-4 px-6 rounded-lg transition-colors text-left flex items-center justify-between min-h-[56px]">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-undo text-white mr-4 text-xl"></i>
+                                        <div>
+                                            <h3 class="font-medium">Desmarcar Scaneados</h3>
+                                            <p class="text-sm text-orange-200">Limpar todas as validações</p>
+                                        </div>
+                                    </div>
+                                    <span id="clear-scans-count" class="bg-orange-500 text-white text-xs px-2 py-1 rounded-full">0</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fullscreen Scanner -->
+            <div id="fullscreen-scanner" class="fixed inset-0 bg-black z-50 hidden">
+                <!-- Close Button -->
+                <button onclick="closeFullscreenScanner()" class="absolute top-4 right-4 z-60 bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-70">
+                    <i class="fas fa-times text-xl"></i>
                 </button>
 
-                <!-- Logout -->
-                <button onclick="logout()" 
-                        class="w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-medium py-4 px-6 rounded-lg transition-colors min-h-[56px]">
-                    <i class="fas fa-sign-out-alt mr-2"></i>Terminar Sessão
-                </button>
+                <!-- Scanner Container -->
+                <div class="relative w-full h-full">
+                    <div id="qr-reader-fullscreen" class="w-full h-full"></div>
+                    
+                    <!-- Scanner Overlay -->
+                    <div class="scanner-overlay">
+                        <div class="scanner-corner top-left"></div>
+                        <div class="scanner-corner top-right"></div>
+                        <div class="scanner-corner bottom-left"></div>
+                        <div class="scanner-corner bottom-right"></div>
+                    </div>
+                    
+                    <!-- Scan Result Display -->
+                    <div id="scan-result-display" class="absolute top-20 left-4 right-4 text-center hidden">
+                        <div class="bg-black bg-opacity-80 rounded-lg p-6">
+                            <div id="scan-status-text" class="text-3xl font-bold mb-2"></div>
+                            <div id="scan-guest-name-display" class="text-xl text-white"></div>
+                            <div id="scan-time-display" class="text-sm text-gray-300 mt-2"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Scanner Instructions -->
+                    <div id="scanner-instructions" class="absolute bottom-20 left-4 right-4 text-center">
+                        <div class="bg-black bg-opacity-50 rounded-lg p-4">
+                            <p class="text-white text-lg">Posicione o QR code na área de leitura</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Guests Sub-Tab -->
+            <div id="content-guests" class="tab-content hidden h-full flex flex-col">
+                <!-- Back Button -->
+                <div class="bg-gray-800 p-4 flex items-center border-b border-gray-700 flex-shrink-0">
+                    <button onclick="showTab('options')" class="flex items-center text-blue-500 hover:text-blue-400">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        <span>Voltar</span>
+                    </button>
+                    <h2 class="ml-4 text-lg font-medium">Convidados</h2>
+                </div>
+                <div class="p-4 flex-1 overflow-y-auto">
+                    <!-- Search -->
+                    <div class="mb-4">
+                        <div class="relative">
+                            <input type="text" id="guest-search" placeholder="Buscar convidado..." 
+                                   class="w-full bg-gray-800 border border-gray-600 rounded-lg pl-10 pr-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                   onkeyup="filterGuests()">
+                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        </div>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="flex space-x-2 mb-4">
+                        <button onclick="filterGuestsByStatus('all')" id="filter-all" 
+                                class="flex-1 py-3 px-4 rounded-lg bg-blue-600 text-white text-sm min-h-[44px] active:bg-blue-700">
+                            Todos
+                        </button>
+                        <button onclick="filterGuestsByStatus('scanned')" id="filter-scanned" 
+                                class="flex-1 py-3 px-4 rounded-lg bg-gray-700 text-gray-300 text-sm min-h-[44px] active:bg-gray-600">
+                            Validados
+                        </button>
+                        <button onclick="filterGuestsByStatus('pending')" id="filter-pending" 
+                                class="flex-1 py-3 px-4 rounded-lg bg-gray-700 text-gray-300 text-sm min-h-[44px] active:bg-gray-600">
+                            Pendentes
+                        </button>
+                    </div>
+
+                    <!-- Guest List -->
+                    <div id="guests-list" class="space-y-3">
+                        <div class="text-center py-8 text-gray-400">
+                            <i class="fas fa-users text-3xl mb-2"></i>
+                            <p>Carregando convidados...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reports Tab -->
+            <div id="content-reports" class="tab-content hidden h-full flex flex-col">
+                <!-- Back Button -->
+                <div class="bg-gray-800 p-4 flex items-center border-b border-gray-700 flex-shrink-0">
+                    <button onclick="showTab('options')" class="flex items-center text-blue-500 hover:text-blue-400">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        <span>Voltar</span>
+                    </button>
+                    <h2 class="ml-4 text-lg font-medium">Relatórios</h2>
+                </div>
+                <div class="p-4 flex-1 overflow-y-auto">
+                    <!-- Summary Cards -->
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="bg-gray-800 rounded-lg p-4 text-center">
+                            <div id="report-validated" class="text-2xl font-bold text-green-500">0</div>
+                            <div class="text-sm text-gray-400">Validados</div>
+                        </div>
+                        <div class="bg-gray-800 rounded-lg p-4 text-center">
+                            <div id="report-pending" class="text-2xl font-bold text-orange-500">0</div>
+                            <div class="text-sm text-gray-400">Pendentes</div>
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="bg-gray-800 rounded-lg p-4 mb-6">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm font-medium">Progresso do Evento</span>
+                            <span id="progress-percentage" class="text-sm text-gray-400">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-700 rounded-full h-2">
+                            <div id="progress-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Export Options -->
+                    <div class="space-y-3">
+                        <button onclick="generatePDFReport()" 
+                                class="w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-medium py-4 px-6 rounded-lg transition-colors min-h-[56px]">
+                            <i class="fas fa-file-pdf mr-2"></i>Exportar Relatório PDF
+                        </button>
+                        
+                        <button onclick="shareReport()" 
+                                class="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-medium py-4 px-6 rounded-lg transition-colors min-h-[56px]">
+                            <i class="fas fa-share mr-2"></i>Partilhar Relatório
+                        </button>
+                    </div>
+
+                    <!-- Recent Scans -->
+                    <div class="mt-6">
+                        <h3 class="text-lg font-medium mb-4">Últimas Validações</h3>
+                        <div id="recent-scans" class="space-y-3">
+                            <div class="text-center py-4 text-gray-400">
+                                <p>Nenhuma validação ainda</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="content-settings" class="tab-content hidden h-full flex flex-col">
+                <!-- Back Button -->
+                <div class="bg-gray-800 p-4 flex items-center border-b border-gray-700 flex-shrink-0">
+                    <button onclick="showTab('options')" class="flex items-center text-blue-500 hover:text-blue-400">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        <span>Voltar</span>
+                    </button>
+                    <h2 class="ml-4 text-lg font-medium">Configurações</h2>
+                </div>
+                <div class="p-4 space-y-6 flex-1 overflow-y-auto">
+                    <!-- Sound Settings -->
+                    <div class="bg-gray-800 rounded-lg p-4">
+                        <h3 class="text-lg font-medium mb-4">Áudio</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="font-medium">Som de Sucesso</h4>
+                                    <p class="text-sm text-gray-400">Reproduzir som ao validar</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="success-sound" class="sr-only peer" checked>
+                                    <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+                            
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="font-medium">Som de Erro</h4>
+                                    <p class="text-sm text-gray-400">Reproduzir som em caso de erro</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="error-sound" class="sr-only peer" checked>
+                                    <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Vibration Settings -->
+                    <div class="bg-gray-800 rounded-lg p-4">
+                        <h3 class="text-lg font-medium mb-4">Vibração</h3>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="font-medium">Feedback Tátil</h4>
+                                <p class="text-sm text-gray-400">Vibrar ao escanear</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="vibration" class="sr-only peer" checked>
+                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Scanner Settings -->
+                    <div class="bg-gray-800 rounded-lg p-4">
+                        <h3 class="text-lg font-medium mb-4">Scanner</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Câmera</label>
+                                <select id="camera-select" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white">
+                                    <option value="">Selecionar câmera...</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- App Info -->
+                    <div class="bg-gray-800 rounded-lg p-4">
+                        <h3 class="text-lg font-medium mb-4">Informações</h3>
+                        <div class="space-y-2 text-sm text-gray-400">
+                            <div class="flex justify-between">
+                                <span>Versão:</span>
+                                <span>1.0.0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Dispositivo:</span>
+                                <span id="device-info">-</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Evento:</span>
+                                <span id="current-token">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Clear Saved Token -->
+                    <button onclick="clearSavedTokenAndNotify()" 
+                            class="w-full bg-orange-600 hover:bg-orange-700 active:bg-orange-800 text-white font-medium py-4 px-6 rounded-lg transition-colors min-h-[56px] mb-3">
+                        <i class="fas fa-trash mr-2"></i>Limpar Token Guardado
+                    </button>
+
+                    <!-- Logout -->
+                    <button onclick="logout()" 
+                            class="w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-medium py-4 px-6 rounded-lg transition-colors min-h-[56px]">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Terminar Sessão
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Toast Container -->
-    <div id="toast-container" class="fixed top-4 right-4 z-40 space-y-2"></div>
+        <!-- Toast Container -->
+        <div id="toast-container" class="fixed top-4 right-4 z-40 space-y-2"></div>
+    </div>
 
     <script>
         // Supabase Configuration
@@ -567,17 +844,137 @@
         let lastScanTime = 0;
         let scanAttempts = new Map(); // Track scan attempts per code
         let deviceName = '';
+        let currentTheme = 'dark';
+        let currentTab = 0; // 0 = scanner, 1 = options
+        let canScan = false; // Control when scanning is allowed
+        let swipeStartX = 0;
+        let swipeStartY = 0;
 
         // Audio contexts for feedback
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
+            // Force fullscreen mode
+            enterFullscreenMode();
+            
+            // Prevent browser UI
+            preventBrowserUI();
+            
             checkConnectivity();
             setupLoginForm();
             loadCameras();
             checkSavedToken(); // Check for saved token
+            initializeTheme();
+            setupSwipeNavigation();
             setInterval(checkConnectivity, 30000); // Check every 30 seconds
+        });
+
+        // Fullscreen and browser UI prevention
+        function enterFullscreenMode() {
+            // Try to enter fullscreen
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else if (document.documentElement.webkitRequestFullscreen) {
+                document.documentElement.webkitRequestFullscreen().catch(() => {});
+            } else if (document.documentElement.msRequestFullscreen) {
+                document.documentElement.msRequestFullscreen().catch(() => {});
+            }
+        }
+
+        function preventBrowserUI() {
+            // Prevent context menu
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                return false;
+            });
+
+            // Prevent text selection
+            document.addEventListener('selectstart', function(e) {
+                if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
+            // Prevent drag
+            document.addEventListener('dragstart', function(e) {
+                e.preventDefault();
+                return false;
+            });
+
+            // Prevent zoom with keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                // Prevent Ctrl+/Cmd+ zoom shortcuts
+                if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '-' || e.key === '0')) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // Prevent F11 fullscreen toggle
+                if (e.key === 'F11') {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // Prevent F12 developer tools
+                if (e.key === 'F12') {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // Prevent Ctrl+Shift+I developer tools
+                if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'I') {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
+            // Prevent pinch zoom on touch devices
+            document.addEventListener('touchstart', function(e) {
+                if (e.touches.length > 1) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+
+            document.addEventListener('touchmove', function(e) {
+                if (e.touches.length > 1) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+
+            // Hide address bar on mobile
+            window.addEventListener('load', function() {
+                setTimeout(function() {
+                    window.scrollTo(0, 1);
+                }, 100);
+            });
+
+            // Prevent pull-to-refresh
+            document.body.addEventListener('touchstart', function(e) {
+                if (e.touches.length === 1 && window.scrollY === 0) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+
+            document.body.addEventListener('touchmove', function(e) {
+                if (e.touches.length === 1 && window.scrollY === 0) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+        }
+
+        // Re-enter fullscreen if user exits
+        document.addEventListener('fullscreenchange', function() {
+            if (!document.fullscreenElement) {
+                setTimeout(enterFullscreenMode, 1000);
+            }
+        });
+
+        document.addEventListener('webkitfullscreenchange', function() {
+            if (!document.webkitFullscreenElement) {
+                setTimeout(enterFullscreenMode, 1000);
+            }
         });
 
         // Token storage management
@@ -617,6 +1014,27 @@
                 localStorage.removeItem('invitesqr_token_date');
             } catch (error) {
                 console.error('Error clearing saved token:', error);
+            }
+        }
+
+        // Theme management
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem('invitesqr_theme') || 'dark';
+            currentTheme = savedTheme;
+            applyTheme(currentTheme);
+        }
+
+        function toggleTheme() {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            applyTheme(currentTheme);
+            localStorage.setItem('invitesqr_theme', currentTheme);
+        }
+
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            const themeIcon = document.getElementById('theme-icon');
+            if (themeIcon) {
+                themeIcon.className = theme === 'dark' ? 'fas fa-sun text-xl' : 'fas fa-moon text-xl';
             }
         }
 
@@ -821,33 +1239,145 @@
             document.getElementById('options-total-guests').textContent = totalGuests;
             document.getElementById('options-session-scans').textContent = sessionScans;
             
+            // Update clear scans count
+            const clearScansCount = document.getElementById('clear-scans-count');
+            if (clearScansCount) {
+                clearScansCount.textContent = scannedCount;
+            }
+            
             // Update reports
-            document.getElementById('report-validated').textContent = scannedCount;
-            document.getElementById('report-pending').textContent = totalGuests - scannedCount;
-            document.getElementById('progress-percentage').textContent = progressPercentage + '%';
-            document.getElementById('progress-bar').style.width = progressPercentage + '%';
+            const reportValidated = document.getElementById('report-validated');
+            const reportPending = document.getElementById('report-pending');
+            const progressPercentageEl = document.getElementById('progress-percentage');
+            const progressBar = document.getElementById('progress-bar');
+            
+            if (reportValidated) reportValidated.textContent = scannedCount;
+            if (reportPending) reportPending.textContent = totalGuests - scannedCount;
+            if (progressPercentageEl) progressPercentageEl.textContent = progressPercentage + '%';
+            if (progressBar) progressBar.style.width = progressPercentage + '%';
         }
 
-        // Tab management
+        // Swipe navigation setup
+        function setupSwipeNavigation() {
+            const swipeContent = document.getElementById('swipe-content');
+            const mainContent = document.getElementById('main-content');
+            
+            if (!swipeContent || !mainContent) return;
+
+            // Touch events
+            mainContent.addEventListener('touchstart', handleTouchStart, { passive: true });
+            mainContent.addEventListener('touchmove', handleTouchMove, { passive: false });
+            mainContent.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+            // Mouse events for desktop testing
+            mainContent.addEventListener('mousedown', handleMouseStart);
+            mainContent.addEventListener('mousemove', handleMouseMove);
+            mainContent.addEventListener('mouseup', handleMouseEnd);
+        }
+
+        function handleTouchStart(e) {
+            swipeStartX = e.touches[0].clientX;
+            swipeStartY = e.touches[0].clientY;
+        }
+
+        function handleTouchMove(e) {
+            if (!swipeStartX || !swipeStartY) return;
+
+            const currentX = e.touches[0].clientX;
+            const currentY = e.touches[0].clientY;
+            const diffX = swipeStartX - currentX;
+            const diffY = swipeStartY - currentY;
+
+            // Prevent vertical scrolling during horizontal swipe
+            if (Math.abs(diffX) > Math.abs(diffY)) {
+                e.preventDefault();
+            }
+        }
+
+        function handleTouchEnd(e) {
+            if (!swipeStartX || !swipeStartY) return;
+
+            const endX = e.changedTouches[0].clientX;
+            const endY = e.changedTouches[0].clientY;
+            const diffX = swipeStartX - endX;
+            const diffY = swipeStartY - endY;
+
+            // Check if it's a horizontal swipe
+            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+                if (diffX > 0 && currentTab === 0) {
+                    // Swipe left: scanner to options
+                    showTab('options');
+                } else if (diffX < 0 && currentTab === 1) {
+                    // Swipe right: options to scanner
+                    showTab('scanner');
+                }
+            }
+
+            swipeStartX = 0;
+            swipeStartY = 0;
+        }
+
+        // Mouse events for desktop
+        function handleMouseStart(e) {
+            swipeStartX = e.clientX;
+            swipeStartY = e.clientY;
+        }
+
+        function handleMouseMove(e) {
+            if (!swipeStartX) return;
+            e.preventDefault();
+        }
+
+        function handleMouseEnd(e) {
+            if (!swipeStartX) return;
+
+            const diffX = swipeStartX - e.clientX;
+            const diffY = swipeStartY - e.clientY;
+
+            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+                if (diffX > 0 && currentTab === 0) {
+                    showTab('options');
+                } else if (diffX < 0 && currentTab === 1) {
+                    showTab('scanner');
+                }
+            }
+
+            swipeStartX = 0;
+            swipeStartY = 0;
+        }
+
+        // Tab management with swipe support
         function showTab(tabName) {
-            // Hide all tabs
+            const tabIndex = tabName === 'scanner' ? 0 : 1;
+            currentTab = tabIndex;
+            
+            // Show main content container and hide all sub-tabs
+            document.getElementById('main-content').classList.remove('hidden');
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.add('hidden');
             });
             
-            // Remove active class from all tab buttons
+            // Update swipe content position
+            const swipeContent = document.getElementById('swipe-content');
+            if (swipeContent) {
+                swipeContent.style.transform = `translateX(-${tabIndex * 50}%)`;
+            }
+            
+            // Update navigation buttons
             document.querySelectorAll('[id^="tab-"]').forEach(btn => {
                 btn.className = btn.className.replace('bg-blue-600 text-white', 'text-gray-400 hover:text-white');
             });
             
-            // Show selected tab
-            document.getElementById(`content-${tabName}`).classList.remove('hidden');
-            
-            // Add active class to selected tab button
             const activeBtn = document.getElementById(`tab-${tabName}`);
             if (activeBtn) {
                 activeBtn.className = activeBtn.className.replace('text-gray-400 hover:text-white', 'bg-blue-600 text-white');
             }
+
+            // Update swipe indicators
+            const dots = document.querySelectorAll('.swipe-dot');
+            dots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === tabIndex);
+            });
             
             // Initialize scanner if needed
             if (tabName === 'scanner' && !html5QrCode) {
@@ -857,7 +1387,10 @@
 
         // Sub-tab management for options
         function showSubTab(subTabName) {
-            // Hide all tabs
+            // Hide main swipe container
+            document.getElementById('main-content').classList.add('hidden');
+            
+            // Hide all sub-tabs
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.add('hidden');
             });
@@ -869,7 +1402,7 @@
         // Scanner functionality
         async function initializeScanner() {
             try {
-                html5QrCode = new Html5Qrcode("qr-reader");
+                html5QrCode = new Html5Qrcode("qr-reader-fullscreen");
             } catch (error) {
                 showToast('Erro ao inicializar scanner', 'error');
             }
@@ -907,16 +1440,44 @@
                 return;
             }
 
-            const button = document.getElementById('scanner-toggle');
+            if (!isScanning) {
+                await startScanner();
+            } else {
+                await stopScanner();
+            }
+        }
+
+        function enableNextScan() {
+            canScan = true;
+            const nextBtn = document.getElementById('next-scan-btn');
+            nextBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Aguardando QR Code...';
+            nextBtn.disabled = true;
+            
+            // Auto-disable after 10 seconds if no scan
+            setTimeout(() => {
+                if (canScan) {
+                    canScan = false;
+                    nextBtn.innerHTML = '<i class="fas fa-arrow-right mr-2"></i>Próximo Convidado';
+                    nextBtn.disabled = false;
+                }
+            }, 10000);
+        }
+
+        function openFullscreenScanner() {
+            document.getElementById('fullscreen-scanner').classList.remove('hidden');
+            document.body.classList.add('fullscreen-scanner-active');
+            
+            // Hide scanner instructions initially
+            document.getElementById('scanner-instructions').classList.remove('hidden');
+            document.getElementById('scan-result-display').classList.add('hidden');
+        }
+
+        function closeFullscreenScanner() {
+            document.getElementById('fullscreen-scanner').classList.add('hidden');
+            document.body.classList.remove('fullscreen-scanner-active');
             
             if (isScanning) {
-                await stopScanner();
-                button.innerHTML = '<i class="fas fa-play mr-2"></i>Iniciar Scanner';
-                button.className = 'w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-medium py-4 px-6 rounded-lg transition-colors text-lg min-h-[56px]';
-            } else {
-                await startScanner();
-                button.innerHTML = '<i class="fas fa-stop mr-2"></i>Parar Scanner';
-                button.className = 'w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-medium py-4 px-6 rounded-lg transition-colors text-lg min-h-[56px]';
+                stopScanner();
             }
         }
 
@@ -925,6 +1486,9 @@
                 await initializeScanner();
             }
 
+            // Open fullscreen scanner
+            openFullscreenScanner();
+
             const cameraId = document.getElementById('camera-select').value || { facingMode: "environment" };
             
             try {
@@ -932,22 +1496,28 @@
                     cameraId,
                     {
                         fps: 10,
-                        qrbox: { width: 250, height: 250 }
+                        qrbox: { width: 300, height: 300 }
                     },
                     onScanSuccess,
                     onScanFailure
                 );
                 
                 isScanning = true;
-                updateScannerStatus('Scanner ativo - Posicione o QR code');
+                canScan = false; // Start with scanning disabled
+                
+                // Update UI
+                document.getElementById('scanner-toggle').innerHTML = '<i class="fas fa-stop mr-2"></i>Parar Scanner';
+                document.getElementById('next-scan-btn').classList.remove('hidden');
+                document.getElementById('scan-status-info').classList.remove('hidden');
                 
                 // Add pulse animation to corners
-                document.querySelectorAll('.scanner-corner').forEach(corner => {
+                document.querySelectorAll('#fullscreen-scanner .scanner-corner').forEach(corner => {
                     corner.classList.add('pulse-animation');
                 });
                 
             } catch (error) {
                 showToast('Erro ao iniciar scanner: ' + error.message, 'error');
+                closeFullscreenScanner();
             }
         }
 
@@ -956,24 +1526,28 @@
                 try {
                     await html5QrCode.stop();
                     isScanning = false;
-                    updateScannerStatus('Scanner parado');
+                    canScan = false;
+                    
+                    // Update UI
+                    document.getElementById('scanner-toggle').innerHTML = '<i class="fas fa-play mr-2"></i>Iniciar Scanner';
+                    document.getElementById('next-scan-btn').classList.add('hidden');
+                    document.getElementById('scan-status-info').classList.add('hidden');
+                    
+                    // Reset next button
+                    const nextBtn = document.getElementById('next-scan-btn');
+                    nextBtn.innerHTML = '<i class="fas fa-arrow-right mr-2"></i>Próximo Convidado';
+                    nextBtn.disabled = false;
                     
                     // Remove pulse animation
-                    document.querySelectorAll('.scanner-corner').forEach(corner => {
+                    document.querySelectorAll('#fullscreen-scanner .scanner-corner').forEach(corner => {
                         corner.classList.remove('pulse-animation');
                     });
+                    
+                    closeFullscreenScanner();
                 } catch (error) {
                     console.error('Error stopping scanner:', error);
                 }
             }
-        }
-
-        function updateScannerStatus(message) {
-            document.getElementById('scanner-status').innerHTML = `
-                <div class="bg-black bg-opacity-50 rounded-lg p-3">
-                    <p class="text-sm text-white">${message}</p>
-                </div>
-            `;
         }
 
         function toggleFastMode() {
@@ -982,6 +1556,11 @@
 
         // QR Code scan handlers
         async function onScanSuccess(decodedText, decodedResult) {
+            // Only process if scanning is enabled
+            if (!canScan) {
+                return;
+            }
+
             const now = Date.now();
             
             // Prevent rapid duplicate scans
@@ -990,21 +1569,19 @@
             }
             lastScanTime = now;
 
+            // Disable scanning after successful read
+            canScan = false;
+
             // Track scan attempts
             const attempts = scanAttempts.get(decodedText) || 0;
             scanAttempts.set(decodedText, attempts + 1);
 
             await processQRCode(decodedText);
             
-            // In fast mode, continue scanning immediately
-            if (!fastMode && isScanning) {
-                await stopScanner();
-                setTimeout(async () => {
-                    if (!isScanning) {
-                        await startScanner();
-                    }
-                }, 2000);
-            }
+            // Reset next button
+            const nextBtn = document.getElementById('next-scan-btn');
+            nextBtn.innerHTML = '<i class="fas fa-arrow-right mr-2"></i>Próximo Convidado';
+            nextBtn.disabled = false;
         }
 
         function onScanFailure(error) {
@@ -1053,62 +1630,71 @@
         }
 
         async function handleScanResult(type, guest, code) {
-            const resultDiv = document.getElementById('last-scan-result');
-            const nameEl = document.getElementById('scan-guest-name');
-            const codeEl = document.getElementById('scan-guest-code');
-            const iconEl = document.getElementById('scan-status-icon');
+            const statusTextEl = document.getElementById('scan-status-text');
+            const guestNameEl = document.getElementById('scan-guest-name-display');
+            const timeEl = document.getElementById('scan-time-display');
+            const resultDisplay = document.getElementById('scan-result-display');
+            const instructions = document.getElementById('scanner-instructions');
 
-            let message, bgClass, iconClass, iconColor;
+            let statusText, statusColor, guestName, timeText;
+            const currentTime = new Date().toLocaleTimeString('pt-PT', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
 
             switch (type) {
                 case 'success':
-                    message = guest.nome;
-                    bgClass = 'bg-green-600';
-                    iconClass = 'fas fa-check-circle';
-                    iconColor = 'text-green-400';
+                    statusText = 'PERMITIDO';
+                    statusColor = 'text-green-400';
+                    guestName = guest.nome;
+                    timeText = `Entrada: ${currentTime}`;
                     playSuccessSound();
                     vibrate([100]);
                     flashScreen('success');
                     break;
                     
                 case 'duplicate':
-                    message = guest.nome + ' (Já validado)';
-                    bgClass = 'bg-orange-600';
-                    iconClass = 'fas fa-exclamation-triangle';
-                    iconColor = 'text-orange-400';
+                    statusText = 'USADO';
+                    statusColor = 'text-red-400';
+                    guestName = guest.nome;
+                    timeText = `Já validado anteriormente`;
                     playErrorSound();
                     vibrate([100, 100, 100]);
                     break;
                     
                 case 'invalid':
-                    message = 'Código inválido';
-                    bgClass = 'bg-red-600';
-                    iconClass = 'fas fa-times-circle';
-                    iconColor = 'text-red-400';
+                    statusText = 'INVÁLIDO';
+                    statusColor = 'text-red-400';
+                    guestName = 'Código não encontrado';
+                    timeText = `Verificado: ${currentTime}`;
                     playErrorSound();
                     vibrate([200]);
                     flashScreen('error');
                     break;
                     
                 case 'error':
-                    message = 'Erro ao processar';
-                    bgClass = 'bg-red-600';
-                    iconClass = 'fas fa-exclamation-circle';
-                    iconColor = 'text-red-400';
+                    statusText = 'ERRO';
+                    statusColor = 'text-red-400';
+                    guestName = 'Erro ao processar';
+                    timeText = `Tentativa: ${currentTime}`;
                     playErrorSound();
                     vibrate([200]);
                     break;
             }
 
-            nameEl.textContent = message;
-            codeEl.textContent = code;
-            iconEl.className = `${iconClass} ${iconColor}`;
-            resultDiv.className = `mx-4 mb-4 p-4 rounded-lg ${bgClass} slide-up`;
-            resultDiv.classList.remove('hidden');
+            statusTextEl.textContent = statusText;
+            statusTextEl.className = `text-4xl font-bold mb-2 ${statusColor}`;
+            guestNameEl.textContent = guestName;
+            timeEl.textContent = timeText;
 
-            // Auto-hide after 3 seconds
+            // Hide instructions and show result
+            instructions.classList.add('hidden');
+            resultDisplay.classList.remove('hidden');
+
+            // Auto-hide after 3 seconds and show instructions again
             setTimeout(() => {
-                resultDiv.classList.add('hidden');
+                resultDisplay.classList.add('hidden');
+                instructions.classList.remove('hidden');
             }, 3000);
         }
 
@@ -1346,6 +1932,45 @@
             }
         }
 
+        // Clear all scans function
+        async function clearAllScans() {
+            if (scannedGuests.size === 0) {
+                showToast('Não há validações para limpar', 'info');
+                return;
+            }
+
+            const confirmMessage = `Tem certeza que deseja desmarcar todas as ${scannedGuests.size} validações?\n\nEsta ação não pode ser desfeita.`;
+            
+            if (confirm(confirmMessage)) {
+                try {
+                    // Log the clear action
+                    if (isOnline && currentClient) {
+                        await supabase.from('logs').insert([{
+                            token: currentClient.token,
+                            status: 'clear_scans',
+                            dispositivo: deviceName,
+                            detalhes: `Cleared ${scannedGuests.size} scans`
+                        }]);
+                    }
+
+                    // Clear all scanned guests
+                    const clearedCount = scannedGuests.size;
+                    scannedGuests.clear();
+                    scanAttempts.clear();
+                    
+                    // Update UI
+                    updateStats();
+                    renderGuests();
+                    updateRecentScans();
+                    
+                    showToast(`${clearedCount} validações foram desmarcadas`, 'success');
+                    
+                } catch (error) {
+                    showToast('Erro ao desmarcar validações', 'error');
+                }
+            }
+        }
+
         // Logout
         async function logout() {
             if (confirm('Tem certeza que deseja terminar a sessão?')) {
@@ -1418,5 +2043,5 @@
         window.addEventListener('online', checkConnectivity);
         window.addEventListener('offline', checkConnectivity);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967aeb9c016177da',t:'MTc1Mzk0MjA5OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967b15f603db77d7',t:'MTc1Mzk0MzgzMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
