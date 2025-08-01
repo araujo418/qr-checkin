@@ -89,7 +89,7 @@
                 <h1 class="text-2xl font-bold text-blue-400 mb-2">📱 InvitesQR Scanner</h1>
                 <p class="text-gray-300">Sistema de controle de convidados</p>
                 <div id="configMessage" class="mt-4 p-3 bg-red-900 border border-red-600 rounded-lg text-left">
-                    <p class="text-red-200 text-sm font-medium mb-2">⚠️ Configuração Necessária:</p>
+                    <p class="text-red-200 text-sm font-medium mb-2"⚠️ Configuração Necessária:</p>
                     <p class="text-red-100 text-xs mb-3">
                         Configure suas credenciais do Supabase no código:<br>
                         • SUPABASE_URL: Sua URL do projeto<br>
@@ -1193,13 +1193,18 @@
                     return;
                 }
 
-                // Check guest status - Accept both 'PERMITIDO' and any other status as valid
-                // Only block if explicitly marked as 'BLOQUEADO'
-                if (guest.status === 'BLOQUEADO') {
+                // Check guest status - Only block if explicitly marked as 'BLOQUEADO'
+                // Accept: null, undefined, empty string, 'PERMITIDO', 'lido', or any other value
+                console.log('📋 Status do convidado:', guest.status);
+                
+                if (guest.status && guest.status.toUpperCase() === 'BLOQUEADO') {
+                    console.log('❌ Convidado bloqueado explicitamente');
                     showScanResult('❌ BLOQUEADO', `${guest.nome} - acesso negado`, 'bg-red-500');
                     playFeedback('error');
                     return;
                 }
+                
+                console.log('✅ Status válido, permitindo acesso');
 
                 // Check scan limit
                 const currentScans = currentClient.scans_usados || 0;
@@ -1225,22 +1230,33 @@
                 }
 
                 // Record scan in logs table with detailed info
+                const logData = {
+                    token: currentClient.token,
+                    data: new Date().toISOString(),
+                    status: 'PERMITIDO',
+                    dispositivo: guest.nome,
+                    tentativas: attempts || 1,
+                    modo_rapido: quickScanMode || false
+                };
+                
+                console.log('📝 Registrando log:', logData);
+                
                 const { error: logError } = await supabase
                     .from('logs')
-                    .insert({
-                        token: currentClient.token,
-                        data: new Date().toISOString(),
-                        status: 'PERMITIDO',
-                        dispositivo: `${guest.nome} (${guest.codigo})`,
-                        tentativas: attempts,
-                        modo_rapido: quickScanMode
-                    });
+                    .insert(logData);
 
                 if (logError) {
-                    console.error('Error recording scan:', logError);
-                    showScanResult('⚠️ ERRO', 'Falha ao registrar scan', 'bg-yellow-500');
+                    console.error('❌ Erro ao registrar log:', logError);
+                    console.error('📋 Dados do log que falharam:', logData);
+                    
+                    // Continue with the scan even if log fails
+                    console.log('⚠️ Continuando scan mesmo com falha no log...');
+                    showScanResult('⚠️ AVISO', `${guest.nome} - Log não registrado`, 'bg-yellow-500');
                     playFeedback('warning');
-                    return;
+                    
+                    // Don't return - continue with the scan process
+                } else {
+                    console.log('✅ Log registrado com sucesso');
                 }
 
                 // Update client scan count
@@ -1252,7 +1268,9 @@
                     .eq('token', currentClient.token);
 
                 if (updateError) {
-                    console.error('Error updating scan count:', updateError);
+                    console.error('❌ Erro ao atualizar contador:', updateError);
+                } else {
+                    console.log('✅ Contador de scans atualizado');
                 }
 
                 // Update local client data
@@ -1261,12 +1279,15 @@
                 // Update local guest status
                 guest.status = 'lido';
 
-                // Successful scan
+                // Successful scan - always mark as successful
                 scannedGuests.add(qrCode);
                 sessionScans++;
                 
+                // Show success message regardless of log/counter errors
                 showScanResult('✅ PERMITIDO', guest.nome, 'bg-green-500');
                 playFeedback('success');
+                
+                console.log('🎉 Scan processado com sucesso para:', guest.nome);
                 
                 // Update UI
                 updateScanLimitDisplay();
@@ -1785,5 +1806,5 @@
             }, 10 * 60 * 1000);
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96836692c4ccad07',t:'MTc1NDAzMTAyMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9683744cf1b0ad07',t:'MTc1NDAzMTU4Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
