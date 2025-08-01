@@ -89,7 +89,7 @@
                 <h1 class="text-2xl font-bold text-blue-400 mb-2">📱 InvitesQR Scanner</h1>
                 <p class="text-gray-300">Sistema de controle de convidados</p>
                 <div id="configMessage" class="mt-4 p-3 bg-red-900 border border-red-600 rounded-lg text-left">
-                    <p class="text-red-200 text-sm font-medium mb-2"⚠️ Configuração Necessária:</p>
+                    <p class="text-red-200 text-sm font-medium mb-2">⚠️ Configuração Necessária:</p>
                     <p class="text-red-100 text-xs mb-3">
                         Configure suas credenciais do Supabase no código:<br>
                         • SUPABASE_URL: Sua URL do projeto<br>
@@ -171,12 +171,6 @@
                 <button class="tab-btn flex-1 py-3 px-4 text-center font-medium transition-colors bg-blue-600 text-white" data-tab="scanner">
                     📸 Scanner
                 </button>
-                <button class="tab-btn flex-1 py-3 px-4 text-center font-medium transition-colors text-gray-300 hover:text-white" data-tab="guests">
-                    👥 Convidados
-                </button>
-                <button class="tab-btn flex-1 py-3 px-4 text-center font-medium transition-colors text-gray-300 hover:text-white" data-tab="reports">
-                    📊 Relatórios
-                </button>
                 <button class="tab-btn flex-1 py-3 px-4 text-center font-medium transition-colors text-gray-300 hover:text-white" data-tab="settings">
                     ⚙️ Opções
                 </button>
@@ -194,7 +188,7 @@
                             Scanner Inativo
                         </div>
                         <div id="scannerSubtext" class="text-sm text-gray-400">
-                            Clique em "Próximo Convidado" para ativar
+                            Clique em "Ativar Scanner" para começar
                         </div>
                     </div>
 
@@ -217,20 +211,8 @@
                     <!-- Scanner Controls -->
                     <div class="space-y-3">
                         <button id="nextGuestBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-4 px-4 rounded-lg transition-colors min-h-[44px] text-lg">
-                            🎯 Próximo Convidado
+                            📸 Ativar Scanner
                         </button>
-                        
-                        <div class="grid grid-cols-3 gap-2">
-                            <button id="quickScanToggle" class="bg-gray-700 hover:bg-gray-600 text-white font-medium py-3 px-2 rounded-lg transition-colors min-h-[44px] text-sm">
-                                ⚡ Rápido
-                            </button>
-                            <button id="switchCameraBtn" class="bg-gray-700 hover:bg-gray-600 text-white font-medium py-3 px-2 rounded-lg transition-colors min-h-[44px] text-sm">
-                                🔄 Câmera
-                            </button>
-                            <button id="flashToggle" class="bg-gray-700 hover:bg-gray-600 text-white font-medium py-3 px-2 rounded-lg transition-colors min-h-[44px] text-sm">
-                                💡 Flash
-                            </button>
-                        </div>
                     </div>
 
                     <!-- Recent Scans -->
@@ -247,76 +229,140 @@
                 </div>
             </div>
 
-            <!-- Guests Tab -->
-            <div id="guestsTab" class="tab-content p-4 hidden">
+
+
+            <!-- Settings Tab -->
+            <div id="settingsTab" class="tab-content p-4 hidden">
                 <div class="space-y-4">
-                    <!-- Search -->
-                    <div class="relative">
-                        <input type="text" id="guestSearch" class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pl-10" placeholder="Buscar convidado...">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center">
-                            <span class="text-gray-400">🔍</span>
-                        </div>
-                    </div>
-
-                    <!-- Filter Buttons -->
-                    <div class="flex space-x-2 overflow-x-auto pb-2">
-                        <button class="filter-btn bg-blue-600 text-white px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]" data-filter="all">
-                            Todos
-                        </button>
-                        <button class="filter-btn bg-gray-700 text-gray-300 px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]" data-filter="scanned">
-                            Escaneados
-                        </button>
-                        <button class="filter-btn bg-gray-700 text-gray-300 px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px]" data-filter="pending">
-                            Pendentes
-                        </button>
-                    </div>
-
-                    <!-- Guest List -->
-                    <div id="guestList" class="space-y-2">
-                        <!-- Guests will be populated here -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Reports Tab -->
-            <div id="reportsTab" class="tab-content p-4 hidden">
-                <div class="space-y-4">
-                    <!-- Stats Cards -->
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-gray-800 rounded-lg p-4 text-center">
-                            <div id="totalScans" class="text-2xl font-bold text-green-500">0</div>
-                            <div class="text-sm text-gray-400">Total Scans</div>
-                        </div>
-                        <div class="bg-gray-800 rounded-lg p-4 text-center">
-                            <div id="sessionScansCount" class="text-2xl font-bold text-blue-500">0</div>
-                            <div class="text-sm text-gray-400">Sessão Atual</div>
-                        </div>
-                        <div class="bg-gray-800 rounded-lg p-4 text-center">
-                            <div id="successRate" class="text-2xl font-bold text-yellow-500">0%</div>
-                            <div class="text-sm text-gray-400">Taxa Sucesso</div>
-                        </div>
-                        <div class="bg-gray-800 rounded-lg p-4 text-center">
-                            <div id="avgScanTime" class="text-2xl font-bold text-purple-500">0s</div>
-                            <div class="text-sm text-gray-400">Tempo Médio</div>
-                        </div>
-                    </div>
-
-                    <!-- Export Options -->
+                    <!-- Convidados -->
                     <div class="bg-gray-800 rounded-lg p-4">
-                        <h3 class="font-medium text-gray-300 mb-3">Exportar Dados</h3>
-                        <div class="space-y-3">
-                            <button id="exportPdfBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-4 rounded-lg transition-colors min-h-[44px]">
+                        <h3 class="font-medium text-gray-300 mb-3">👥 Convidados</h3>
+                        
+                        <!-- Search -->
+                        <div class="relative mb-3">
+                            <input type="text" id="guestSearch" class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pl-10" placeholder="Buscar convidado...">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center">
+                                <span class="text-gray-400">🔍</span>
+                            </div>
+                        </div>
+
+                        <!-- Filter Buttons -->
+                        <div class="flex space-x-2 overflow-x-auto pb-3 mb-3">
+                            <button class="filter-btn bg-blue-600 text-white px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px] text-sm" data-filter="all">
+                                Todos
+                            </button>
+                            <button class="filter-btn bg-gray-700 text-gray-300 px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px] text-sm" data-filter="scanned">
+                                Escaneados
+                            </button>
+                            <button class="filter-btn bg-gray-700 text-gray-300 px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px] text-sm" data-filter="pending">
+                                Pendentes
+                            </button>
+                        </div>
+
+                        <!-- Guest List -->
+                        <div id="guestList" class="space-y-2 max-h-60 overflow-y-auto">
+                            <!-- Guests will be populated here -->
+                        </div>
+                    </div>
+
+                    <!-- Relatórios -->
+                    <div class="bg-gray-800 rounded-lg p-4">
+                        <h3 class="font-medium text-gray-300 mb-3">📊 Relatórios</h3>
+                        
+                        <!-- Stats Cards -->
+                        <div class="grid grid-cols-2 gap-3 mb-4">
+                            <div class="bg-gray-700 rounded-lg p-3 text-center">
+                                <div id="totalScans" class="text-xl font-bold text-green-500">0</div>
+                                <div class="text-xs text-gray-400">Total Scans</div>
+                            </div>
+                            <div class="bg-gray-700 rounded-lg p-3 text-center">
+                                <div id="sessionScansCount" class="text-xl font-bold text-blue-500">0</div>
+                                <div class="text-xs text-gray-400">Sessão Atual</div>
+                            </div>
+                            <div class="bg-gray-700 rounded-lg p-3 text-center">
+                                <div id="successRate" class="text-xl font-bold text-yellow-500">0%</div>
+                                <div class="text-xs text-gray-400">Taxa Sucesso</div>
+                            </div>
+                            <div class="bg-gray-700 rounded-lg p-3 text-center">
+                                <div id="avgScanTime" class="text-xl font-bold text-purple-500">0s</div>
+                                <div class="text-xs text-gray-400">Tempo Médio</div>
+                            </div>
+                        </div>
+
+                        <!-- Export Options -->
+                        <div class="space-y-2">
+                            <button id="exportPdfBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors min-h-[44px] text-sm">
                                 📄 Exportar PDF
                             </button>
-                            <button id="shareDataBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors min-h-[44px]">
+                            <button id="shareDataBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors min-h-[44px] text-sm">
                                 📤 Compartilhar Dados
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Scanner Settings -->
+                    <div class="bg-gray-800 rounded-lg p-4">
+                        <h3 class="font-medium text-gray-300 mb-3">📸 Scanner</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-300">⚡ Modo Rápido</span>
+                                <button id="quickScanToggle" class="w-12 h-6 bg-gray-600 rounded-full relative transition-colors">
+                                    <div class="w-5 h-5 bg-white rounded-full absolute top-0.5 left-0.5 transition-transform"></div>
+                                </button>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-300">💡 Flash</span>
+                                <button id="flashToggle" class="w-12 h-6 bg-gray-600 rounded-full relative transition-colors">
+                                    <div class="w-5 h-5 bg-white rounded-full absolute top-0.5 left-0.5 transition-transform"></div>
+                                </button>
+                            </div>
+                            <div class="text-xs text-gray-400 mt-2">
+                                📷 Câmera: Sempre traseira (automático)
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sound Settings -->
+                    <div class="bg-gray-800 rounded-lg p-4">
+                        <h3 class="font-medium text-gray-300 mb-3">🔊 Som e Vibração</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-300">Som de Feedback</span>
+                                <button id="soundToggle" class="w-12 h-6 bg-green-600 rounded-full relative transition-colors">
+                                    <div class="w-5 h-5 bg-white rounded-full absolute top-0.5 right-0.5 transition-transform"></div>
+                                </button>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-300">Vibração</span>
+                                <button id="vibrationToggle" class="w-12 h-6 bg-green-600 rounded-full relative transition-colors">
+                                    <div class="w-5 h-5 bg-white rounded-full absolute top-0.5 right-0.5 transition-transform"></div>
+                                </button>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-300">Mensagens Inteligentes</span>
+                                <button id="smartMessagesToggle" class="w-12 h-6 bg-green-600 rounded-full relative transition-colors">
+                                    <div class="w-5 h-5 bg-white rounded-full absolute top-0.5 right-0.5 transition-transform"></div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Data Management -->
+                    <div class="bg-gray-800 rounded-lg p-4">
+                        <h3 class="font-medium text-gray-300 mb-3">💾 Gerenciar Dados</h3>
+                        <div class="space-y-3">
+                            <button id="syncDataBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors min-h-[44px]">
+                                🔄 Sincronizar Dados
+                            </button>
+                            <button id="clearDataBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-4 rounded-lg transition-colors min-h-[44px]">
+                                🗑️ Limpar Dados Locais
                             </button>
                         </div>
                     </div>
 
                     <!-- Session Info -->
                     <div class="bg-gray-800 rounded-lg p-4">
-                        <h3 class="font-medium text-gray-300 mb-3">Informações da Sessão</h3>
+                        <h3 class="font-medium text-gray-300 mb-3">ℹ️ Informações da Sessão</h3>
                         <div class="space-y-2 text-sm">
                             <div class="flex justify-between">
                                 <span class="text-gray-400">Início da Sessão:</span>
@@ -332,72 +378,10 @@
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- Settings Tab -->
-            <div id="settingsTab" class="tab-content p-4 hidden">
-                <div class="space-y-4">
-                    <!-- Sound Settings -->
-                    <div class="bg-gray-800 rounded-lg p-4">
-                        <h3 class="font-medium text-gray-300 mb-3">Som e Vibração</h3>
-                        <div class="space-y-3">
-                            <div class="flex items-center justify-between">
-                                <span class="text-gray-300">Som de Feedback</span>
-                                <button id="soundToggle" class="w-12 h-6 bg-green-600 rounded-full relative transition-colors">
-                                    <div class="w-5 h-5 bg-white rounded-full absolute top-0.5 right-0.5 transition-transform"></div>
-                                </button>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-gray-300">Vibração</span>
-                                <button id="vibrationToggle" class="w-12 h-6 bg-green-600 rounded-full relative transition-colors">
-                                    <div class="w-5 h-5 bg-white rounded-full absolute top-0.5 right-0.5 transition-transform"></div>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Smart Messages -->
-                    <div class="bg-gray-800 rounded-lg p-4">
-                        <h3 class="font-medium text-gray-300 mb-3">Mensagens Inteligentes</h3>
-                        <div class="flex items-center justify-between">
-                            <span class="text-gray-300">Dicas e Celebrações</span>
-                            <button id="smartMessagesToggle" class="w-12 h-6 bg-green-600 rounded-full relative transition-colors">
-                                <div class="w-5 h-5 bg-white rounded-full absolute top-0.5 right-0.5 transition-transform"></div>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Camera Settings -->
-                    <div class="bg-gray-800 rounded-lg p-4">
-                        <h3 class="font-medium text-gray-300 mb-3">Câmera</h3>
-                        <div class="space-y-3">
-                            <div class="flex items-center justify-between">
-                                <span class="text-gray-300">Câmera Preferida</span>
-                                <select id="cameraSelect" class="bg-gray-700 border border-gray-600 rounded px-3 py-1 text-white">
-                                    <option value="environment">Traseira</option>
-                                    <option value="user">Frontal</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Data Management -->
-                    <div class="bg-gray-800 rounded-lg p-4">
-                        <h3 class="font-medium text-gray-300 mb-3">Gerenciar Dados</h3>
-                        <div class="space-y-3">
-                            <button id="syncDataBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors min-h-[44px]">
-                                🔄 Sincronizar Dados
-                            </button>
-                            <button id="clearDataBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-4 rounded-lg transition-colors min-h-[44px]">
-                                🗑️ Limpar Dados Locais
-                            </button>
-                        </div>
-                    </div>
 
                     <!-- Debug Info -->
                     <div class="bg-gray-800 rounded-lg p-4">
-                        <h3 class="font-medium text-gray-300 mb-3">Informações de Debug</h3>
+                        <h3 class="font-medium text-gray-300 mb-3">🔧 Debug</h3>
                         <div class="text-xs text-gray-400 space-y-1">
                             <div>Versão: 1.0.0</div>
                             <div id="debugInfo">Carregando...</div>
@@ -466,8 +450,10 @@
         let isOnline = true;
         let tokenValidationInterval = null;
         let quickScanMode = false;
-        let scanAttempts = new Map(); // Track attempts per QR code
+        let scanAttempts = new Map();
         let lastScanTime = 0;
+        let scanHistory = [];
+        let isAppInitialized = false;
 
         // Demo data for testing without Supabase
         const demoData = {
@@ -568,12 +554,11 @@
         const loginError = document.getElementById('loginError');
 
         // Initialize App
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             // Show configuration message if Supabase not configured
             if (!supabase) {
                 document.getElementById('configMessage').classList.remove('hidden');
                 document.getElementById('demoMessage').classList.add('hidden');
-                // Disable login if not configured
                 document.getElementById('loginBtn').disabled = true;
                 document.getElementById('loginBtn').textContent = 'Configure o Supabase';
                 return;
@@ -582,11 +567,15 @@
                 document.getElementById('demoMessage').classList.add('hidden');
             }
             
-            loadSavedData();
-            checkAutoLogin();
-            setupEventListeners();
-            updateConnectionStatus();
-            startAutoSave();
+            // Initialize app only once
+            if (!isAppInitialized) {
+                loadSavedData();
+                setupEventListeners();
+                isAppInitialized = true;
+            }
+            
+            // Always check for auto-login
+            await checkAutoLogin();
         });
 
         // Load saved data from localStorage
@@ -618,125 +607,132 @@
 
         // Check for auto-login
         async function checkAutoLogin() {
-            if (!supabase) return; // Skip if Supabase not configured
+            if (!supabase) return;
             
             const savedToken = localStorage.getItem('invitesqr_token');
-            if (savedToken) {
-                try {
-                    // Validate saved token
-                    const { data: clientData, error } = await supabase
-                        .from('clientes')
-                        .select('*')
-                        .eq('token', savedToken)
-                        .single();
+            if (!savedToken) return;
 
-                    if (!error && clientData) {
-                        // Check if token is still valid
-                        if (!clientData.validade || new Date(clientData.validade * 1000) >= new Date()) {
-                            currentClient = clientData;
-                            
-                            // Load guests
-                            const { data: guestsData } = await supabase
-                                .from('convidados')
-                                .select('*')
-                                .eq('token_cliente', savedToken);
-                            
-                            guests = guestsData || [];
-                            await loadExistingScans();
-                            
-                            showMainApp();
-                            showWelcomeMessage();
-                            startTokenValidation();
-                            return;
-                        }
-                    }
-                } catch (error) {
-                    console.error('Auto-login error:', error);
-                }
-                
-                // If we get here, token is invalid - clear it
-                localStorage.removeItem('invitesqr_token');
-                localStorage.removeItem(STORAGE_KEYS.CLIENT_DATA);
-            }
-        }
-
-        // Start token validation interval
-        function startTokenValidation() {
-            // Clear existing interval
-            if (tokenValidationInterval) {
-                clearInterval(tokenValidationInterval);
-            }
-
-            // Check token validity every 30 seconds
-            tokenValidationInterval = setInterval(async () => {
-                await validateCurrentToken();
-            }, 30000);
-        }
-
-        // Validate current token
-        async function validateCurrentToken() {
-            if (!supabase || !currentClient || !currentClient.token) return;
-
+            // Show loading state
+            loginBtn.textContent = 'Verificando token...';
+            loginBtn.disabled = true;
+            
             try {
+                console.log('🔍 Verificando token salvo:', savedToken);
+                
+                // Validate saved token
                 const { data: clientData, error } = await supabase
                     .from('clientes')
                     .select('*')
-                    .eq('token', currentClient.token)
+                    .eq('token', savedToken)
                     .single();
 
                 if (error || !clientData) {
-                    // Token no longer exists
-                    handleTokenInvalid('Token removido do sistema');
+                    console.log('❌ Token inválido ou não encontrado');
+                    clearInvalidToken('Token não encontrado ou inválido');
                     return;
                 }
 
                 // Check if token expired
                 if (clientData.validade && new Date(clientData.validade * 1000) < new Date()) {
-                    handleTokenInvalid('Token expirado');
+                    console.log('❌ Token expirado');
+                    clearInvalidToken('Token expirado');
                     return;
                 }
 
-                // Update client data if changed
-                if (JSON.stringify(clientData) !== JSON.stringify(currentClient)) {
-                    currentClient = clientData;
-                    localStorage.setItem(STORAGE_KEYS.CLIENT_DATA, JSON.stringify(currentClient));
-                    document.getElementById('eventName').textContent = currentClient.nome;
-                    updateScanLimitDisplay();
-                }
-
+                console.log('✅ Token válido, fazendo login automático');
+                currentClient = clientData;
+                
+                // Load guests data efficiently
+                const { data: guestsData } = await supabase
+                    .from('convidados')
+                    .select('*')
+                    .eq('token_cliente', savedToken);
+                
+                guests = guestsData || [];
+                await loadExistingScans();
+                
+                showMainApp();
+                showWelcomeMessage();
+                startTokenValidation();
+                
             } catch (error) {
-                console.error('Token validation error:', error);
-                // Don't logout on network errors, just update connection status
-                updateConnectionStatus();
+                console.error('❌ Erro no auto-login:', error);
+                clearInvalidToken('Erro de conexão');
             }
         }
 
-        // Handle invalid token
-        function handleTokenInvalid(reason) {
-            // Clear all data
+        // Clear invalid token and show login screen
+        function clearInvalidToken(reason) {
+            console.log('🧹 Limpando token inválido:', reason);
+            
+            // Clear all stored data
             localStorage.removeItem('invitesqr_token');
             Object.values(STORAGE_KEYS).forEach(key => {
                 localStorage.removeItem(key);
             });
 
-            // Clear interval
-            if (tokenValidationInterval) {
-                clearInterval(tokenValidationInterval);
-                tokenValidationInterval = null;
-            }
-
-            // Reset variables
+            // Reset app state
             currentClient = null;
             guests = [];
             scannedGuests.clear();
             sessionScans = 0;
 
-            // Show login screen
+            // Show login screen with message
             mainApp.classList.add('hidden');
             loginScreen.classList.remove('hidden');
             
-            // Show error message
-            showLoginError(reason + '. Por favor, faça login novamente.');
+            loginBtn.textContent = 'Entrar';
+            loginBtn.disabled = false;
+            
+            if (reason !== 'Token não encontrado ou inválido') {
+                showLoginError(reason + '. Por favor, faça login novamente.');
+            }
+        }
+
+        // Start token validation interval (less frequent)
+        function startTokenValidation() {
+            if (tokenValidationInterval) {
+                clearInterval(tokenValidationInterval);
+            }
+
+            // Check token validity every 2 minutes (less frequent)
+            tokenValidationInterval = setInterval(async () => {
+                await validateCurrentToken();
+            }, 120000);
+        }
+
+        // Validate current token (simplified)
+        async function validateCurrentToken() {
+            if (!supabase || !currentClient?.token) return;
+
+            try {
+                const { data: clientData, error } = await supabase
+                    .from('clientes')
+                    .select('validade, scans_usados, limite_scans')
+                    .eq('token', currentClient.token)
+                    .single();
+
+                if (error?.code === 'PGRST116' || !clientData) {
+                    clearInvalidToken('Token removido do sistema');
+                    return;
+                }
+
+                // Check if token expired
+                if (clientData.validade && new Date(clientData.validade * 1000) < new Date()) {
+                    clearInvalidToken('Token expirado');
+                    return;
+                }
+
+                // Update only if scan count changed
+                if (clientData.scans_usados !== currentClient.scans_usados) {
+                    currentClient.scans_usados = clientData.scans_usados;
+                    currentClient.limite_scans = clientData.limite_scans;
+                    updateScanLimitDisplay();
+                }
+
+            } catch (error) {
+                console.error('Erro na validação do token:', error);
+            }
         }
 
         // Setup event listeners
@@ -757,7 +753,6 @@
             // Scanner controls
             document.getElementById('nextGuestBtn').addEventListener('click', activateScanner);
             document.getElementById('quickScanToggle').addEventListener('click', toggleQuickScan);
-            document.getElementById('switchCameraBtn').addEventListener('click', switchCamera);
             document.getElementById('flashToggle').addEventListener('click', toggleFlash);
 
             // Settings toggles
@@ -777,8 +772,12 @@
 
 
 
-            // Guest search and filter
-            document.getElementById('guestSearch').addEventListener('input', filterGuests);
+            // Guest search and filter (debounced)
+            let searchTimeout;
+            document.getElementById('guestSearch').addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(filterGuests, 300); // Debounce search
+            });
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     setGuestFilter(this.dataset.filter);
@@ -895,6 +894,11 @@
                 showMainApp();
                 showWelcomeMessage();
                 startTokenValidation();
+                
+                // Auto-activate scanner after login
+                setTimeout(() => {
+                    activateScanner();
+                }, 1000);
                 
                 loginBtn.textContent = 'Entrar';
                 loginBtn.disabled = false;
@@ -1041,13 +1045,12 @@
             }
         }
 
-        // Activate scanner
+        // Activate scanner - now always active
         async function activateScanner() {
-            if (isScanning) return;
-
-            // Check connectivity before activating
-            if (!isOnline) {
-                showScanResult('📡 SEM CONEXÃO', 'Verifique sua internet', 'bg-red-500');
+            if (isScanning) {
+                // Scanner already active, just enable scanning
+                canScan = true;
+                updateScannerStatus('Scanner Ativo', 'Pronto para escanear - posicione o QR code');
                 return;
             }
 
@@ -1064,41 +1067,56 @@
             };
 
             try {
-                // Start the camera
-                await html5QrCode.start(
-                    { facingMode: "environment" }, // Use back camera
-                    config,
-                    (decodedText, decodedResult) => {
-                        // QR code successfully scanned
-                        processQRScan(decodedText);
-                    },
-                    (errorMessage) => {
-                        // Scanning error - can be ignored for continuous scanning
-                    }
-                );
+                // Force back camera - try multiple methods
+                const cameraConstraints = [
+                    { facingMode: { exact: "environment" } }, // Prefer exact back camera
+                    { facingMode: "environment" }, // Fallback to any back camera
+                    { video: { facingMode: { exact: "environment" } } } // Alternative format
+                ];
 
-                updateScannerStatus('Scanner Ativo', 'Posicione o QR code na área destacada');
-                document.getElementById('scannerMessage').textContent = 'Scanner ativo - aguardando QR code';
-                
-                // Set timeout for scanner (20 seconds)
-                scanTimeout = setTimeout(() => {
-                    deactivateScanner();
-                    showSmartMessage('⏰ Scanner desativado por timeout. Clique em "Próximo Convidado" novamente.');
-                }, 20000);
+                let cameraStarted = false;
+                for (const constraint of cameraConstraints) {
+                    try {
+                        await html5QrCode.start(
+                            constraint,
+                            config,
+                            (decodedText, decodedResult) => {
+                                // QR code successfully scanned
+                                processQRScan(decodedText);
+                            },
+                            (errorMessage) => {
+                                // Scanning error - can be ignored for continuous scanning
+                            }
+                        );
+                        cameraStarted = true;
+                        console.log('✅ Câmera traseira ativada com sucesso');
+                        break;
+                    } catch (err) {
+                        console.log('⚠️ Tentativa de câmera falhou:', err.message);
+                        continue;
+                    }
+                }
+
+                if (!cameraStarted) {
+                    throw new Error('Não foi possível ativar a câmera traseira');
+                }
+
+                updateScannerStatus('Scanner Ativo', 'Câmera traseira ativa - posicione o QR code');
+                document.getElementById('scannerMessage').textContent = 'Scanner sempre ativo - aguardando QR code';
 
             } catch (error) {
                 console.error('Error starting scanner:', error);
-                updateScannerStatus('Erro na Câmera', 'Não foi possível acessar a câmera');
+                updateScannerStatus('Erro na Câmera', 'Não foi possível acessar a câmera traseira');
                 document.getElementById('scannerOverlay').classList.add('hidden');
                 isScanning = false;
                 canScan = false;
                 
                 // Show error message
-                showScanResult('❌ ERRO', 'Não foi possível acessar a câmera', 'bg-red-500');
+                showScanResult('❌ ERRO', 'Não foi possível acessar a câmera traseira', 'bg-red-500');
             }
         }
 
-        // Deactivate scanner
+        // Deactivate scanner - only used for manual stop or errors
         function deactivateScanner() {
             if (!isScanning) return;
 
@@ -1111,7 +1129,7 @@
             }
 
             document.getElementById('scannerOverlay').classList.add('hidden');
-            updateScannerStatus('Scanner Inativo', 'Clique em "Próximo Convidado" para ativar');
+            updateScannerStatus('Scanner Parado', 'Clique em "Ativar Scanner" para continuar');
 
             if (html5QrCode && html5QrCode.isScanning) {
                 html5QrCode.stop().catch(console.error);
@@ -1124,27 +1142,38 @@
 
             // Prevent rapid duplicate scans
             const now = Date.now();
-            if (now - lastScanTime < 1000) return;
+            if (now - lastScanTime < 2000) return; // Increased to 2 seconds
             lastScanTime = now;
 
             // Track scan attempts
             const attempts = scanAttempts.get(qrCode) || 0;
             scanAttempts.set(qrCode, attempts + 1);
 
-            // In quick scan mode, don't deactivate scanner immediately
-            if (!quickScanMode) {
-                deactivateScanner();
-            }
+            // Temporarily disable scanning to prevent duplicates
+            canScan = false;
+            
+            // Re-enable scanning after processing
+            setTimeout(() => {
+                canScan = true;
+                updateScannerStatus('Scanner Ativo', 'Pronto para próximo QR code');
+            }, 3000);
 
             try {
+                console.log('🔍 Processando QR code:', qrCode);
+                console.log('👥 Total de convidados:', guests.length);
+                console.log('📋 Códigos disponíveis:', guests.map(g => g.codigo));
+                
                 // Find guest in local data first
                 const guest = guests.find(g => g.codigo === qrCode);
                 
                 if (!guest) {
-                    showScanResult('❌ INVÁLIDO', 'QR code não encontrado', 'bg-red-500');
+                    console.log('❌ Convidado não encontrado para código:', qrCode);
+                    showScanResult('❌ INVÁLIDO', `QR code "${qrCode}" não encontrado`, 'bg-red-500');
                     playFeedback('error');
                     return;
                 }
+                
+                console.log('✅ Convidado encontrado:', guest);
 
                 // Check if guest belongs to current client
                 if (guest.token_cliente !== currentClient.token) {
@@ -1228,28 +1257,10 @@
                 // Check for milestones
                 checkMilestones();
 
-                // In quick scan mode, continue scanning after a brief pause
-                if (quickScanMode) {
-                    setTimeout(() => {
-                        if (canScan && isScanning) {
-                            updateScannerStatus('Scanner Ativo', 'Modo rápido - próximo QR code');
-                        }
-                    }, 1500);
-                }
-
             } catch (error) {
                 console.error('Scan processing error:', error);
                 showScanResult('⚠️ ERRO', 'Erro de conexão', 'bg-yellow-500');
                 playFeedback('warning');
-                
-                // In quick scan mode, continue even after errors
-                if (quickScanMode) {
-                    setTimeout(() => {
-                        if (canScan && isScanning) {
-                            updateScannerStatus('Scanner Ativo', 'Modo rápido - aguardando QR code');
-                        }
-                    }, 2000);
-                }
             }
         }
 
@@ -1389,50 +1400,68 @@
             }, 4000);
         }
 
-        // Render guest list
+        // Render guest list (optimized)
         function renderGuestList() {
             const guestList = document.getElementById('guestList');
-            const searchTerm = document.getElementById('guestSearch').value.toLowerCase();
-            const currentFilter = document.querySelector('.filter-btn.bg-blue-600').dataset.filter;
+            const searchTerm = document.getElementById('guestSearch')?.value?.toLowerCase() || '';
+            const currentFilter = document.querySelector('.filter-btn.bg-blue-600')?.dataset?.filter || 'all';
             
-            let filteredGuests = guests.filter(guest => {
-                const matchesSearch = guest.nome.toLowerCase().includes(searchTerm) || 
-                                    guest.codigo.toLowerCase().includes(searchTerm);
+            // Filter guests efficiently
+            const filteredGuests = guests.filter(guest => {
+                const matchesSearch = !searchTerm || 
+                    guest.nome.toLowerCase().includes(searchTerm) || 
+                    guest.codigo.toLowerCase().includes(searchTerm);
                 
-                if (currentFilter === 'scanned') {
-                    return matchesSearch && scannedGuests.has(guest.codigo);
-                } else if (currentFilter === 'pending') {
-                    return matchesSearch && !scannedGuests.has(guest.codigo);
-                }
+                if (!matchesSearch) return false;
                 
-                return matchesSearch;
+                const isScanned = scannedGuests.has(guest.codigo);
+                if (currentFilter === 'scanned') return isScanned;
+                if (currentFilter === 'pending') return !isScanned;
+                return true;
             });
             
+            // Clear and render
             guestList.innerHTML = '';
             
             if (filteredGuests.length === 0) {
-                guestList.innerHTML = '<div class="text-gray-400 text-center py-8">Nenhum convidado encontrado</div>';
+                guestList.innerHTML = '<div class="text-gray-400 text-center py-4 text-sm">Nenhum convidado encontrado</div>';
                 return;
             }
             
-            filteredGuests.forEach(guest => {
+            // Limit rendering to first 50 guests for performance
+            const guestsToRender = filteredGuests.slice(0, 50);
+            
+            const fragment = document.createDocumentFragment();
+            guestsToRender.forEach(guest => {
                 const isScanned = scannedGuests.has(guest.codigo);
                 const guestElement = document.createElement('div');
-                guestElement.className = `bg-gray-800 rounded-lg p-4 flex items-center justify-between ${isScanned ? 'opacity-75' : ''}`;
+                guestElement.className = `bg-gray-700 rounded-lg p-3 flex items-center justify-between ${isScanned ? 'opacity-75' : ''}`;
                 guestElement.innerHTML = `
-                    <div>
-                        <div class="font-medium ${isScanned ? 'text-green-400' : 'text-white'}">${guest.nome}</div>
-                        <div class="text-sm text-gray-400">${guest.codigo}</div>
+                    <div class="flex items-center space-x-3">
+                        <div class="w-5 h-5 rounded-full border-2 ${isScanned ? 'border-green-500 bg-green-500' : 'border-gray-500 bg-gray-700'} flex items-center justify-center transition-all duration-300">
+                            ${isScanned ? '<div class="w-2 h-2 bg-white rounded-full"></div>' : ''}
+                        </div>
+                        <div>
+                            <div class="font-medium text-sm ${isScanned ? 'text-green-400' : 'text-white'}">${guest.nome}</div>
+                            <div class="text-xs text-gray-400">${guest.codigo}</div>
+                        </div>
                     </div>
-                    <div class="text-2xl">
+                    <div class="text-lg">
                         ${isScanned ? '✅' : '⏳'}
                     </div>
                 `;
-                
-                // Guests are read-only in the list - scans only via QR scanner
-                
-                guestList.appendChild(guestElement);
+                fragment.appendChild(guestElement);
             });
+            
+            guestList.appendChild(fragment);
+            
+            // Show count if limited
+            if (filteredGuests.length > 50) {
+                const moreElement = document.createElement('div');
+                moreElement.className = 'text-gray-400 text-center py-2 text-xs';
+                moreElement.textContent = `Mostrando 50 de ${filteredGuests.length} convidados`;
+                guestList.appendChild(moreElement);
+            }
         }
 
         // Filter guests
@@ -1490,10 +1519,7 @@
             }
         }
 
-        // Switch camera
-        function switchCamera() {
-            showSmartMessage('📷 Câmera alternada com sucesso!');
-        }
+
 
         // Toggle quick scan mode
         function toggleQuickScan() {
@@ -1709,42 +1735,30 @@
             setInterval(saveData, 30000);
         }
 
-        // Update debug info
+        // Update debug info (simplified)
         function updateDebugInfo() {
             const debugInfo = document.getElementById('debugInfo');
-            const totalAttempts = Array.from(scanAttempts.values()).reduce((sum, attempts) => sum + attempts, 0);
-            debugInfo.innerHTML = `
-                <div>Guests: ${guests.length}</div>
-                <div>Scanned: ${scannedGuests.size}</div>
-                <div>Session: ${sessionScans}</div>
-                <div>Attempts: ${totalAttempts}</div>
-                <div>Quick Mode: ${quickScanMode ? 'ON' : 'OFF'}</div>
-                <div>Online: ${isOnline ? 'YES' : 'NO'}</div>
-                <div>Storage: ${Object.keys(localStorage).filter(k => k.startsWith('invitesqr_')).length} keys</div>
-            `;
+            if (debugInfo) {
+                debugInfo.innerHTML = `
+                    <div>Convidados: ${guests.length} | Escaneados: ${scannedGuests.size}</div>
+                    <div>Sessão: ${sessionScans} | Token: ${currentClient?.token ? 'Ativo' : 'Inativo'}</div>
+                `;
+            }
         }
 
-        // Update debug info periodically
-        setInterval(updateDebugInfo, 5000);
+        // Update debug info less frequently
+        setInterval(updateDebugInfo, 30000);
         updateDebugInfo();
 
-        // Auto-sync data every 5 minutes
+        // Simplified background tasks (less frequent)
         if (supabase) {
+            // Auto-sync only every 10 minutes
             setInterval(async () => {
-                if (currentClient) {
+                if (currentClient && document.visibilityState === 'visible') {
                     await syncData();
                 }
-            }, 5 * 60 * 1000);
+            }, 10 * 60 * 1000);
         }
-
-        // Check connectivity every 30 seconds
-        if (supabase) {
-            setInterval(updateConnectionStatus, 30000);
-        }
-
-        // Listen for online/offline events
-        window.addEventListener('online', updateConnectionStatus);
-        window.addEventListener('offline', updateConnectionStatus);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96832177c4953f24',t:'MTc1NDAyODE4OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9683447ff6dcaa64',t:'MTc1NDAyOTYyNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
