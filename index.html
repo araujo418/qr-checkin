@@ -95,16 +95,12 @@
             <div class="text-center mb-6">
                 <h1 class="text-2xl font-bold text-blue-400 mb-2">📱 InvitesQR Scanner</h1>
                 <p class="text-gray-300">Sistema de controle de convidados</p>
-
-                
-
             </div>
             
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-2">Token do Evento</label>
-                    <input type="text" id="tokenInput" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="evt-xxxxxx">
-                    <p class="text-xs text-gray-400 mt-1">Formato: evt-xxxxxx</p>
+                    <input type="text" id="tokenInput" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Digite o token do evento">
                 </div>
                 
                 <button id="loginBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors min-h-[44px]">
@@ -112,6 +108,10 @@
                 </button>
                 
                 <div id="loginError" class="text-red-500 text-sm text-center hidden"></div>
+                
+                <div class="text-center mt-6 pt-4 border-t border-gray-700">
+                    <p class="text-xs text-gray-500">959 823 409</p>
+                </div>
             </div>
         </div>
     </div>
@@ -125,6 +125,7 @@
                     <h1 class="text-lg font-bold text-blue-400">InvitesQR Scanner</h1>
                     <p id="eventName" class="text-sm text-gray-300"></p>
                     <p id="scanLimit" class="text-xs text-gray-400"></p>
+                    <p id="tokenExpiry" class="text-xs text-yellow-400"></p>
                 </div>
                 <div class="flex items-center space-x-2">
                     <div id="connectionStatus" class="w-3 h-3 rounded-full bg-green-500"></div>
@@ -168,15 +169,6 @@
             <!-- Scanner Tab -->
             <div id="scannerTab" class="tab-content p-4 min-h-full">
                 <div class="space-y-4">
-                    <!-- Scanner Status -->
-                    <div class="bg-gray-800 rounded-lg p-4 text-center">
-                        <div id="scannerStatus" class="text-lg font-medium text-gray-300 mb-2">
-                            Scanner Inativo
-                        </div>
-                        <div id="scannerSubtext" class="text-sm text-gray-400">
-                            Clique em "Ativar Scanner" para começar
-                        </div>
-                    </div>
 
                     <!-- Scanner Container -->
                     <div class="relative bg-gray-800 rounded-lg overflow-hidden">
@@ -282,9 +274,6 @@
                             <button id="exportPdfBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors min-h-[44px] text-sm">
                                 📄 Exportar PDF
                             </button>
-                            <button id="shareDataBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors min-h-[44px] text-sm">
-                                📤 Compartilhar Dados
-                            </button>
                         </div>
                     </div>
 
@@ -340,10 +329,7 @@
                         <h3 class="font-medium text-gray-300 mb-3">💾 Gerenciar Dados</h3>
                         <div class="space-y-3">
                             <button id="syncDataBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors min-h-[44px]">
-                                🔄 Sincronizar Dados
-                            </button>
-                            <button id="clearDataBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-4 rounded-lg transition-colors min-h-[44px]">
-                                🗑️ Limpar Dados Locais
+                                🔄 Verificar Novos Convidados
                             </button>
                         </div>
                     </div>
@@ -805,12 +791,10 @@
 
             // Data management
             document.getElementById('syncDataBtn').addEventListener('click', syncData);
-            document.getElementById('clearDataBtn').addEventListener('click', clearData);
             document.getElementById('logoutBtn').addEventListener('click', logout);
 
             // Export functions
             document.getElementById('exportPdfBtn').addEventListener('click', exportToPDF);
-            document.getElementById('shareDataBtn').addEventListener('click', shareData);
 
             // Close scan result
             document.getElementById('closeScanResult').addEventListener('click', closeScanResult);
@@ -1018,6 +1002,7 @@
         // Update scan limit display
         function updateScanLimitDisplay() {
             const scanLimitElement = document.getElementById('scanLimit');
+            const tokenExpiryElement = document.getElementById('tokenExpiry');
             const currentScans = currentClient.scans_usados || 0;
             const scanLimit = currentClient.limite_scans || 0;
             
@@ -1036,6 +1021,24 @@
             } else {
                 scanLimitElement.textContent = `${currentScans} scans • Ilimitado`;
                 scanLimitElement.className = 'text-xs text-gray-400';
+            }
+            
+            // Show token expiry date
+            if (currentClient.validade) {
+                const expiryDate = new Date(currentClient.validade * 1000);
+                const now = new Date();
+                const daysUntilExpiry = Math.ceil((expiryDate - now) / (1000 * 60 * 60 * 24));
+                
+                if (daysUntilExpiry > 0) {
+                    tokenExpiryElement.textContent = `Expira em ${daysUntilExpiry} dia(s) - ${expiryDate.toLocaleDateString()}`;
+                    tokenExpiryElement.className = daysUntilExpiry <= 3 ? 'text-xs text-red-400' : 'text-xs text-yellow-400';
+                } else {
+                    tokenExpiryElement.textContent = `Token expirado em ${expiryDate.toLocaleDateString()}`;
+                    tokenExpiryElement.className = 'text-xs text-red-400';
+                }
+            } else {
+                tokenExpiryElement.textContent = 'Token sem data de expiração';
+                tokenExpiryElement.className = 'text-xs text-gray-400';
             }
         }
 
@@ -1157,7 +1160,19 @@
                 }
 
                 updateScannerStatus('Scanner Ativo', 'Câmera traseira ativa - posicione o QR code');
-                document.getElementById('scannerMessage').textContent = 'Scanner sempre ativo - aguardando QR code';
+                document.getElementById('scannerMessage').textContent = 'Posicione o QR code na área destacada';
+                
+                // Hide scanner message after 3 seconds
+                setTimeout(() => {
+                    const messageEl = document.getElementById('scannerMessage');
+                    if (messageEl) {
+                        messageEl.style.opacity = '0';
+                        setTimeout(() => {
+                            messageEl.textContent = '';
+                            messageEl.style.opacity = '1';
+                        }, 300);
+                    }
+                }, 3000);
 
             } catch (error) {
                 console.error('Error starting scanner:', error);
@@ -1404,10 +1419,9 @@
             }
         }
 
-        // Update scanner status
+        // Update scanner status (removed - no longer needed)
         function updateScannerStatus(status, subtext) {
-            document.getElementById('scannerStatus').textContent = status;
-            document.getElementById('scannerSubtext').textContent = subtext;
+            // Scanner status display removed
         }
 
         // Update progress
@@ -1551,11 +1565,10 @@
                         </div>
                         <div>
                             <div class="font-medium text-sm ${isScanned ? 'text-green-400' : 'text-white'}">${guest.nome}</div>
-                            <div class="text-xs text-gray-400">${guest.codigo}</div>
                         </div>
                     </div>
                     <div class="text-lg">
-                        ${isScanned ? '✅' : '⏳'}
+                        ${isScanned ? '✅' : ''}
                     </div>
                 `;
                 fragment.appendChild(guestElement);
@@ -1608,8 +1621,16 @@
 
         function toggleTheme() {
             isDarkTheme = !isDarkTheme;
-            document.getElementById('themeToggle').textContent = isDarkTheme ? '🌙' : '☀️';
-            // Theme switching would be implemented here
+            const themeBtn = document.getElementById('themeToggle');
+            const body = document.body;
+            
+            if (isDarkTheme) {
+                themeBtn.textContent = '🌙';
+                body.className = 'bg-gray-900 text-white min-h-screen';
+            } else {
+                themeBtn.textContent = '☀️';
+                body.className = 'bg-gray-100 text-gray-900 min-h-screen';
+            }
         }
 
         function updateToggleButton(buttonId, enabled) {
@@ -1659,10 +1680,13 @@
                 return;
             }
 
-            document.getElementById('syncDataBtn').textContent = 'Sincronizando...';
+            document.getElementById('syncDataBtn').textContent = 'Verificando...';
             
             try {
-                // Sync guests data
+                // Get current guest count
+                const currentGuestCount = guests.length;
+                
+                // Sync guests data (only check for new guests)
                 const { data: guestsData, error: guestsError } = await supabase
                     .from('convidados')
                     .select('*')
@@ -1670,29 +1694,19 @@
 
                 if (guestsError) throw guestsError;
 
-                guests = guestsData || [];
-                localStorage.setItem(STORAGE_KEYS.GUESTS_DATA, JSON.stringify(guests));
-
-                // Sync logs data
-                const { data: logsData, error: logsError } = await supabase
-                    .from('logs')
-                    .select('*')
-                    .eq('token', currentClient.token)
-                    .eq('status', 'PERMITIDO');
-
-                if (logsError) throw logsError;
-
-                // Extract guest codes from logs
-                const scannedCodes = new Set();
-                logsData.forEach(log => {
-                    // Find the guest that matches this log entry
-                    const guest = guests.find(g => log.dispositivo.includes(g.nome));
-                    if (guest) {
-                        scannedCodes.add(guest.codigo);
-                    }
-                });
-                scannedGuests = scannedCodes;
-                localStorage.setItem(STORAGE_KEYS.SCANNED_GUESTS, JSON.stringify([...scannedGuests]));
+                const newGuests = guestsData || [];
+                const newGuestCount = newGuests.length;
+                
+                // Only update if there are new guests
+                if (newGuestCount > currentGuestCount) {
+                    guests = newGuests;
+                    localStorage.setItem(STORAGE_KEYS.GUESTS_DATA, JSON.stringify(guests));
+                    
+                    const addedCount = newGuestCount - currentGuestCount;
+                    showSmartMessage(`✅ ${addedCount} novo(s) convidado(s) adicionado(s)!`);
+                } else {
+                    showSmartMessage('✅ Nenhum novo convidado encontrado');
+                }
 
                 // Update last sync time
                 localStorage.setItem(STORAGE_KEYS.LAST_SYNC, Date.now().toString());
@@ -1702,32 +1716,16 @@
                 updateStats();
                 renderGuestList();
                 
-                document.getElementById('syncDataBtn').textContent = '🔄 Sincronizar Dados';
-                showSmartMessage('✅ Dados sincronizados com sucesso!');
+                document.getElementById('syncDataBtn').textContent = '🔄 Verificar Novos Convidados';
 
             } catch (error) {
                 console.error('Sync error:', error);
-                document.getElementById('syncDataBtn').textContent = '🔄 Sincronizar Dados';
-                showSmartMessage('❌ Erro na sincronização. Verifique sua conexão.');
+                document.getElementById('syncDataBtn').textContent = '🔄 Verificar Novos Convidados';
+                showSmartMessage('❌ Erro na verificação. Verifique sua conexão.');
             }
         }
 
-        function clearData() {
-            if (confirm('Tem certeza que deseja limpar todos os dados locais? Esta ação não pode ser desfeita.')) {
-                Object.values(STORAGE_KEYS).forEach(key => {
-                    localStorage.removeItem(key);
-                });
-                
-                scannedGuests.clear();
-                sessionScans = 0;
-                
-                updateProgress();
-                updateStats();
-                renderGuestList();
-                
-                showSmartMessage('🗑️ Dados locais limpos com sucesso!');
-            }
-        }
+
 
         function logout() {
             if (confirm('Tem certeza que deseja sair?')) {
@@ -1757,27 +1755,7 @@
             }, 2000);
         }
 
-        function shareData() {
-            const data = {
-                evento: currentClient.nome,
-                totalScans: scannedGuests.size,
-                sessionScans: sessionScans,
-                data: new Date().toLocaleDateString()
-            };
-            
-            const text = `Relatório InvitesQR\nEvento: ${data.evento}\nTotal: ${data.totalScans} scans\nSessão: ${data.sessionScans} scans\nData: ${data.data}`;
-            
-            if (navigator.share) {
-                navigator.share({
-                    title: 'Relatório InvitesQR',
-                    text: text
-                });
-            } else {
-                navigator.clipboard.writeText(text).then(() => {
-                    showSmartMessage('📋 Dados copiados para a área de transferência!');
-                });
-            }
-        }
+
 
         // Check actual connectivity
         async function checkConnectivity() {
@@ -1875,5 +1853,5 @@
             }, 10 * 60 * 1000);
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96839f66e217e2c5',t:'MTc1NDAzMzM0OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'968481ddc4f477da',t:'MTc1NDA0MjYyMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
