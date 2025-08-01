@@ -79,6 +79,14 @@
             background: rgba(239, 68, 68, 0.9);
             backdrop-filter: blur(4px);
         }
+        .touch-manipulation {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        button, .tab-btn {
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen">
@@ -88,30 +96,9 @@
             <div class="text-center mb-6">
                 <h1 class="text-2xl font-bold text-blue-400 mb-2">📱 InvitesQR Scanner</h1>
                 <p class="text-gray-300">Sistema de controle de convidados</p>
-                <div id="configMessage" class="mt-4 p-3 bg-red-900 border border-red-600 rounded-lg text-left">
-                    <p class="text-red-200 text-sm font-medium mb-2"⚠️ Configuração Necessária:</p>
-                    <p class="text-red-100 text-xs mb-3">
-                        Configure suas credenciais do Supabase no código:<br>
-                        • SUPABASE_URL: Sua URL do projeto<br>
-                        • SUPABASE_KEY: Sua chave pública (anon key)
-                    </p>
-                    <p class="text-red-200 text-xs font-medium mb-2">📋 Estrutura do Banco:</p>
-                    <p class="text-red-100 text-xs">
-                        Crie as tabelas:<br>
-                        • <strong>clientes</strong>: id, nome, token, validade, scans_usados, limite_scans<br>
-                        • <strong>convidados</strong>: id, nome, codigo, token_cliente, status<br>
-                        • <strong>logs</strong>: id, token, data, status, dispositivo, tentativas, modo_rapido
-                    </p>
-                </div>
+
                 
-                <div id="demoMessage" class="mt-4 p-3 bg-yellow-900 border border-yellow-600 rounded-lg text-left hidden">
-                    <p class="text-yellow-200 text-sm font-medium mb-2">🎭 Modo Demo Ativo:</p>
-                    <p class="text-yellow-100 text-xs">
-                        Sistema funcionando com dados de demonstração.<br>
-                        • Token de teste: <strong>evt-demo123</strong><br>
-                        • 8 convidados fictícios disponíveis
-                    </p>
-                </div>
+
             </div>
             
             <div class="space-y-4">
@@ -131,7 +118,7 @@
     </div>
 
     <!-- Main App -->
-    <div id="mainApp" class="hidden min-h-screen">
+    <div id="mainApp" class="hidden min-h-screen flex flex-col">
         <!-- Header -->
         <header class="bg-gray-800 shadow-lg p-4">
             <div class="flex items-center justify-between">
@@ -168,19 +155,19 @@
         <!-- Tab Navigation -->
         <nav class="bg-gray-800 border-b border-gray-700">
             <div class="flex">
-                <button class="tab-btn flex-1 py-3 px-4 text-center font-medium transition-colors bg-blue-600 text-white" data-tab="scanner">
+                <button class="tab-btn flex-1 py-4 px-4 text-center font-medium transition-colors bg-blue-600 text-white min-h-[56px] touch-manipulation" data-tab="scanner">
                     📸 Scanner
                 </button>
-                <button class="tab-btn flex-1 py-3 px-4 text-center font-medium transition-colors text-gray-300 hover:text-white" data-tab="settings">
+                <button class="tab-btn flex-1 py-4 px-4 text-center font-medium transition-colors text-gray-300 hover:text-white min-h-[56px] touch-manipulation" data-tab="settings">
                     ⚙️ Opções
                 </button>
             </div>
         </nav>
 
         <!-- Tab Contents -->
-        <div class="swipe-container flex-1">
+        <div class="swipe-container flex-1 overflow-y-auto">
             <!-- Scanner Tab -->
-            <div id="scannerTab" class="tab-content p-4">
+            <div id="scannerTab" class="tab-content p-4 min-h-full">
                 <div class="space-y-4">
                     <!-- Scanner Status -->
                     <div class="bg-gray-800 rounded-lg p-4 text-center">
@@ -210,7 +197,7 @@
 
                     <!-- Scanner Controls -->
                     <div class="space-y-3">
-                        <button id="nextGuestBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-4 px-4 rounded-lg transition-colors min-h-[44px] text-lg">
+                        <button id="nextGuestBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-5 px-4 rounded-lg transition-colors min-h-[56px] text-lg touch-manipulation">
                             📸 Ativar Scanner
                         </button>
                         
@@ -234,7 +221,7 @@
 
 
             <!-- Settings Tab -->
-            <div id="settingsTab" class="tab-content p-4 hidden">
+            <div id="settingsTab" class="tab-content p-4 min-h-full hidden">
                 <div class="space-y-4">
                     <!-- Convidados -->
                     <div class="bg-gray-800 rounded-lg p-4">
@@ -250,13 +237,13 @@
 
                         <!-- Filter Buttons -->
                         <div class="flex space-x-2 overflow-x-auto pb-3 mb-3">
-                            <button class="filter-btn bg-blue-600 text-white px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px] text-sm" data-filter="all">
+                            <button class="filter-btn bg-blue-600 text-white px-4 py-3 rounded-lg whitespace-nowrap min-h-[48px] text-sm touch-manipulation" data-filter="all">
                                 Todos
                             </button>
-                            <button class="filter-btn bg-gray-700 text-gray-300 px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px] text-sm" data-filter="scanned">
+                            <button class="filter-btn bg-gray-700 text-gray-300 px-4 py-3 rounded-lg whitespace-nowrap min-h-[48px] text-sm touch-manipulation" data-filter="scanned">
                                 Escaneados
                             </button>
-                            <button class="filter-btn bg-gray-700 text-gray-300 px-4 py-2 rounded-lg whitespace-nowrap min-h-[44px] text-sm" data-filter="pending">
+                            <button class="filter-btn bg-gray-700 text-gray-300 px-4 py-3 rounded-lg whitespace-nowrap min-h-[48px] text-sm touch-manipulation" data-filter="pending">
                                 Pendentes
                             </button>
                         </div>
@@ -414,7 +401,10 @@
 
         <!-- Scan Result Toast -->
         <div id="scanResultToast" class="fixed top-20 left-4 right-4 p-4 rounded-lg shadow-lg transform -translate-y-full transition-transform z-40">
-            <div id="scanResultContent" class="font-medium text-center"></div>
+            <div class="flex items-center justify-between">
+                <div id="scanResultContent" class="font-medium flex-1"></div>
+                <button id="closeScanResult" class="ml-3 text-white hover:text-gray-300 text-xl font-bold">×</button>
+            </div>
         </div>
     </div>
 
@@ -557,17 +547,7 @@
 
         // Initialize App
         document.addEventListener('DOMContentLoaded', async function() {
-            // Show configuration message if Supabase not configured
-            if (!supabase) {
-                document.getElementById('configMessage').classList.remove('hidden');
-                document.getElementById('demoMessage').classList.add('hidden');
-                document.getElementById('loginBtn').disabled = true;
-                document.getElementById('loginBtn').textContent = 'Configure o Supabase';
-                return;
-            } else {
-                document.getElementById('configMessage').classList.add('hidden');
-                document.getElementById('demoMessage').classList.add('hidden');
-            }
+
             
             // Initialize app only once
             if (!isAppInitialized) {
@@ -580,27 +560,36 @@
             await checkAutoLogin();
         });
 
-        // Load saved data from localStorage
+        // Load saved data from localStorage (token-specific)
         function loadSavedData() {
             try {
-                const savedScannedGuests = localStorage.getItem(STORAGE_KEYS.SCANNED_GUESTS);
-                if (savedScannedGuests) {
-                    scannedGuests = new Set(JSON.parse(savedScannedGuests));
-                }
+                if (currentClient?.token) {
+                    const tokenPrefix = `${currentClient.token}_`;
+                    
+                    const savedScannedGuests = localStorage.getItem(tokenPrefix + STORAGE_KEYS.SCANNED_GUESTS);
+                    if (savedScannedGuests) {
+                        scannedGuests = new Set(JSON.parse(savedScannedGuests));
+                        console.log('📂 Carregados', scannedGuests.size, 'scans salvos para token:', currentClient.token);
+                    }
 
-                const savedSessionScans = localStorage.getItem(STORAGE_KEYS.SESSION_SCANS);
-                if (savedSessionScans) {
-                    sessionScans = parseInt(savedSessionScans);
-                }
+                    const savedSessionScans = localStorage.getItem(tokenPrefix + STORAGE_KEYS.SESSION_SCANS);
+                    if (savedSessionScans) {
+                        sessionScans = parseInt(savedSessionScans);
+                    }
 
-                const savedClientData = localStorage.getItem(STORAGE_KEYS.CLIENT_DATA);
-                if (savedClientData) {
-                    currentClient = JSON.parse(savedClientData);
-                }
+                    const savedClientData = localStorage.getItem(STORAGE_KEYS.CLIENT_DATA);
+                    if (savedClientData) {
+                        const parsedClient = JSON.parse(savedClientData);
+                        // Only load if same token
+                        if (parsedClient.token === currentClient.token) {
+                            currentClient = parsedClient;
+                        }
+                    }
 
-                const savedGuestsData = localStorage.getItem(STORAGE_KEYS.GUESTS_DATA);
-                if (savedGuestsData) {
-                    guests = JSON.parse(savedGuestsData);
+                    const savedGuestsData = localStorage.getItem(STORAGE_KEYS.GUESTS_DATA);
+                    if (savedGuestsData) {
+                        guests = JSON.parse(savedGuestsData);
+                    }
                 }
             } catch (error) {
                 console.error('Error loading saved data:', error);
@@ -630,14 +619,14 @@
 
                 if (error || !clientData) {
                     console.log('❌ Token inválido ou não encontrado');
-                    clearInvalidToken('Token não encontrado ou inválido');
+                    clearInvalidToken('❌ TOKEN INVÁLIDO - Token não encontrado no sistema');
                     return;
                 }
 
                 // Check if token expired
                 if (clientData.validade && new Date(clientData.validade * 1000) < new Date()) {
                     console.log('❌ Token expirado');
-                    clearInvalidToken('Token expirado');
+                    clearInvalidToken('❌ TOKEN EXPIRADO - Token vencido');
                     return;
                 }
 
@@ -651,6 +640,11 @@
                     .eq('token_cliente', savedToken);
                 
                 guests = guestsData || [];
+                
+                // Load saved data from localStorage (persistent across refreshes)
+                loadSavedData();
+                
+                // Also load from database to sync
                 await loadExistingScans();
                 
                 showMainApp();
@@ -663,21 +657,66 @@
             }
         }
 
-        // Clear invalid token and show login screen
-        function clearInvalidToken(reason) {
-            console.log('🧹 Limpando token inválido:', reason);
+        // Clear ALL previous data (used on every new login attempt)
+        function clearAllPreviousData() {
+            // Stop any running processes
+            if (tokenValidationInterval) {
+                clearInterval(tokenValidationInterval);
+                tokenValidationInterval = null;
+            }
             
-            // Clear all stored data
+            if (scanTimeout) {
+                clearTimeout(scanTimeout);
+                scanTimeout = null;
+            }
+            
+            // Stop scanner if running
+            if (isScanning && html5QrCode && html5QrCode.isScanning) {
+                try {
+                    html5QrCode.stop().catch(console.error);
+                } catch (error) {
+                    console.error('Error stopping scanner:', error);
+                }
+            }
+            
+            // Clear ALL localStorage data
             localStorage.removeItem('invitesqr_token');
             Object.values(STORAGE_KEYS).forEach(key => {
                 localStorage.removeItem(key);
             });
 
-            // Reset app state
+            // Reset ALL app state variables
             currentClient = null;
             guests = [];
             scannedGuests.clear();
             sessionScans = 0;
+            scanAttempts.clear();
+            scanHistory = [];
+            lastScanTime = 0;
+            sessionStartTime = Date.now();
+            isScanning = false;
+            canScan = false;
+            
+            // Reset UI elements
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const recentScans = document.getElementById('recentScans');
+            
+            if (progressBar) progressBar.style.width = '0%';
+            if (progressText) progressText.textContent = '0 scans';
+            if (recentScans) {
+                recentScans.innerHTML = '<div class="text-gray-400 text-sm text-center py-4">Nenhum scan realizado ainda</div>';
+            }
+            
+            console.log('✅ Todos os dados anteriores foram limpos');
+        }
+
+        // Clear invalid token and show login screen
+        function clearInvalidToken(reason) {
+            console.log('🧹 Limpando token inválido:', reason);
+            
+            // Use the comprehensive clear function
+            clearAllPreviousData();
 
             // Show login screen with message
             mainApp.classList.add('hidden');
@@ -686,9 +725,9 @@
             loginBtn.textContent = 'Entrar';
             loginBtn.disabled = false;
             
-            if (reason !== 'Token não encontrado ou inválido') {
-                showLoginError(reason + '. Por favor, faça login novamente.');
-            }
+            // Always show the error message for invalid tokens
+            showLoginError(reason);
+            playFeedback('error');
         }
 
         // Start token validation interval (less frequent)
@@ -697,10 +736,10 @@
                 clearInterval(tokenValidationInterval);
             }
 
-            // Check token validity every 2 minutes (less frequent)
+            // Check token validity every 30 seconds (more frequent)
             tokenValidationInterval = setInterval(async () => {
                 await validateCurrentToken();
-            }, 120000);
+            }, 30000);
         }
 
         // Validate current token (simplified)
@@ -715,13 +754,13 @@
                     .single();
 
                 if (error?.code === 'PGRST116' || !clientData) {
-                    clearInvalidToken('Token removido do sistema');
+                    clearInvalidToken('❌ TOKEN INVÁLIDO - Token removido do sistema');
                     return;
                 }
 
                 // Check if token expired
                 if (clientData.validade && new Date(clientData.validade * 1000) < new Date()) {
-                    clearInvalidToken('Token expirado');
+                    clearInvalidToken('❌ TOKEN EXPIRADO - Token vencido');
                     return;
                 }
 
@@ -774,6 +813,9 @@
             document.getElementById('exportPdfBtn').addEventListener('click', exportToPDF);
             document.getElementById('shareDataBtn').addEventListener('click', shareData);
 
+            // Close scan result
+            document.getElementById('closeScanResult').addEventListener('click', closeScanResult);
+
 
 
             // Guest search and filter (debounced)
@@ -811,6 +853,10 @@
                 return;
             }
 
+            // ALWAYS clear all previous data when attempting new login
+            console.log('🧹 Limpando todos os dados do token anterior...');
+            clearAllPreviousData();
+
             loginBtn.textContent = 'Conectando...';
             loginBtn.disabled = true;
 
@@ -845,9 +891,11 @@
                 if (clientError) {
                     console.error('❌ Erro na consulta:', clientError);
                     if (clientError.code === 'PGRST116') {
-                        showLoginError('Token não encontrado na base de dados');
+                        showLoginError('❌ TOKEN INVÁLIDO - Token não encontrado no sistema');
+                        playFeedback('error');
                     } else {
-                        showLoginError(`Erro na consulta: ${clientError.message}`);
+                        showLoginError(`❌ ERRO DE CONEXÃO - ${clientError.message}`);
+                        playFeedback('error');
                     }
                     loginBtn.textContent = 'Entrar';
                     loginBtn.disabled = false;
@@ -856,7 +904,8 @@
 
                 if (!clientData) {
                     console.log('⚠️ Nenhum dado retornado para o token');
-                    showLoginError('Token não encontrado');
+                    showLoginError('❌ TOKEN INVÁLIDO - Token não encontrado no sistema');
+                    playFeedback('error');
                     loginBtn.textContent = 'Entrar';
                     loginBtn.disabled = false;
                     return;
@@ -864,7 +913,8 @@
 
                 // Check if token is still valid (not expired)
                 if (clientData.validade && new Date(clientData.validade * 1000) < new Date()) {
-                    showLoginError('Token expirado. Entre em contato com o organizador.');
+                    showLoginError('❌ TOKEN EXPIRADO - Token vencido, entre em contato com o organizador');
+                    playFeedback('error');
                     loginBtn.textContent = 'Entrar';
                     loginBtn.disabled = false;
                     return;
@@ -879,7 +929,8 @@
                     .eq('token_cliente', token);
 
                 if (guestsError) {
-                    showLoginError('Erro ao carregar convidados');
+                    showLoginError('❌ ERRO - Falha ao carregar convidados do token');
+                    playFeedback('error');
                     loginBtn.textContent = 'Entrar';
                     loginBtn.disabled = false;
                     return;
@@ -909,7 +960,8 @@
 
             } catch (error) {
                 console.error('Login error:', error);
-                showLoginError('Erro de conexão. Verifique sua internet.');
+                showLoginError('❌ ERRO DE CONEXÃO - Verifique sua internet e tente novamente');
+                playFeedback('error');
                 loginBtn.textContent = 'Entrar';
                 loginBtn.disabled = false;
             }
@@ -1248,13 +1300,7 @@
                 if (logError) {
                     console.error('❌ Erro ao registrar log:', logError);
                     console.error('📋 Dados do log que falharam:', logData);
-                    
-                    // Continue with the scan even if log fails
                     console.log('⚠️ Continuando scan mesmo com falha no log...');
-                    showScanResult('⚠️ AVISO', `${guest.nome} - Log não registrado`, 'bg-yellow-500');
-                    playFeedback('warning');
-                    
-                    // Don't return - continue with the scan process
                 } else {
                     console.log('✅ Log registrado com sucesso');
                 }
@@ -1318,9 +1364,16 @@
             
             toast.style.transform = 'translateY(0)';
             
+            // Auto-hide after 5 seconds (increased time)
             setTimeout(() => {
-                toast.style.transform = 'translateY(-100%)';
-            }, 3000);
+                closeScanResult();
+            }, 5000);
+        }
+
+        // Close scan result manually
+        function closeScanResult() {
+            const toast = document.getElementById('scanResultToast');
+            toast.style.transform = 'translateY(-100%)';
         }
 
         // Play feedback
@@ -1763,14 +1816,19 @@
             }
         }
 
-        // Save data
+        // Save data (persistent across refreshes)
         function saveData() {
             try {
-                localStorage.setItem(STORAGE_KEYS.SCANNED_GUESTS, JSON.stringify([...scannedGuests]));
-                localStorage.setItem(STORAGE_KEYS.SESSION_SCANS, sessionScans.toString());
-                localStorage.setItem(STORAGE_KEYS.CLIENT_DATA, JSON.stringify(currentClient));
-                localStorage.setItem(STORAGE_KEYS.GUESTS_DATA, JSON.stringify(guests));
-                localStorage.setItem(STORAGE_KEYS.LAST_SYNC, Date.now().toString());
+                if (currentClient?.token) {
+                    // Save with token prefix to avoid conflicts
+                    const tokenPrefix = `${currentClient.token}_`;
+                    localStorage.setItem(tokenPrefix + STORAGE_KEYS.SCANNED_GUESTS, JSON.stringify([...scannedGuests]));
+                    localStorage.setItem(tokenPrefix + STORAGE_KEYS.SESSION_SCANS, sessionScans.toString());
+                    localStorage.setItem(STORAGE_KEYS.CLIENT_DATA, JSON.stringify(currentClient));
+                    localStorage.setItem(STORAGE_KEYS.GUESTS_DATA, JSON.stringify(guests));
+                    localStorage.setItem(STORAGE_KEYS.LAST_SYNC, Date.now().toString());
+                    console.log('💾 Dados salvos para token:', currentClient.token);
+                }
             } catch (error) {
                 console.error('Error saving data:', error);
             }
@@ -1806,5 +1864,5 @@
             }, 10 * 60 * 1000);
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9683744cf1b0ad07',t:'MTc1NDAzMTU4Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9683931047394807',t:'MTc1NDAzMjg0Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
