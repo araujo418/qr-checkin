@@ -1868,86 +1868,56 @@
             lastScanTime = now;
             
             try {
-                // Clean the scanned text
+                // Clean the scanned text - remove any whitespace and normalize
                 const cleanScannedText = decodedText.toString().trim();
                 console.log('🧹 Cleaned scanned text:', cleanScannedText);
+                console.log('📊 Total guests loaded:', guests.length);
                 
                 let guest = null;
                 
-                // Method 1: Direct exact match
+                // Method 1: Direct exact match with QR code
                 guest = guests.find(g => g.qr_code && g.qr_code.toString().trim() === cleanScannedText);
-                console.log('🔍 Method 1 (exact):', guest ? `Found: ${guest.nome}` : 'Not found');
+                console.log('🔍 Method 1 (QR exact):', guest ? `Found: ${guest.nome}` : 'Not found');
                 
-                // Method 2: Case insensitive match
+                // Method 2: Try by ID if scanned text is numeric
+                if (!guest && /^\d+$/.test(cleanScannedText)) {
+                    guest = guests.find(g => g.id.toString() === cleanScannedText);
+                    console.log('🔍 Method 2 (by ID):', guest ? `Found: ${guest.nome}` : 'Not found');
+                }
+                
+                // Method 3: Case insensitive QR code match
                 if (!guest) {
                     guest = guests.find(g => g.qr_code && 
                         g.qr_code.toString().trim().toLowerCase() === cleanScannedText.toLowerCase());
-                    console.log('🔍 Method 2 (case insensitive):', guest ? `Found: ${guest.nome}` : 'Not found');
+                    console.log('🔍 Method 3 (QR case insensitive):', guest ? `Found: ${guest.nome}` : 'Not found');
                 }
                 
-                // Method 3: Try by ID if scanned text is numeric
-                if (!guest && /^\d+$/.test(cleanScannedText)) {
-                    guest = guests.find(g => g.id.toString() === cleanScannedText);
-                    console.log('🔍 Method 3 (by ID):', guest ? `Found: ${guest.nome}` : 'Not found');
-                }
-                
-                // Method 4: Try by email if it looks like an email
-                if (!guest && cleanScannedText.includes('@')) {
-                    guest = guests.find(g => g.email && 
-                        g.email.toLowerCase().trim() === cleanScannedText.toLowerCase());
-                    console.log('🔍 Method 4 (by email):', guest ? `Found: ${guest.nome}` : 'Not found');
-                }
-                
-                // Method 5: Try by name (exact match)
-                if (!guest) {
-                    guest = guests.find(g => g.nome && 
-                        g.nome.toLowerCase().trim() === cleanScannedText.toLowerCase());
-                    console.log('🔍 Method 5 (by name exact):', guest ? `Found: ${guest.nome}` : 'Not found');
-                }
-                
-                // Method 6: Try partial name match
-                if (!guest && cleanScannedText.length > 3) {
-                    guest = guests.find(g => g.nome && 
-                        g.nome.toLowerCase().includes(cleanScannedText.toLowerCase()));
-                    console.log('🔍 Method 6 (partial name):', guest ? `Found: ${guest.nome}` : 'Not found');
-                }
-                
-                // Method 7: Try to find any field that contains the scanned text
-                if (!guest && cleanScannedText.length > 2) {
-                    guest = guests.find(g => {
-                        const searchFields = [
-                            g.qr_code?.toString(),
-                            g.nome?.toString(),
-                            g.email?.toString(),
-                            g.id?.toString()
-                        ].filter(Boolean);
-                        
-                        return searchFields.some(field => 
-                            field.toLowerCase().includes(cleanScannedText.toLowerCase()) ||
-                            cleanScannedText.toLowerCase().includes(field.toLowerCase())
-                        );
-                    });
-                    console.log('🔍 Method 7 (any field contains):', guest ? `Found: ${guest.nome}` : 'Not found');
-                }
-                
-                // Debug: Show what we're comparing against
+                // Debug: Show what we're comparing against if not found
                 if (!guest) {
                     console.log('❌ QR Code not found. Debugging info:');
-                    console.log('Scanned:', cleanScannedText);
-                    console.log('Available QR codes:', guests.map(g => g.qr_code).filter(Boolean).slice(0, 10));
-                    console.log('Available IDs:', guests.map(g => g.id).slice(0, 10));
-                    console.log('Available names:', guests.map(g => g.nome).slice(0, 5));
+                    console.log('Scanned text:', `"${cleanScannedText}"`);
+                    console.log('Scanned text length:', cleanScannedText.length);
+                    console.log('Scanned text type:', typeof cleanScannedText);
                     
-                    // Show detailed comparison for first few guests
-                    guests.slice(0, 3).forEach((g, index) => {
-                        console.log(`Guest ${index + 1}:`, {
-                            id: g.id,
-                            nome: g.nome,
-                            qr_code: g.qr_code,
-                            qr_matches: g.qr_code === cleanScannedText,
-                            id_matches: g.id.toString() === cleanScannedText
-                        });
-                    });
+                    // Show first 10 QR codes from database
+                    const availableQRCodes = guests.map(g => ({
+                        id: g.id,
+                        nome: g.nome,
+                        qr_code: g.qr_code,
+                        qr_type: typeof g.qr_code,
+                        qr_length: g.qr_code ? g.qr_code.toString().length : 0
+                    })).slice(0, 10);
+                    
+                    console.log('Available QR codes (first 10):', availableQRCodes);
+                    
+                    // Check for exact matches manually
+                    const exactMatches = guests.filter(g => g.qr_code && g.qr_code.toString().trim() === cleanScannedText);
+                    console.log('Exact matches found:', exactMatches.length);
+                    
+                    // Check for case insensitive matches
+                    const caseInsensitiveMatches = guests.filter(g => g.qr_code && 
+                        g.qr_code.toString().trim().toLowerCase() === cleanScannedText.toLowerCase());
+                    console.log('Case insensitive matches found:', caseInsensitiveMatches.length);
                 }
                 
                 if (!guest) {
@@ -2227,7 +2197,7 @@
                                 <h4 class="font-medium ${isVip ? 'text-yellow-300' : 'text-white'}">${guest.nome}</h4>
                                 ${isVip ? '<i class="fas fa-crown text-yellow-500 ml-2"></i>' : ''}
                             </div>
-                            <p class="text-sm text-gray-400">${guest.email || 'Sem email'}</p>
+                            <p class="text-sm text-gray-400">ID: ${guest.id} | QR: ${guest.qr_code || 'N/A'}</p>
                             ${isVip ? '<p class="text-xs text-yellow-400 font-medium">VIP</p>' : ''}
                         </div>
                         <div class="flex items-center space-x-2">
@@ -2252,9 +2222,9 @@
             
             guestItems.forEach(item => {
                 const guestName = item.querySelector('h4').textContent.toLowerCase();
-                const guestEmail = item.querySelector('p').textContent.toLowerCase();
+                const guestInfo = item.querySelector('p').textContent.toLowerCase();
                 
-                if (guestName.includes(searchTerm) || guestEmail.includes(searchTerm)) {
+                if (guestName.includes(searchTerm) || guestInfo.includes(searchTerm)) {
                     item.style.display = 'block';
                 } else {
                     item.style.display = 'none';
@@ -2607,5 +2577,5 @@ Progresso: ${guests.length > 0 ? Math.round((scannedGuests.size / guests.length)
             }
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'968263bbb2c177d7',t:'MTc1NDAyMDQxOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96827375024577d7',t:'MTc1NDAyMTA2Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
