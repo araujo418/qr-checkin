@@ -10,8 +10,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         .swipe-container {
-            touch-action: pan-x;
+            touch-action: auto;
             overflow-x: hidden;
+            overflow-y: auto;
         }
         .tab-content {
             transition: transform 0.3s ease-out;
@@ -80,12 +81,10 @@
             backdrop-filter: blur(4px);
         }
         .touch-manipulation {
-            touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
         }
         button, .tab-btn {
             -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
         }
     </style>
 </head>
@@ -155,10 +154,10 @@
         <!-- Tab Navigation -->
         <nav class="bg-gray-800 border-b border-gray-700">
             <div class="flex">
-                <button class="tab-btn flex-1 py-4 px-4 text-center font-medium transition-colors bg-blue-600 text-white min-h-[56px] touch-manipulation" data-tab="scanner">
+                <button class="tab-btn flex-1 py-4 px-4 text-center font-medium transition-colors bg-blue-600 text-white min-h-[56px]" data-tab="scanner">
                     📸 Scanner
                 </button>
-                <button class="tab-btn flex-1 py-4 px-4 text-center font-medium transition-colors text-gray-300 hover:text-white min-h-[56px] touch-manipulation" data-tab="settings">
+                <button class="tab-btn flex-1 py-4 px-4 text-center font-medium transition-colors text-gray-300 hover:text-white min-h-[56px]" data-tab="settings">
                     ⚙️ Opções
                 </button>
             </div>
@@ -197,7 +196,7 @@
 
                     <!-- Scanner Controls -->
                     <div class="space-y-3">
-                        <button id="nextGuestBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-5 px-4 rounded-lg transition-colors min-h-[56px] text-lg touch-manipulation">
+                        <button id="nextGuestBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-5 px-4 rounded-lg transition-colors min-h-[56px] text-lg">
                             📸 Ativar Scanner
                         </button>
                         
@@ -237,13 +236,13 @@
 
                         <!-- Filter Buttons -->
                         <div class="flex space-x-2 overflow-x-auto pb-3 mb-3">
-                            <button class="filter-btn bg-blue-600 text-white px-4 py-3 rounded-lg whitespace-nowrap min-h-[48px] text-sm touch-manipulation" data-filter="all">
+                            <button class="filter-btn bg-blue-600 text-white px-4 py-3 rounded-lg whitespace-nowrap min-h-[48px] text-sm" data-filter="all">
                                 Todos
                             </button>
-                            <button class="filter-btn bg-gray-700 text-gray-300 px-4 py-3 rounded-lg whitespace-nowrap min-h-[48px] text-sm touch-manipulation" data-filter="scanned">
+                            <button class="filter-btn bg-gray-700 text-gray-300 px-4 py-3 rounded-lg whitespace-nowrap min-h-[48px] text-sm" data-filter="scanned">
                                 Escaneados
                             </button>
-                            <button class="filter-btn bg-gray-700 text-gray-300 px-4 py-3 rounded-lg whitespace-nowrap min-h-[48px] text-sm touch-manipulation" data-filter="pending">
+                            <button class="filter-btn bg-gray-700 text-gray-300 px-4 py-3 rounded-lg whitespace-nowrap min-h-[48px] text-sm" data-filter="pending">
                                 Pendentes
                             </button>
                         </div>
@@ -1359,12 +1358,18 @@
             const toast = document.getElementById('scanResultToast');
             const content = document.getElementById('scanResultContent');
             
+            // Reset and show toast
+            toast.style.display = 'block';
             toast.className = `fixed top-20 left-4 right-4 p-4 rounded-lg shadow-lg transform transition-transform z-40 ${bgClass} text-white`;
             content.innerHTML = `<div class="text-lg font-bold">${status}</div><div class="text-sm">${message}</div>`;
             
-            toast.style.transform = 'translateY(0)';
+            // Start from hidden position and animate to visible
+            toast.style.transform = 'translateY(-100%)';
+            setTimeout(() => {
+                toast.style.transform = 'translateY(0)';
+            }, 10);
             
-            // Auto-hide after 5 seconds (increased time)
+            // Auto-hide after 5 seconds
             setTimeout(() => {
                 closeScanResult();
             }, 5000);
@@ -1374,6 +1379,12 @@
         function closeScanResult() {
             const toast = document.getElementById('scanResultToast');
             toast.style.transform = 'translateY(-100%)';
+            
+            // Reset toast position after animation completes
+            setTimeout(() => {
+                toast.style.transform = 'translateY(-100%)';
+                toast.style.display = 'none';
+            }, 300);
         }
 
         // Play feedback
@@ -1864,5 +1875,5 @@
             }, 10 * 60 * 1000);
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9683931047394807',t:'MTc1NDAzMjg0Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96839f66e217e2c5',t:'MTc1NDAzMzM0OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
