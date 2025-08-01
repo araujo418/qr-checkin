@@ -1103,12 +1103,11 @@
             }
         }
 
-        // Activate scanner - now always active
+        // Toggle scanner - activate or deactivate
         async function activateScanner() {
             if (isScanning) {
-                // Scanner already active, just enable scanning
-                canScan = true;
-                updateScannerStatus('Scanner Ativo', 'Pronto para escanear - posicione o QR code');
+                // Scanner is active, deactivate it
+                deactivateScanner();
                 return;
             }
 
@@ -1162,6 +1161,12 @@
                 updateScannerStatus('Scanner Ativo', 'Câmera traseira ativa - posicione o QR code');
                 document.getElementById('scannerMessage').textContent = 'Posicione o QR code na área destacada';
                 
+                // Update button text to "Desativar Scanner"
+                const scannerBtn = document.getElementById('nextGuestBtn');
+                scannerBtn.textContent = '⏹️ Desativar Scanner';
+                scannerBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                scannerBtn.classList.add('bg-red-600', 'hover:bg-red-700');
+                
                 // Hide scanner message after 3 seconds
                 setTimeout(() => {
                     const messageEl = document.getElementById('scannerMessage');
@@ -1180,6 +1185,12 @@
                 document.getElementById('scannerOverlay').classList.add('hidden');
                 isScanning = false;
                 canScan = false;
+                
+                // Reset button to "Ativar Scanner" on error
+                const scannerBtn = document.getElementById('nextGuestBtn');
+                scannerBtn.textContent = '📸 Ativar Scanner';
+                scannerBtn.classList.remove('bg-red-600', 'hover:bg-red-700');
+                scannerBtn.classList.add('bg-green-600', 'hover:bg-green-700');
                 
                 // Show error message
                 showScanResult('❌ ERRO', 'Não foi possível acessar a câmera traseira', 'bg-red-500');
@@ -1200,6 +1211,12 @@
 
             document.getElementById('scannerOverlay').classList.add('hidden');
             updateScannerStatus('Scanner Parado', 'Clique em "Ativar Scanner" para continuar');
+
+            // Update button text back to "Ativar Scanner"
+            const scannerBtn = document.getElementById('nextGuestBtn');
+            scannerBtn.textContent = '📸 Ativar Scanner';
+            scannerBtn.classList.remove('bg-red-600', 'hover:bg-red-700');
+            scannerBtn.classList.add('bg-green-600', 'hover:bg-green-700');
 
             if (html5QrCode && html5QrCode.isScanning) {
                 html5QrCode.stop().catch(console.error);
@@ -1343,8 +1360,8 @@
                 scannedGuests.add(qrCode);
                 sessionScans++;
                 
-                // Show success message regardless of log/counter errors
-                showScanResult('✅ PERMITIDO', guest.nome, 'bg-green-500');
+                // Show success message with celebration animation
+                showScanResult('✅ PERMITIDO', guest.nome, 'bg-green-500', true);
                 playFeedback('success');
                 
                 console.log('🎉 Scan processado com sucesso para:', guest.nome);
@@ -1356,7 +1373,7 @@
                 addRecentScan(guest);
                 saveData();
 
-                // Check for milestones
+                // Check for milestones and capacity alerts
                 checkMilestones();
 
                 console.log('✅ Convidado marcado como lido:', guest.nome);
@@ -1369,13 +1386,13 @@
         }
 
         // Show scan result
-        function showScanResult(status, message, bgClass) {
+        function showScanResult(status, message, bgClass, isSuccess = false) {
             const toast = document.getElementById('scanResultToast');
             const content = document.getElementById('scanResultContent');
             
             // Reset and show toast
             toast.style.display = 'block';
-            toast.className = `fixed top-20 left-4 right-4 p-4 rounded-lg shadow-lg transform transition-transform z-40 ${bgClass} text-white`;
+            toast.className = `fixed top-20 left-4 right-4 p-4 rounded-lg shadow-lg transform transition-transform z-40 ${bgClass} text-white ${isSuccess ? 'success-celebration' : ''}`;
             content.innerHTML = `<div class="text-lg font-bold">${status}</div><div class="text-sm">${message}</div>`;
             
             // Start from hidden position and animate to visible
@@ -1471,7 +1488,7 @@
             scanElement.innerHTML = `
                 <div>
                     <div class="font-medium text-green-400">${guest.nome}</div>
-                    <div class="text-xs text-gray-400">${guest.codigo} • ${new Date().toLocaleTimeString()}</div>
+                    <div class="text-xs text-gray-400">${new Date().toLocaleTimeString()}</div>
                 </div>
                 <div class="text-green-400">✅</div>
             `;
@@ -1488,12 +1505,23 @@
             }
         }
 
-        // Check milestones
+        // Check milestones and capacity alerts
         function checkMilestones() {
             if (!smartMessagesEnabled) return;
 
             const milestones = [10, 25, 50, 100];
             const currentCount = scannedGuests.size;
+            const totalGuests = guests.length;
+            
+            // Check capacity alert (80%)
+            const capacityThreshold = Math.floor(totalGuests * 0.8);
+            if (currentCount === capacityThreshold && totalGuests > 10) {
+                setTimeout(() => {
+                    showSmartMessage('⚠️ ATENÇÃO: 80% da capacidade atingida!');
+                    playFeedback('warning');
+                }, 500);
+                return; // Don't show milestone if showing capacity alert
+            }
             
             if (milestones.includes(currentCount)) {
                 const messages = {
@@ -1853,5 +1881,5 @@
             }, 10 * 60 * 1000);
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'968481ddc4f477da',t:'MTc1NDA0MjYyMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'968491e7e78077d7',t:'MTc1NDA0MzI4MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
