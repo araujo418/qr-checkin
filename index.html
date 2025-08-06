@@ -57,6 +57,9 @@
         .dark .hover\:bg-gray-200:hover { background-color: #6b7280; }
         .dark .hover\:text-gray-700:hover { color: #d1d5db; }
         .dark .hover\:border-gray-300:hover { border-color: #9ca3af; }
+        .dark .hover\:bg-gray-50:hover { background-color: #4b5563; }
+        .dark .bg-green-50 { background-color: #064e3b; }
+        .dark .divide-gray-200 > * + * { border-color: #4b5563; }
 
         /* Dark Gray Theme */
         .dark-gray {
@@ -167,18 +170,10 @@
                     <!-- Scanner Principal -->
                     <div class="lg:col-span-2">
                         <div class="bg-white rounded-xl shadow-sm p-6">
-                            <div class="text-center mb-4">
-                                <button id="toggleScanner" class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors text-lg font-medium shadow-lg">
-                                    <i class="fas fa-qrcode mr-2"></i>
-                                    <i class="fas fa-play mr-2"></i>
-                                    Iniciar Scanner
-                                </button>
-                            </div>
-                            
                             <div id="scannerContainer" class="scanner-container bg-gray-900 rounded-2xl h-[350px] flex items-center justify-center mx-auto border-4 border-gray-300 shadow-2xl">
                                 <div class="text-center text-gray-400 px-6">
                                     <i class="fas fa-qrcode text-5xl mb-4 text-gray-500"></i>
-                                    <p class="text-lg font-medium">Clique em "Iniciar Scanner"</p>
+                                    <p class="text-lg font-medium">A inicializar scanner...</p>
                                     <p class="text-sm mt-2 text-gray-500">Posicione o QR na área de scan</p>
                                 </div>
                             </div>
@@ -245,7 +240,7 @@
                             <i class="fas fa-chart-bar mr-3 text-blue-600"></i>
                             Estatísticas do Evento
                         </h2>
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                             <div class="bg-green-50 p-4 rounded-lg text-center border border-green-200">
                                 <div class="text-3xl font-bold text-green-600" id="confirmedCount">0</div>
                                 <div class="text-sm text-green-700 mt-1">Confirmados</div>
@@ -253,14 +248,6 @@
                             <div class="bg-yellow-50 p-4 rounded-lg text-center border border-yellow-200">
                                 <div class="text-3xl font-bold text-yellow-600" id="pendingCount">0</div>
                                 <div class="text-sm text-yellow-700 mt-1">Pendentes</div>
-                            </div>
-                            <div class="bg-blue-50 p-4 rounded-lg text-center border border-blue-200">
-                                <div class="text-3xl font-bold text-blue-600" id="scanUsed">0</div>
-                                <div class="text-sm text-blue-700 mt-1">Scans Usados</div>
-                            </div>
-                            <div class="bg-purple-50 p-4 rounded-lg text-center border border-purple-200">
-                                <div class="text-3xl font-bold text-purple-600" id="scanLimit">∞</div>
-                                <div class="text-sm text-purple-700 mt-1">Limite</div>
                             </div>
                         </div>
                         
@@ -305,52 +292,29 @@
                             </div>
                         </div>
                         
-                        <div id="guestList" class="p-6">
-                            <div class="text-center text-gray-500 py-8">
-                                <i class="fas fa-users text-3xl mb-2"></i>
-                                <p>A carregar lista de convidados...</p>
+                        <div class="overflow-hidden">
+                            <div id="guestList" class="max-h-96 overflow-y-auto">
+                                <table class="w-full">
+                                    <thead class="bg-gray-50 sticky top-0">
+                                        <tr>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
+                                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="guestTableBody" class="bg-white divide-y divide-gray-200">
+                                        <tr>
+                                            <td colspan="2" class="text-center text-gray-500 py-8">
+                                                <i class="fas fa-users text-3xl mb-2"></i>
+                                                <p>A carregar lista de convidados...</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Configurações do Scanner -->
-                    <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
-                        <h2 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
-                            <i class="fas fa-qrcode mr-3 text-blue-600"></i>
-                            Configurações do Scanner
-                        </h2>
-                        <div class="space-y-6">
-                            <!-- Modo Rápido -->
-                            <div class="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
-                                <div class="flex-1">
-                                    <h3 class="font-medium text-gray-800 flex items-center">
-                                        <i class="fas fa-bolt mr-2 text-blue-600"></i>
-                                        Modo Rápido
-                                    </h3>
-                                    <p class="text-sm text-gray-600 mt-1">Digitalização contínua sem pausas</p>
-                                </div>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" id="quickModeToggle" class="sr-only peer">
-                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                                </label>
-                            </div>
 
-                            <!-- Flash da Câmara -->
-                            <div class="flex items-center justify-between p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                                <div class="flex-1">
-                                    <h3 class="font-medium text-gray-800 flex items-center">
-                                        <i class="fas fa-flashlight mr-2 text-yellow-600"></i>
-                                        Flash da Câmara
-                                    </h3>
-                                    <p class="text-sm text-gray-600 mt-1">Ativar luz para ambientes escuros</p>
-                                </div>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" id="flashModeToggle" class="sr-only peer">
-                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-yellow-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-600"></div>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
 
                     <!-- Configurações de Feedback -->
                     <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
@@ -400,7 +364,7 @@
                         <div class="space-y-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-3">Tema da Interface</label>
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <label class="relative cursor-pointer">
                                         <input type="radio" name="theme" value="light" class="sr-only peer" checked>
                                         <div class="p-4 border-2 border-gray-200 rounded-lg peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all">
@@ -425,18 +389,6 @@
                                             </div>
                                         </div>
                                     </label>
-                                    <label class="relative cursor-pointer">
-                                        <input type="radio" name="theme" value="darkGray" class="sr-only peer">
-                                        <div class="p-4 border-2 border-gray-200 rounded-lg peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all">
-                                            <div class="flex items-center justify-center mb-2">
-                                                <i class="fas fa-adjust text-2xl text-gray-600"></i>
-                                            </div>
-                                            <div class="text-center">
-                                                <div class="font-medium text-gray-800">Cinza Escuro</div>
-                                                <div class="text-sm text-gray-600">Contraste médio</div>
-                                            </div>
-                                        </div>
-                                    </label>
                                 </div>
                             </div>
                         </div>
@@ -450,7 +402,7 @@
                             <i class="fas fa-bolt mr-3 text-yellow-600"></i>
                             Ações Rápidas
                         </h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <button id="refreshDataBtn" class="bg-gray-600 text-white py-4 px-6 rounded-lg hover:bg-gray-700 transition-colors flex items-center justify-center text-lg font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1">
                                 <i class="fas fa-refresh mr-3"></i>
                                 Atualizar
@@ -462,10 +414,6 @@
                             <button id="exportBtn" class="bg-purple-600 text-white py-4 px-6 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center text-lg font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1">
                                 <i class="fas fa-download mr-3"></i>
                                 Exportar
-                            </button>
-                            <button id="quickScanBtn" class="bg-blue-600 text-white py-4 px-6 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center text-lg font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1">
-                                <i class="fas fa-qrcode mr-3"></i>
-                                Voltar ao Scanner
                             </button>
                         </div>
                     </div>
@@ -506,14 +454,13 @@
         let lastScanResult = null;
         let connectionCheckInterval = null;
         let tokenCheckInterval = null;
+        let autoSyncInterval = null;
         
         // Configurações
         let settings = {
-            quickMode: false,
-            flashMode: false,
             soundEnabled: true,
             vibrationEnabled: true,
-            theme: 'light' // 'light', 'dark', 'darkGray'
+            theme: 'light' // 'light', 'dark'
         };
 
         // Elementos DOM
@@ -525,7 +472,7 @@
         const eventTitle = document.getElementById('eventTitle');
         const scannedCount = document.getElementById('scannedCount');
         const totalGuests = document.getElementById('totalGuests');
-        const toggleScanner = document.getElementById('toggleScanner');
+
         const scannerContainer = document.getElementById('scannerContainer');
         const scanResult = document.getElementById('scanResult');
         const nextScanContainer = document.getElementById('nextScanContainer');
@@ -639,8 +586,7 @@
             // Reativar botões
             const onlineButtons = [
                 document.getElementById('syncBtn'),
-                document.getElementById('refreshDataBtn'),
-                document.getElementById('toggleScanner')
+                document.getElementById('refreshDataBtn')
             ];
             
             onlineButtons.forEach(btn => {
@@ -649,6 +595,13 @@
                     btn.classList.remove('opacity-50', 'cursor-not-allowed');
                 }
             });
+            
+            // Iniciar scanner automaticamente quando voltar online
+            if (!isScanning && currentClient) {
+                setTimeout(() => {
+                    startScanner();
+                }, 1000);
+            }
         }
 
         // Desativar funcionalidades que precisam de internet
@@ -656,8 +609,7 @@
             // Desativar botões que precisam de internet
             const onlineButtons = [
                 document.getElementById('syncBtn'),
-                document.getElementById('refreshDataBtn'),
-                document.getElementById('toggleScanner')
+                document.getElementById('refreshDataBtn')
             ];
             
             onlineButtons.forEach(btn => {
@@ -675,6 +627,23 @@
                 await loadSession();
                 console.log('Dados sincronizados automaticamente após reconexão');
             } catch (error) {
+                console.error('Erro na sincronização automática:', error);
+            }
+        }
+
+        // Sincronização automática silenciosa
+        async function autoSync() {
+            try {
+                const previousGuestCount = guests.length;
+                await loadSession();
+                
+                // Só mostrar notificação se encontrou novos convidados
+                if (guests.length > previousGuestCount) {
+                    const newGuests = guests.length - previousGuestCount;
+                    showNotification(`${newGuests} novo${newGuests > 1 ? 's' : ''} convidado${newGuests > 1 ? 's' : ''} encontrado${newGuests > 1 ? 's' : ''}!`, 'info');
+                }
+            } catch (error) {
+                // Sincronização silenciosa - não mostrar erros
                 console.error('Erro na sincronização automática:', error);
             }
         }
@@ -730,7 +699,10 @@
                             { id: 2, nome: 'Maria Santos', token_cliente: 'TESTE', status: 'pendente', codigo: 'QR002' },
                             { id: 3, nome: 'Pedro Costa', token_cliente: 'TESTE', status: 'pendente', codigo: 'QR003' },
                             { id: 4, nome: 'Ana Oliveira', token_cliente: 'TESTE', status: 'pendente', codigo: 'QR004' },
-                            { id: 5, nome: 'Carlos Lima', token_cliente: 'TESTE', status: 'pendente', codigo: 'QR005' }
+                            { id: 5, nome: 'Carlos Lima', token_cliente: 'TESTE', status: 'pendente', codigo: 'QR005' },
+                            { id: 6, nome: 'Sofia Rodrigues', token_cliente: 'TESTE', status: 'pendente', codigo: 'QR006' },
+                            { id: 7, nome: 'Miguel Ferreira', token_cliente: 'TESTE', status: 'pendente', codigo: 'QR007' },
+                            { id: 8, nome: 'Catarina Alves', token_cliente: 'TESTE', status: 'pendente', codigo: 'QR008' }
                         ];
                         
                         // Guardar token para próximas sessões
@@ -739,7 +711,12 @@
                         scannedGuests = new Set();
                         showMainApp();
                         startMonitoring();
-                        updateUI();
+                        
+                        // Aguardar um pouco para garantir que os elementos DOM estão prontos
+                        setTimeout(() => {
+                            updateUI();
+                            renderGuestList();
+                        }, 100);
                         return;
                     }
                     throw new Error('Token inválido ou expirado');
@@ -787,6 +764,13 @@
                 }
             }, 30000);
             
+            // Sincronização automática a cada 10 segundos
+            autoSyncInterval = setInterval(async () => {
+                if (isOnline && currentClient) {
+                    await autoSync();
+                }
+            }, 10000);
+            
             // Listeners para eventos de conexão do navegador
             window.addEventListener('online', async () => {
                 // Verificar conexão real quando navegador diz que está online
@@ -808,6 +792,7 @@
         function stopMonitoring() {
             if (connectionCheckInterval) clearInterval(connectionCheckInterval);
             if (tokenCheckInterval) clearInterval(tokenCheckInterval);
+            if (autoSyncInterval) clearInterval(autoSyncInterval);
         }
 
         // Carregar sessão
@@ -815,6 +800,11 @@
             try {
                 if (!supabaseClient) {
                     throw new Error('Cliente Supabase não inicializado');
+                }
+                
+                // Verificar se currentClient existe
+                if (!currentClient || !currentClient.token) {
+                    throw new Error('Cliente não inicializado');
                 }
                 
                 // Carregar convidados usando token_cliente
@@ -836,18 +826,24 @@
                 if (scanError) throw scanError;
                 
                 // Criar set de códigos já escaneados
-                scannedGuests = new Set(scanData
-                    .filter(log => log.status === 'escaneado')
-                    .map(log => {
-                        // Encontrar convidado pelo código no log
-                        const guest = guests.find(g => g.codigo === log.dispositivo);
-                        return guest ? guest.id : null;
-                    })
-                    .filter(id => id !== null)
-                );
+                scannedGuests = new Set();
+                if (scanData && Array.isArray(scanData)) {
+                    scanData
+                        .filter(log => log && log.status === 'escaneado' && log.dispositivo)
+                        .forEach(log => {
+                            // Encontrar convidado pelo código no log
+                            const guest = guests.find(g => g && g.codigo === log.dispositivo);
+                            if (guest && guest.id) {
+                                scannedGuests.add(guest.id);
+                            }
+                        });
+                }
                 
-                updateUI();
-                checkMilestones();
+                // Aguardar um pouco para garantir que DOM está pronto
+                setTimeout(() => {
+                    updateUI();
+                    checkMilestones();
+                }, 50);
                 
             } catch (error) {
                 console.error('Erro ao carregar sessão:', error);
@@ -860,6 +856,13 @@
             loginScreen.classList.add('hidden');
             mainApp.classList.remove('hidden');
             eventTitle.textContent = currentClient.nome || 'Evento';
+            
+            // Iniciar scanner automaticamente
+            setTimeout(() => {
+                if (isOnline) {
+                    startScanner();
+                }
+            }, 500);
         }
 
         // Controle das abas
@@ -895,33 +898,56 @@
 
         // Atualizar interface
         function updateUI() {
-            totalGuests.textContent = guests.length;
-            scannedCount.textContent = scannedGuests.size;
-            
-            const confirmed = guests.filter(g => scannedGuests.has(g.id)).length;
-            const pending = guests.length - confirmed;
-            
-            // Atualizar estatísticas principais
-            confirmedCount.textContent = confirmed;
-            pendingCount.textContent = pending;
-            
-            // Atualizar barra de progresso (dashboard)
-            const progressPercentage = guests.length > 0 ? Math.round((confirmed / guests.length) * 100) : 0;
-            progressBar.style.width = `${progressPercentage}%`;
-            progressText.textContent = `${progressPercentage}% dos convidados digitalizados`;
-            
-            // Atualizar barra de progresso do scanner
-            scannerProgressBar.style.width = `${progressPercentage}%`;
-            scannerProgressText.textContent = `${progressPercentage}%`;
-            scannerScannedCount.textContent = confirmed;
-            scannerTotalGuestCount.textContent = guests.length;
-            
-            // Atualizar limites usando os campos corretos
-            const limit = currentClient?.limite_scans || '∞';
-            scanLimit.textContent = limit;
-            scanUsed.textContent = currentClient?.scans_usados || scannedGuests.size;
-            
-            renderGuestList();
+            try {
+                // Verificar se arrays existem e são válidos
+                if (!Array.isArray(guests)) guests = [];
+                if (!scannedGuests || typeof scannedGuests.size !== 'number') scannedGuests = new Set();
+                
+                const guestCount = guests.length;
+                const scannedSize = scannedGuests.size;
+                
+                // Verificar se elementos existem antes de atualizar
+                const totalGuestsEl = document.getElementById('totalGuests');
+                const scannedCountEl = document.getElementById('scannedCount');
+                
+                if (totalGuestsEl) totalGuestsEl.textContent = guestCount;
+                if (scannedCountEl) scannedCountEl.textContent = scannedSize;
+                
+                const confirmed = guests.filter(g => g && g.id && scannedGuests.has(g.id)).length;
+                const pending = guestCount - confirmed;
+                
+                // Atualizar estatísticas principais
+                const confirmedCountEl = document.getElementById('confirmedCount');
+                const pendingCountEl = document.getElementById('pendingCount');
+                
+                if (confirmedCountEl) confirmedCountEl.textContent = confirmed;
+                if (pendingCountEl) pendingCountEl.textContent = pending;
+                
+                // Atualizar barra de progresso (dashboard)
+                const progressPercentage = guestCount > 0 ? Math.round((confirmed / guestCount) * 100) : 0;
+                const progressBarEl = document.getElementById('progressBar');
+                const progressTextEl = document.getElementById('progressText');
+                
+                if (progressBarEl) progressBarEl.style.width = `${progressPercentage}%`;
+                if (progressTextEl) progressTextEl.textContent = `${progressPercentage}% dos convidados digitalizados`;
+                
+                // Atualizar barra de progresso do scanner
+                const scannerProgressBarEl = document.getElementById('scannerProgressBar');
+                const scannerProgressTextEl = document.getElementById('scannerProgressText');
+                const scannerScannedCountEl = document.getElementById('scannerScannedCount');
+                const scannerTotalGuestCountEl = document.getElementById('scannerTotalGuestCount');
+                
+                if (scannerProgressBarEl) scannerProgressBarEl.style.width = `${progressPercentage}%`;
+                if (scannerProgressTextEl) scannerProgressTextEl.textContent = `${progressPercentage}%`;
+                if (scannerScannedCountEl) scannerScannedCountEl.textContent = confirmed;
+                if (scannerTotalGuestCountEl) scannerTotalGuestCountEl.textContent = guestCount;
+                
+                // Renderizar lista de convidados
+                renderGuestList();
+                
+            } catch (error) {
+                console.error('Erro ao atualizar interface:', error);
+            }
         }
 
         // Verificar marcos e notificações
@@ -977,59 +1003,125 @@
 
         // Renderizar lista de convidados
         function renderGuestList() {
-            const searchTerm = searchInput.value.toLowerCase();
-            const filter = filterSelect.value;
-            
-            let filteredGuests = guests.filter(guest => {
-                const matchesSearch = guest.nome.toLowerCase().includes(searchTerm) ||
-                                    (guest.codigo && guest.codigo.toLowerCase().includes(searchTerm));
+            try {
+                const guestTableBody = document.getElementById('guestTableBody');
                 
-                if (filter === 'scanned') return matchesSearch && scannedGuests.has(guest.id);
-                if (filter === 'pending') return matchesSearch && !scannedGuests.has(guest.id);
-                return matchesSearch;
-            });
-            
-            if (filteredGuests.length === 0) {
-                guestList.innerHTML = `
-                    <div class="text-center text-gray-500 py-8">
-                        <i class="fas fa-search text-3xl mb-2"></i>
-                        <p>Nenhum convidado encontrado</p>
-                    </div>
-                `;
-                return;
+                // Verificar se elemento existe
+                if (!guestTableBody) {
+                    console.error('Elemento guestTableBody não encontrado');
+                    return;
+                }
+                
+                // Verificar se há convidados e se é um array válido
+                if (!Array.isArray(guests) || guests.length === 0) {
+                    guestTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="2" class="text-center text-gray-500 py-8">
+                                <i class="fas fa-users text-3xl mb-2"></i>
+                                <p>Nenhum convidado encontrado</p>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                // Obter valores de pesquisa e filtro com verificação de segurança
+                const searchInputEl = document.getElementById('searchInput');
+                const filterSelectEl = document.getElementById('filterSelect');
+                
+                const searchTerm = (searchInputEl && searchInputEl.value) ? searchInputEl.value.toLowerCase() : '';
+                const filter = (filterSelectEl && filterSelectEl.value) ? filterSelectEl.value : 'all';
+                
+                // Filtrar convidados com verificações de segurança
+                let filteredGuests = guests.filter(guest => {
+                    // Verificar se guest é válido
+                    if (!guest || !guest.nome || !guest.id) return false;
+                    
+                    const guestName = guest.nome.toLowerCase();
+                    const guestCode = guest.codigo ? guest.codigo.toLowerCase() : '';
+                    
+                    const matchesSearch = guestName.includes(searchTerm) || guestCode.includes(searchTerm);
+                    
+                    if (filter === 'scanned') return matchesSearch && scannedGuests.has(guest.id);
+                    if (filter === 'pending') return matchesSearch && !scannedGuests.has(guest.id);
+                    return matchesSearch;
+                });
+                
+                // Ordenar: escaneados primeiro, depois por nome
+                filteredGuests.sort((a, b) => {
+                    if (!a || !b || !a.nome || !b.nome) return 0;
+                    
+                    const aScanned = scannedGuests.has(a.id);
+                    const bScanned = scannedGuests.has(b.id);
+                    
+                    if (aScanned && !bScanned) return -1;
+                    if (!aScanned && bScanned) return 1;
+                    return a.nome.localeCompare(b.nome);
+                });
+                
+                if (filteredGuests.length === 0) {
+                    guestTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="2" class="text-center text-gray-500 py-8">
+                                <i class="fas fa-search text-3xl mb-2"></i>
+                                <p>Nenhum convidado encontrado</p>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                // Renderizar lista com verificações de segurança
+                guestTableBody.innerHTML = filteredGuests.map(guest => {
+                    if (!guest || !guest.nome || !guest.id) return '';
+                    
+                    const isScanned = scannedGuests.has(guest.id);
+                    const statusIcon = isScanned ? 'fa-check-circle text-green-600' : 'fa-clock text-yellow-600';
+                    const statusText = isScanned ? 'Escaneado' : 'Pendente';
+                    const rowClass = isScanned ? 'bg-green-50' : '';
+                    
+                    // Escapar HTML para prevenir XSS
+                    const safeName = guest.nome.replace(/[<>&"']/g, function(match) {
+                        const escapeMap = {
+                            '<': '&lt;',
+                            '>': '&gt;',
+                            '&': '&amp;',
+                            '"': '&quot;',
+                            "'": '&#x27;'
+                        };
+                        return escapeMap[match];
+                    });
+                    
+                    return `
+                        <tr class="${rowClass} hover:bg-gray-50">
+                            <td class="px-4 py-3 text-sm font-medium text-gray-900">${safeName}</td>
+                            <td class="px-4 py-3 text-center">
+                                <span class="inline-flex items-center text-sm">
+                                    <i class="fas ${statusIcon} mr-2"></i>
+                                    ${statusText}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                }).filter(row => row !== '').join('');
+                
+            } catch (error) {
+                console.error('Erro ao renderizar lista de convidados:', error);
+                const guestTableBody = document.getElementById('guestTableBody');
+                if (guestTableBody) {
+                    guestTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="2" class="text-center text-red-500 py-8">
+                                <i class="fas fa-exclamation-triangle text-3xl mb-2"></i>
+                                <p>Erro ao carregar lista de convidados</p>
+                            </td>
+                        </tr>
+                    `;
+                }
             }
-            
-            guestList.innerHTML = filteredGuests.map(guest => {
-                const isScanned = scannedGuests.has(guest.id);
-                const statusClass = isScanned ? 'scanned' : 'pending';
-                const statusIcon = isScanned ? 'fa-check-circle' : 'fa-clock';
-                const statusText = isScanned ? 'Escaneado' : 'Pendente';
-                
-                return `
-                    <div class="guest-card ${statusClass} text-white p-4 rounded-lg mb-3">
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <h3 class="font-semibold">${guest.nome}</h3>
-
-                            </div>
-                            <div class="text-right">
-                                <i class="fas ${statusIcon} text-xl mb-1"></i>
-                                <p class="text-sm">${statusText}</p>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
         }
 
-        // Scanner QR Code
-        toggleScanner.addEventListener('click', () => {
-            if (isScanning) {
-                stopScanner();
-            } else {
-                startScanner();
-            }
-        });
+        // Scanner QR Code - Inicialização automática
 
         async function startScanner() {
             try {
@@ -1046,13 +1138,16 @@
                 );
                 
                 isScanning = true;
-                toggleScanner.innerHTML = '<i class="fas fa-stop mr-2"></i>Parar Scanner';
-                toggleScanner.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-                toggleScanner.classList.add('bg-red-600', 'hover:bg-red-700');
                 
             } catch (error) {
                 console.error('Erro ao iniciar scanner:', error);
-                showScanResult('Erro ao acessar câmera', 'error');
+                scannerContainer.innerHTML = `
+                    <div class="text-center text-red-400 px-6">
+                        <i class="fas fa-exclamation-triangle text-5xl mb-4 text-red-500"></i>
+                        <p class="text-lg font-medium">Erro ao acessar câmera</p>
+                        <p class="text-sm mt-2 text-red-500">Verifique as permissões da câmera</p>
+                    </div>
+                `;
             }
         }
 
@@ -1062,54 +1157,78 @@
                     html5QrCode.clear();
                     scannerContainer.innerHTML = `
                         <div class="text-center text-gray-400 px-6">
-                            <i class="fas fa-qrcode text-6xl sm:text-7xl mb-6 text-gray-500"></i>
-                            <p class="text-lg sm:text-xl font-medium">Scanner parado</p>
-                            <p class="text-sm sm:text-base mt-2 text-gray-500">Clique em "Iniciar Scanner" para recomeçar</p>
+                            <i class="fas fa-qrcode text-5xl mb-4 text-gray-500"></i>
+                            <p class="text-lg font-medium">Scanner parado</p>
+                            <p class="text-sm mt-2 text-gray-500">Sem conexão com a internet</p>
                         </div>
                     `;
                 });
             }
             
             isScanning = false;
-            toggleScanner.innerHTML = '<i class="fas fa-qrcode mr-2"></i><i class="fas fa-play mr-2"></i>Iniciar Scanner';
-            toggleScanner.classList.remove('bg-red-600', 'hover:bg-red-700');
-            toggleScanner.classList.add('bg-blue-600', 'hover:bg-blue-700');
         }
 
         async function onScanSuccess(decodedText) {
-            // Se já processou um scan e não está no modo rápido, pausar
-            if (scanPaused && !settings.quickMode) {
+            // Se já processou um scan, pausar
+            if (scanPaused) {
                 return;
             }
             
             try {
-                // Pausar scanner após primeiro scan (se não estiver no modo rápido)
-                if (!settings.quickMode) {
-                    scanPaused = true;
+                // Pausar scanner após primeiro scan
+                scanPaused = true;
+                
+                // Verificar se dados básicos existem
+                if (!decodedText || typeof decodedText !== 'string') {
+                    showScanResult('CÓDIGO INVÁLIDO', '', 'error');
+                    playFeedback('error');
+                    showNextScanButton();
+                    return;
                 }
                 
                 // Verificar conexão
                 if (!isOnline) {
-                    showScanResult('Sem conexão com internet', 'error');
+                    showScanResult('SEM INTERNET', '', 'error');
+                    playFeedback('error');
+                    showNextScanButton();
+                    return;
+                }
+                
+                // Verificar se currentClient existe
+                if (!currentClient || !currentClient.token) {
+                    showScanResult('ERRO DE SESSÃO', '', 'error');
+                    playFeedback('error');
+                    showNextScanButton();
+                    return;
+                }
+                
+                // Verificar se guests é um array válido
+                if (!Array.isArray(guests)) {
+                    showScanResult('ERRO DE DADOS', '', 'error');
+                    playFeedback('error');
                     showNextScanButton();
                     return;
                 }
                 
                 // Procurar convidado pelo código (busca exata e segura)
                 const guest = guests.find(g => {
+                    // Verificar se o convidado e código são válidos
+                    if (!g || !g.codigo || !g.id || !g.nome) return false;
+                    
                     // Verificar se o código escaneado corresponde exatamente ao código do convidado
-                    return g.codigo && g.codigo.trim().toLowerCase() === decodedText.trim().toLowerCase();
+                    return g.codigo.trim().toLowerCase() === decodedText.trim().toLowerCase();
                 });
                 
                 if (!guest) {
-                    showScanResult('INVÁLIDO', '', 'error');
+                    showScanResult('CÓDIGO INVÁLIDO', '', 'error');
                     playFeedback('error');
                     showNextScanButton();
                     return;
                 }
                 
+                // Verificar se já foi escaneado
                 if (scannedGuests.has(guest.id)) {
-                    showScanResult('USADO', guest.nome, 'warning');
+                    showScanResult('JÁ ESCANEADO', guest.nome, 'warning');
                     playFeedback('warning');
                     showNextScanButton();
                     return;
@@ -1125,6 +1244,14 @@
                     return;
                 }
                 
+                // Verificar se Supabase está disponível
+                if (!supabaseClient) {
+                    showScanResult('ERRO DE SISTEMA', '', 'error');
+                    playFeedback('error');
+                    showNextScanButton();
+                    return;
+                }
+                
                 // Registrar scan no Supabase
                 const { error: logError } = await supabaseClient
                     .from('logs')
@@ -1135,7 +1262,10 @@
                         dispositivo: guest.codigo
                     });
                 
-                if (logError) throw logError;
+                if (logError) {
+                    console.error('Erro ao registrar log:', logError);
+                    throw new Error('Erro ao registrar scan');
+                }
                 
                 // Atualizar contador de scans usados no cliente
                 const { error: updateError } = await supabaseClient
@@ -1145,7 +1275,10 @@
                     })
                     .eq('token', currentClient.token);
                 
-                if (updateError) throw updateError;
+                if (updateError) {
+                    console.error('Erro ao atualizar contador:', updateError);
+                    // Não falhar por este erro, continuar
+                }
                 
                 // Atualizar status do convidado
                 const { error: guestError } = await supabaseClient
@@ -1153,26 +1286,31 @@
                     .update({ status: 'escaneado' })
                     .eq('id', guest.id);
                 
-                if (guestError) throw guestError;
+                if (guestError) {
+                    console.error('Erro ao atualizar convidado:', guestError);
+                    // Não falhar por este erro, continuar
+                }
                 
                 // Atualizar estado local
                 currentClient.scans_usados = (currentClient.scans_usados || 0) + 1;
                 scannedGuests.add(guest.id);
                 lastScanResult = { guest, success: true };
-                updateUI();
-                checkMilestones();
+                
+                // Atualizar interface
+                setTimeout(() => {
+                    updateUI();
+                    checkMilestones();
+                }, 100);
                 
                 showScanResult('PERMITIDO', guest.nome, 'success');
                 playFeedback('success');
                 
-                // Mostrar botão próximo se não estiver no modo rápido
-                if (!settings.quickMode) {
-                    showNextScanButton();
-                }
+                // Mostrar botão próximo
+                showNextScanButton();
                 
             } catch (error) {
                 console.error('Erro ao processar scan:', error);
-                showScanResult('ERRO', '', 'error');
+                showScanResult('ERRO DE SISTEMA', '', 'error');
                 playFeedback('error');
                 showNextScanButton();
             }
@@ -1180,9 +1318,7 @@
 
         // Mostrar botão próximo
         function showNextScanButton() {
-            if (!settings.quickMode) {
-                nextScanContainer.classList.remove('hidden');
-            }
+            nextScanContainer.classList.remove('hidden');
         }
 
         // Feedback sonoro e vibração
@@ -1279,19 +1415,15 @@
             }
             
             scanResult.classList.remove('hidden');
-            
-            // Auto-hide após 5 segundos se estiver no modo rápido
-            if (settings.quickMode) {
-                setTimeout(() => {
-                    scanResult.classList.add('hidden');
-                    scanResultPlaceholder.classList.remove('hidden');
-                }, 5000);
-            }
         }
 
-        // Busca e filtros
-        searchInput.addEventListener('input', renderGuestList);
-        filterSelect.addEventListener('change', renderGuestList);
+        // Busca e filtros - com verificação de segurança
+        if (searchInput) {
+            searchInput.addEventListener('input', renderGuestList);
+        }
+        if (filterSelect) {
+            filterSelect.addEventListener('change', renderGuestList);
+        }
 
         // Sincronizar dados
         syncBtn.addEventListener('click', async () => {
@@ -1343,18 +1475,6 @@
         });
 
         // Event listeners para configurações
-        document.getElementById('quickModeToggle').addEventListener('change', (e) => {
-            settings.quickMode = e.target.checked;
-            localStorage.setItem('scannerSettings', JSON.stringify(settings));
-            showNotification(settings.quickMode ? 'Modo rápido ativado' : 'Modo rápido desativado', 'info');
-        });
-
-        document.getElementById('flashModeToggle').addEventListener('change', (e) => {
-            settings.flashMode = e.target.checked;
-            localStorage.setItem('scannerSettings', JSON.stringify(settings));
-            showNotification(settings.flashMode ? 'Flash ativado' : 'Flash desativado', 'info');
-        });
-
         document.getElementById('soundToggle').addEventListener('change', (e) => {
             settings.soundEnabled = e.target.checked;
             localStorage.setItem('scannerSettings', JSON.stringify(settings));
@@ -1383,30 +1503,28 @@
 
         // Função para aplicar tema
         function applyTheme(theme) {
-            document.body.classList.remove('dark', 'dark-gray');
+            document.body.classList.remove('dark');
             if (theme === 'dark') {
                 document.body.classList.add('dark');
-            } else if (theme === 'darkGray') {
-                document.body.classList.add('dark-gray');
             }
         }
 
         // Função para resetar configurações
         function resetSettings() {
             settings = {
-                quickMode: false,
-                flashMode: false,
                 soundEnabled: true,
                 vibrationEnabled: true,
                 theme: 'light'
             };
             
-            // Atualizar interface
-            document.getElementById('quickModeToggle').checked = settings.quickMode;
-            document.getElementById('flashModeToggle').checked = settings.flashMode;
-            document.getElementById('soundToggle').checked = settings.soundEnabled;
-            document.getElementById('vibrationToggle').checked = settings.vibrationEnabled;
-            document.querySelector(`input[name="theme"][value="${settings.theme}"]`).checked = true;
+            // Atualizar interface (verificar se elementos existem)
+            const soundToggle = document.getElementById('soundToggle');
+            const vibrationToggle = document.getElementById('vibrationToggle');
+            const themeRadio = document.querySelector(`input[name="theme"][value="${settings.theme}"]`);
+            
+            if (soundToggle) soundToggle.checked = settings.soundEnabled;
+            if (vibrationToggle) vibrationToggle.checked = settings.vibrationEnabled;
+            if (themeRadio) themeRadio.checked = true;
             
             // Aplicar tema
             applyTheme(settings.theme);
@@ -1421,12 +1539,14 @@
             if (savedSettings) {
                 settings = { ...settings, ...JSON.parse(savedSettings) };
                 
-                // Atualizar interface
-                document.getElementById('quickModeToggle').checked = settings.quickMode;
-                document.getElementById('flashModeToggle').checked = settings.flashMode;
-                document.getElementById('soundToggle').checked = settings.soundEnabled;
-                document.getElementById('vibrationToggle').checked = settings.vibrationEnabled;
-                document.querySelector(`input[name="theme"][value="${settings.theme}"]`).checked = true;
+                // Atualizar interface (verificar se elementos existem)
+                const soundToggle = document.getElementById('soundToggle');
+                const vibrationToggle = document.getElementById('vibrationToggle');
+                const themeRadio = document.querySelector(`input[name="theme"][value="${settings.theme}"]`);
+                
+                if (soundToggle) soundToggle.checked = settings.soundEnabled;
+                if (vibrationToggle) vibrationToggle.checked = settings.vibrationEnabled;
+                if (themeRadio) themeRadio.checked = true;
                 
                 // Aplicar tema
                 applyTheme(settings.theme);
@@ -1488,95 +1608,115 @@
 
         // Inicialização
         document.addEventListener('DOMContentLoaded', () => {
-            // Inicializar elementos das abas
-            scannerTab = document.getElementById('scannerTab');
-            scannerTabContent = document.getElementById('scannerTabContent');
-            quickScanBtn = document.getElementById('quickScanBtn');
-            refreshDataBtn = document.getElementById('refreshDataBtn');
-            progressBar = document.getElementById('progressBar');
-            progressText = document.getElementById('progressText');
-            scannerProgressBar = document.getElementById('scannerProgressBar');
-            scannerProgressText = document.getElementById('scannerProgressText');
-            scannerScannedCount = document.getElementById('scannerScannedCount');
-            scannerTotalGuestCount = document.getElementById('scannerTotalGuestCount');
-            optionsTab = document.getElementById('optionsTab');
-            optionsTabContent = document.getElementById('optionsTabContent');
-            
-            // Atualizar ano automaticamente
-            document.getElementById('currentYear').textContent = new Date().getFullYear();
-            
-            // Carregar token salvo automaticamente
-            const savedToken = localStorage.getItem('eventToken');
-            if (savedToken) {
-                realToken = savedToken;
-                tokenInput.value = '********';
-                tokenInput.style.color = '#6b7280';
-                tokenInput.style.fontFamily = 'monospace';
+            try {
+                // Inicializar elementos das abas com verificação de segurança
+                scannerTab = document.getElementById('scannerTab');
+                scannerTabContent = document.getElementById('scannerTabContent');
+                quickScanBtn = document.getElementById('quickScanBtn');
+                refreshDataBtn = document.getElementById('refreshDataBtn');
+                progressBar = document.getElementById('progressBar');
+                progressText = document.getElementById('progressText');
+                scannerProgressBar = document.getElementById('scannerProgressBar');
+                scannerProgressText = document.getElementById('scannerProgressText');
+                scannerScannedCount = document.getElementById('scannerScannedCount');
+                scannerTotalGuestCount = document.getElementById('scannerTotalGuestCount');
+                optionsTab = document.getElementById('optionsTab');
+                optionsTabContent = document.getElementById('optionsTabContent');
                 
-                // Adicionar texto de ajuda
-                const helpText = document.createElement('p');
-                helpText.id = 'tokenHelp';
-                helpText.className = 'text-xs text-gray-500 mt-1';
-                helpText.innerHTML = '<i class="fas fa-info-circle mr-1"></i>Token guardado - clique em Entrar';
-                tokenInput.parentNode.appendChild(helpText);
-            }
-            
-            // Controlar comportamento do campo de token
-            tokenInput.addEventListener('focus', () => {
-                if (tokenInput.value === '********' && realToken) {
-                    tokenInput.value = '';
-                    tokenInput.style.color = '#374151';
-                    tokenInput.style.fontFamily = 'Inter, sans-serif';
-                    realToken = null; // Limpar token salvo se usuário começar a digitar
-                    
-                    // Remover texto de ajuda
-                    const helpText = document.getElementById('tokenHelp');
-                    if (helpText) helpText.remove();
+                // Atualizar ano automaticamente
+                const currentYearEl = document.getElementById('currentYear');
+                if (currentYearEl) {
+                    currentYearEl.textContent = new Date().getFullYear();
                 }
-            });
-            
-            tokenInput.addEventListener('input', () => {
-                if (realToken && tokenInput.value !== '********') {
-                    realToken = null; // Limpar token salvo se usuário digitar algo
+                
+                // Carregar token salvo automaticamente
+                const savedToken = localStorage.getItem('eventToken');
+                if (savedToken && tokenInput) {
+                    realToken = savedToken;
+                    tokenInput.value = '********';
+                    tokenInput.style.color = '#6b7280';
+                    tokenInput.style.fontFamily = 'monospace';
                     
-                    // Remover texto de ajuda
-                    const helpText = document.getElementById('tokenHelp');
-                    if (helpText) helpText.remove();
-                }
-            });
-            
-            // Event listeners das abas
-            if (scannerTab) scannerTab.addEventListener('click', () => switchTab('scanner'));
-            if (optionsTab) optionsTab.addEventListener('click', () => switchTab('options'));
-            
-            // Botão de ação rápida para ir ao scanner
-            if (quickScanBtn) quickScanBtn.addEventListener('click', () => switchTab('scanner'));
-            
-            // Botão de atualizar dados
-            if (refreshDataBtn) {
-                refreshDataBtn.addEventListener('click', async () => {
-                    if (!isOnline) {
-                        return; // Não fazer nada se offline, botão já está desabilitado
+                    // Adicionar texto de ajuda
+                    const helpText = document.createElement('p');
+                    helpText.id = 'tokenHelp';
+                    helpText.className = 'text-xs text-gray-500 mt-1';
+                    helpText.innerHTML = '<i class="fas fa-info-circle mr-1"></i>Token guardado - clique em Entrar';
+                    if (tokenInput.parentNode) {
+                        tokenInput.parentNode.appendChild(helpText);
                     }
+                }
+                
+                // Controlar comportamento do campo de token
+                if (tokenInput) {
+                    tokenInput.addEventListener('focus', () => {
+                        if (tokenInput.value === '********' && realToken) {
+                            tokenInput.value = '';
+                            tokenInput.style.color = '#374151';
+                            tokenInput.style.fontFamily = 'Inter, sans-serif';
+                            realToken = null; // Limpar token salvo se usuário começar a digitar
+                            
+                            // Remover texto de ajuda
+                            const helpText = document.getElementById('tokenHelp');
+                            if (helpText) helpText.remove();
+                        }
+                    });
                     
-                    refreshDataBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Atualizando...';
+                    tokenInput.addEventListener('input', () => {
+                        if (realToken && tokenInput.value !== '********') {
+                            realToken = null; // Limpar token salvo se usuário digitar algo
+                            
+                            // Remover texto de ajuda
+                            const helpText = document.getElementById('tokenHelp');
+                            if (helpText) helpText.remove();
+                        }
+                    });
+                }
+                
+                // Event listeners das abas
+                if (scannerTab) scannerTab.addEventListener('click', () => switchTab('scanner'));
+                if (optionsTab) optionsTab.addEventListener('click', () => switchTab('options'));
+                
+                // Botão de ação rápida para ir ao scanner
+                if (quickScanBtn) quickScanBtn.addEventListener('click', () => switchTab('scanner'));
+                
+                // Botão de atualizar dados
+                if (refreshDataBtn) {
+                    refreshDataBtn.addEventListener('click', async () => {
+                        if (!isOnline) {
+                            return; // Não fazer nada se offline, botão já está desabilitado
+                        }
+                        
+                        refreshDataBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Atualizando...';
+                        try {
+                            await loadSession();
+                            showNotification('Dados atualizados com sucesso!', 'success');
+                        } catch (error) {
+                            showNotification('Erro ao atualizar dados', 'error');
+                        } finally {
+                            refreshDataBtn.innerHTML = '<i class="fas fa-refresh mr-2"></i>Atualizar';
+                        }
+                    });
+                }
+                
+                // Carregar configurações salvas
+                loadSettings();
+                
+                // Inicializar na aba do scanner
+                switchTab('scanner');
+                
+            } catch (error) {
+                console.error('Erro na inicialização:', error);
+                // Tentar novamente após um pequeno delay
+                setTimeout(() => {
                     try {
-                        await loadSession();
-                        showNotification('Dados atualizados com sucesso!', 'success');
-                    } catch (error) {
-                        showNotification('Erro ao atualizar dados', 'error');
-                    } finally {
-                        refreshDataBtn.innerHTML = '<i class="fas fa-refresh mr-2"></i>Atualizar';
+                        switchTab('scanner');
+                    } catch (e) {
+                        console.error('Erro na inicialização das abas:', e);
                     }
-                });
+                }, 500);
             }
-            
-            // Carregar configurações salvas
-            loadSettings();
-            
-            // Inicializar na aba do scanner
-            switchTab('scanner');
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96afb68307d777e3',t:'MTc1NDQ5NTY2Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96b07ee3259577d7',t:'MTc1NDUwMzg3NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
