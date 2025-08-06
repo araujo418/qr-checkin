@@ -159,29 +159,33 @@
             <!-- Scanner Tab -->
             <div id="scannerTabContent" class="tab-content">
                 <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
-                    <div id="scannerContainer" class="scanner-container bg-gray-900 rounded-2xl h-[500px] sm:h-[600px] md:h-[700px] flex items-center justify-center mx-auto max-w-4xl border-4 border-gray-300 shadow-2xl relative">
-                        <div class="text-center text-gray-400 px-6">
-                            <i class="fas fa-qrcode text-6xl sm:text-7xl mb-6 text-gray-500"></i>
-                            <p class="text-lg sm:text-xl font-medium">Clique em "Iniciar Scanner" para começar</p>
-                            <p class="text-sm sm:text-base mt-2 text-gray-500">Posicione o código QR dentro da área de digitalização</p>
-                        </div>
-                        
-                        <!-- Resultado do scan dentro do scanner -->
-                        <div id="scanResult" class="hidden absolute top-4 left-4 right-4 p-4 rounded-xl text-center shadow-xl border-l-4 transform transition-all duration-300 scale-95 z-10"></div>
-                        
-                        <!-- Botão próximo dentro do scanner -->
-                        <div id="nextScanContainer" class="hidden absolute bottom-4 right-4 z-10">
-                            <button id="nextScanBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors shadow-lg">
-                                <i class="fas fa-arrow-right mr-2"></i>
-                                Próximo
-                            </button>
+                    <div class="text-center mb-6">
+                        <div class="bg-blue-100 w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-qrcode text-blue-600 text-2xl sm:text-3xl"></i>
                         </div>
                     </div>
                     
-                    <div class="flex justify-center mt-6">
-                        <button id="toggleScanner" class="bg-blue-600 text-white px-8 py-4 rounded-lg hover:bg-blue-700 transition-colors text-lg font-medium shadow-lg">
+                    <div class="flex justify-center mb-8">
+                        <button id="toggleScanner" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors text-base font-medium shadow-lg">
                             <i class="fas fa-play mr-2"></i>
                             Iniciar Scanner
+                        </button>
+                    </div>
+                    
+                    <div id="scannerContainer" class="scanner-container bg-gray-900 rounded-2xl h-96 sm:h-[500px] md:h-[600px] flex items-center justify-center mx-auto max-w-2xl border-4 border-gray-300 shadow-2xl">
+                        <div class="text-center text-gray-400 px-6">
+                            <i class="fas fa-qrcode text-6xl sm:text-7xl mb-6 text-gray-500"></i>
+                            <p class="text-lg sm:text-xl font-medium">Clique em "Iniciar Digitalizador" para começar</p>
+                            <p class="text-sm sm:text-base mt-2 text-gray-500">Posicione o código QR dentro da área de digitalização</p>
+                        </div>
+                    </div>
+                    
+                    <div id="scanResult" class="hidden mt-4 sm:mt-6 p-6 rounded-2xl text-center shadow-xl border-l-4 transform transition-all duration-300 scale-95"></div>
+                    
+                    <div id="nextScanContainer" class="hidden mt-4 sm:mt-6 flex justify-center">
+                        <button id="nextScanBtn" class="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors">
+                            <i class="fas fa-arrow-right mr-2"></i>
+                            Próximo
                         </button>
                     </div>
 
@@ -857,18 +861,7 @@
                         <div class="text-center text-gray-400 px-6">
                             <i class="fas fa-qrcode text-6xl sm:text-7xl mb-6 text-gray-500"></i>
                             <p class="text-lg sm:text-xl font-medium">Scanner parado</p>
-                            <p class="text-sm sm:text-base mt-2 text-gray-500">Clique em "Iniciar Scanner" para recomeçar</p>
-                        </div>
-                        
-                        <!-- Resultado do scan dentro do scanner -->
-                        <div id="scanResult" class="hidden absolute top-4 left-4 right-4 p-4 rounded-xl text-center shadow-xl border-l-4 transform transition-all duration-300 scale-95 z-10"></div>
-                        
-                        <!-- Botão próximo dentro do scanner -->
-                        <div id="nextScanContainer" class="hidden absolute bottom-4 right-4 z-10">
-                            <button id="nextScanBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors shadow-lg">
-                                <i class="fas fa-arrow-right mr-2"></i>
-                                Próximo
-                            </button>
+                            <p class="text-sm sm:text-base mt-2 text-gray-500">Clique em "Iniciar Digitalizador" para recomeçar</p>
                         </div>
                     `;
                 });
@@ -1252,5 +1245,5 @@
             switchTab('scanner');
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96ad028e060777d7',t:'MTc1NDQ2NzMyNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96acf3bd14ce77d7',t:'MTc1NDQ2NjcxOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
