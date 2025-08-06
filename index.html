@@ -163,14 +163,12 @@
                         <div class="bg-blue-100 w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mx-auto mb-3">
                             <i class="fas fa-qrcode text-blue-600 text-2xl sm:text-3xl"></i>
                         </div>
-                        <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">Scanner de Código QR</h2>
-                        <p class="text-gray-600 text-sm sm:text-base">Digitalize os códigos QR dos convidados</p>
                     </div>
                     
                     <div class="flex justify-center mb-8">
-                        <button id="toggleScanner" class="bg-blue-600 text-white px-8 py-4 sm:px-12 sm:py-5 rounded-2xl hover:bg-blue-700 transition-colors text-lg sm:text-xl font-semibold shadow-xl w-full max-w-md">
-                            <i class="fas fa-play mr-3 sm:mr-4"></i>
-                            Iniciar Digitalizador
+                        <button id="toggleScanner" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors text-base font-medium shadow-lg">
+                            <i class="fas fa-play mr-2"></i>
+                            Iniciar Scanner
                         </button>
                     </div>
                     
@@ -182,12 +180,12 @@
                         </div>
                     </div>
                     
-                    <div id="scanResult" class="hidden mt-4 sm:mt-6 p-3 sm:p-4 rounded-xl text-center text-base sm:text-lg font-medium"></div>
+                    <div id="scanResult" class="hidden mt-4 sm:mt-6 p-6 rounded-2xl text-center shadow-xl border-l-4 transform transition-all duration-300 scale-95"></div>
                     
                     <div id="nextScanContainer" class="hidden mt-4 sm:mt-6 flex justify-center">
-                        <button id="nextScanBtn" class="bg-green-600 text-white px-6 py-3 sm:px-8 sm:py-3 rounded-xl font-medium hover:bg-green-700 transition-colors w-full max-w-xs">
+                        <button id="nextScanBtn" class="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors">
                             <i class="fas fa-arrow-right mr-2"></i>
-                            Próxima Digitalização
+                            Próximo
                         </button>
                     </div>
 
@@ -845,7 +843,7 @@
                 );
                 
                 isScanning = true;
-                toggleScanner.innerHTML = '<i class="fas fa-stop mr-3"></i>Desativar Scanner';
+                toggleScanner.innerHTML = '<i class="fas fa-stop mr-2"></i>Parar Scanner';
                 toggleScanner.classList.remove('bg-blue-600', 'hover:bg-blue-700');
                 toggleScanner.classList.add('bg-red-600', 'hover:bg-red-700');
                 
@@ -870,7 +868,7 @@
             }
             
             isScanning = false;
-            toggleScanner.innerHTML = '<i class="fas fa-play mr-3"></i>Iniciar Scanner';
+            toggleScanner.innerHTML = '<i class="fas fa-play mr-2"></i>Iniciar Scanner';
             toggleScanner.classList.remove('bg-red-600', 'hover:bg-red-700');
             toggleScanner.classList.add('bg-blue-600', 'hover:bg-blue-700');
         }
@@ -894,8 +892,11 @@
                     return;
                 }
                 
-                // Procurar convidado pelo código
-                const guest = guests.find(g => g.codigo === decodedText || g.id.toString() === decodedText);
+                // Procurar convidado pelo código (busca exata e segura)
+                const guest = guests.find(g => {
+                    // Verificar se o código escaneado corresponde exatamente ao código do convidado
+                    return g.codigo && g.codigo.trim().toLowerCase() === decodedText.trim().toLowerCase();
+                });
                 
                 if (!guest) {
                     showScanResult('INVÁLIDO', '', 'error');
@@ -1025,29 +1026,58 @@
         }
 
         function showScanResult(status, guestName, type) {
-            const colors = {
-                success: 'bg-green-100 border-green-300 text-green-700',
-                error: 'bg-red-100 border-red-300 text-red-700',
-                warning: 'bg-red-100 border-red-300 text-red-700'
+            const styles = {
+                success: {
+                    bg: 'bg-gradient-to-r from-green-50 to-emerald-50',
+                    border: 'border-l-green-500',
+                    text: 'text-green-800',
+                    icon: 'fas fa-check-circle text-green-500',
+                    shadow: 'shadow-green-200'
+                },
+                error: {
+                    bg: 'bg-gradient-to-r from-red-50 to-rose-50',
+                    border: 'border-l-red-500',
+                    text: 'text-red-800',
+                    icon: 'fas fa-times-circle text-red-500',
+                    shadow: 'shadow-red-200'
+                },
+                warning: {
+                    bg: 'bg-gradient-to-r from-yellow-50 to-amber-50',
+                    border: 'border-l-yellow-500',
+                    text: 'text-yellow-800',
+                    icon: 'fas fa-exclamation-triangle text-yellow-500',
+                    shadow: 'shadow-yellow-200'
+                }
             };
             
-            scanResult.className = `p-4 rounded-xl border-2 text-center ${colors[type]}`;
+            const style = styles[type];
+            scanResult.className = `p-6 rounded-2xl text-center shadow-xl border-l-4 transform transition-all duration-300 ${style.bg} ${style.border} ${style.text} ${style.shadow}`;
             
             if (guestName) {
                 scanResult.innerHTML = `
+                    <div class="flex items-center justify-center mb-4">
+                        <i class="${style.icon} text-4xl"></i>
+                    </div>
                     <div class="text-2xl font-bold mb-2">${status}</div>
-                    <div class="text-lg">${guestName}</div>
+                    <div class="text-lg font-medium opacity-80">${guestName}</div>
                 `;
             } else {
                 scanResult.innerHTML = `
+                    <div class="flex items-center justify-center mb-4">
+                        <i class="${style.icon} text-4xl"></i>
+                    </div>
                     <div class="text-2xl font-bold">${status}</div>
                 `;
             }
             
-            scanResult.classList.remove('hidden');
+            scanResult.classList.remove('hidden', 'scale-95');
+            scanResult.classList.add('scale-100');
             
             setTimeout(() => {
-                scanResult.classList.add('hidden');
+                scanResult.classList.add('scale-95');
+                setTimeout(() => {
+                    scanResult.classList.add('hidden');
+                }, 300);
             }, 3000);
         }
 
@@ -1215,5 +1245,5 @@
             switchTab('scanner');
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96ace2c500e277dd',t:'MTc1NDQ2NjAyMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96acf3bd14ce77d7',t:'MTc1NDQ2NjcxOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
