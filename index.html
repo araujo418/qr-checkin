@@ -6,7 +6,7 @@
     <title>Leitor QR Code - Controle de Convidados</title>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?v=3.4.0"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -542,23 +542,10 @@
         const syncBtn = document.getElementById('syncBtn');
         const exportBtn = document.getElementById('exportBtn');
         
-        // Elementos das abas
-        const scannerTab = document.getElementById('scannerTab');
-        const scannerTabContent = document.getElementById('scannerTabContent');
-        const quickScanBtn = document.getElementById('quickScanBtn');
-        const refreshDataBtn = document.getElementById('refreshDataBtn');
-        const progressBar = document.getElementById('progressBar');
-        const progressText = document.getElementById('progressText');
-        
-        // Elementos da barra de progresso do scanner
-        const scannerProgressBar = document.getElementById('scannerProgressBar');
-        const scannerProgressText = document.getElementById('scannerProgressText');
-        const scannerScannedCount = document.getElementById('scannerScannedCount');
-        const scannerTotalGuestCount = document.getElementById('scannerTotalGuestCount');
-        
-        // Elementos das abas
-        const optionsTab = document.getElementById('optionsTab');
-        const optionsTabContent = document.getElementById('optionsTabContent');
+        // Elementos das abas - serão inicializados após DOM carregar
+        let scannerTab, scannerTabContent, quickScanBtn, refreshDataBtn, progressBar, progressText;
+        let scannerProgressBar, scannerProgressText, scannerScannedCount, scannerTotalGuestCount;
+        let optionsTab, optionsTabContent;
 
         // Estado da conexão
         let isOnline = true;
@@ -877,6 +864,12 @@
 
         // Controle das abas
         function switchTab(tabName) {
+            // Verificar se elementos existem antes de manipular
+            if (!scannerTab || !optionsTab || !scannerTabContent || !optionsTabContent) {
+                console.error('Elementos das abas não encontrados');
+                return;
+            }
+            
             // Remover classe active de todas as abas
             scannerTab.classList.remove('active', 'bg-blue-50', 'text-blue-600', 'border-blue-500');
             scannerTab.classList.add('text-gray-500', 'border-transparent');
@@ -947,7 +940,7 @@
             
             // Capacidade do evento (80%)
             if (totalCount > 0 && (scannedCount / totalCount) >= 0.8) {
-                showNotification(⚠️ 80% da capacidade atingida!', 'warning');
+                showNotification('⚠️ 80% da capacidade atingida!', 'warning');
             }
         }
 
@@ -1488,35 +1481,27 @@
             }
         }
 
-        // Event listeners das abas
-        scannerTab.addEventListener('click', () => switchTab('scanner'));
-        optionsTab.addEventListener('click', () => switchTab('options'));
-        
-        // Botão de ação rápida para ir ao scanner
-        quickScanBtn.addEventListener('click', () => switchTab('scanner'));
-        
-        // Botão de atualizar dados
-        refreshDataBtn.addEventListener('click', async () => {
-            if (!isOnline) {
-                return; // Não fazer nada se offline, botão já está desabilitado
-            }
-            
-            refreshDataBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Atualizando...';
-            try {
-                await loadSession();
-                showNotification('Dados atualizados com sucesso!', 'success');
-            } catch (error) {
-                showNotification('Erro ao atualizar dados', 'error');
-            } finally {
-                refreshDataBtn.innerHTML = '<i class="fas fa-refresh mr-2"></i>Atualizar';
-            }
-        });
+        // Event listeners das abas serão adicionados na inicialização
 
         // Variável para armazenar o token real
         let realToken = null;
 
         // Inicialização
         document.addEventListener('DOMContentLoaded', () => {
+            // Inicializar elementos das abas
+            scannerTab = document.getElementById('scannerTab');
+            scannerTabContent = document.getElementById('scannerTabContent');
+            quickScanBtn = document.getElementById('quickScanBtn');
+            refreshDataBtn = document.getElementById('refreshDataBtn');
+            progressBar = document.getElementById('progressBar');
+            progressText = document.getElementById('progressText');
+            scannerProgressBar = document.getElementById('scannerProgressBar');
+            scannerProgressText = document.getElementById('scannerProgressText');
+            scannerScannedCount = document.getElementById('scannerScannedCount');
+            scannerTotalGuestCount = document.getElementById('scannerTotalGuestCount');
+            optionsTab = document.getElementById('optionsTab');
+            optionsTabContent = document.getElementById('optionsTabContent');
+            
             // Atualizar ano automaticamente
             document.getElementById('currentYear').textContent = new Date().getFullYear();
             
@@ -1560,6 +1545,32 @@
                 }
             });
             
+            // Event listeners das abas
+            if (scannerTab) scannerTab.addEventListener('click', () => switchTab('scanner'));
+            if (optionsTab) optionsTab.addEventListener('click', () => switchTab('options'));
+            
+            // Botão de ação rápida para ir ao scanner
+            if (quickScanBtn) quickScanBtn.addEventListener('click', () => switchTab('scanner'));
+            
+            // Botão de atualizar dados
+            if (refreshDataBtn) {
+                refreshDataBtn.addEventListener('click', async () => {
+                    if (!isOnline) {
+                        return; // Não fazer nada se offline, botão já está desabilitado
+                    }
+                    
+                    refreshDataBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Atualizando...';
+                    try {
+                        await loadSession();
+                        showNotification('Dados atualizados com sucesso!', 'success');
+                    } catch (error) {
+                        showNotification('Erro ao atualizar dados', 'error');
+                    } finally {
+                        refreshDataBtn.innerHTML = '<i class="fas fa-refresh mr-2"></i>Atualizar';
+                    }
+                });
+            }
+            
             // Carregar configurações salvas
             loadSettings();
             
@@ -1567,5 +1578,5 @@
             switchTab('scanner');
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96afa807f48c77e3',t:'MTc1NDQ5NTA3NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96afb68307d777e3',t:'MTc1NDQ5NTY2Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
