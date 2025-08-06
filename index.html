@@ -85,32 +85,37 @@
 </head>
 <body class="bg-gray-50 min-h-screen">
     <!-- Login Screen -->
-    <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
-            <div class="text-center mb-8">
-                <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-qrcode text-blue-600 text-2xl"></i>
+    <div id="loginScreen" class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6">
+        <div class="bg-white rounded-2xl shadow-xl p-6 sm:p-8 w-full max-w-sm sm:max-w-md">
+            <div class="text-center mb-6 sm:mb-8">
+                <div class="bg-blue-100 w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <i class="fas fa-qrcode text-blue-600 text-xl sm:text-2xl"></i>
                 </div>
-                <h1 class="text-2xl font-bold text-gray-800">Leitor de Código QR</h1>
-                <p class="text-gray-600 mt-2">Controlo de Convidados</p>
+                <h1 class="text-xl sm:text-2xl font-bold text-gray-800">Leitor de Código QR</h1>
+                <p class="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">Controlo de Convidados</p>
             </div>
             
-            <form id="loginForm" class="space-y-6">
+            <form id="loginForm" class="space-y-4 sm:space-y-6">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Token do Evento</label>
                     <input type="text" id="tokenInput" 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           class="w-full px-3 sm:px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                            placeholder="Introduza o token do evento" required>
                 </div>
                 
                 <button type="submit" id="loginBtn"
-                        class="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                        class="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors text-base">
                     <i class="fas fa-sign-in-alt mr-2"></i>
                     Entrar
                 </button>
             </form>
             
             <div id="loginError" class="hidden mt-4 p-3 bg-red-100 border border-red-300 rounded-lg text-red-700 text-sm"></div>
+        </div>
+        
+        <!-- Créditos sutis -->
+        <div class="text-center mt-8 text-xs text-gray-400">
+            Created By Invites <span id="currentYear"></span>
         </div>
     </div>
 
@@ -146,7 +151,7 @@
                         <i class="fas fa-qrcode mr-1 sm:mr-2"></i>
                         Scanner
                     </button>
-                    <button id="dashboardTab" class="tab-button flex-1 px-4 py-3 text-sm sm:text-base font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 rounded-t-lg">
+                    <button id="optionsTab" class="tab-button flex-1 px-4 py-3 text-sm sm:text-base font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 rounded-t-lg">
                         <i class="fas fa-cog mr-1 sm:mr-2"></i>
                         Opções
                     </button>
@@ -158,220 +163,317 @@
         <div class="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4">
             <!-- Scanner Tab -->
             <div id="scannerTabContent" class="tab-content">
-                <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
-                    <div class="text-center mb-6">
-                        <div class="bg-blue-100 w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <i class="fas fa-qrcode text-blue-600 text-2xl sm:text-3xl"></i>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Scanner Principal -->
+                    <div class="lg:col-span-2">
+                        <div class="bg-white rounded-xl shadow-sm p-6">
+                            <div class="text-center mb-4">
+                                <button id="toggleScanner" class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors text-lg font-medium shadow-lg">
+                                    <i class="fas fa-qrcode mr-2"></i>
+                                    <i class="fas fa-play mr-2"></i>
+                                    Iniciar Scanner
+                                </button>
+                            </div>
+                            
+                            <div id="scannerContainer" class="scanner-container bg-gray-900 rounded-2xl h-[350px] flex items-center justify-center mx-auto border-4 border-gray-300 shadow-2xl">
+                                <div class="text-center text-gray-400 px-6">
+                                    <i class="fas fa-qrcode text-5xl mb-4 text-gray-500"></i>
+                                    <p class="text-lg font-medium">Clique em "Iniciar Scanner"</p>
+                                    <p class="text-sm mt-2 text-gray-500">Posicione o QR na área de scan</p>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="flex justify-center mb-8">
-                        <button id="toggleScanner" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors text-base font-medium shadow-lg">
-                            <i class="fas fa-play mr-2"></i>
-                            Iniciar Scanner
-                        </button>
-                    </div>
-                    
-                    <div id="scannerContainer" class="scanner-container bg-gray-900 rounded-2xl h-96 sm:h-[500px] md:h-[600px] flex items-center justify-center mx-auto max-w-2xl border-4 border-gray-300 shadow-2xl">
-                        <div class="text-center text-gray-400 px-6">
-                            <i class="fas fa-qrcode text-6xl sm:text-7xl mb-6 text-gray-500"></i>
-                            <p class="text-lg sm:text-xl font-medium">Clique em "Iniciar Digitalizador" para começar</p>
-                            <p class="text-sm sm:text-base mt-2 text-gray-500">Posicione o código QR dentro da área de digitalização</p>
-                        </div>
-                    </div>
-                    
-                    <div id="scanResult" class="hidden mt-4 sm:mt-6 p-6 rounded-2xl text-center shadow-xl border-l-4 transform transition-all duration-300 scale-95"></div>
-                    
-                    <div id="nextScanContainer" class="hidden mt-4 sm:mt-6 flex justify-center">
-                        <button id="nextScanBtn" class="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors">
-                            <i class="fas fa-arrow-right mr-2"></i>
-                            Próximo
-                        </button>
                     </div>
 
-                    <!-- Progress Bar in Scanner Tab -->
-                    <div class="mt-8 bg-gray-50 rounded-xl p-6">
-                        <div class="flex justify-between items-center mb-3">
-                            <h3 class="font-semibold text-gray-800">Progresso do Evento</h3>
-                            <span class="text-sm font-medium text-gray-600" id="scannerProgressText">0%</span>
+                    <!-- Painel Lateral -->
+                    <div class="lg:col-span-1">
+                        <!-- Resultado do Scan -->
+                        <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+                            <h3 class="font-semibold text-gray-800 mb-4 flex items-center">
+                                <i class="fas fa-clipboard-check mr-2 text-blue-600"></i>
+                                Resultado
+                            </h3>
+                            <div id="scanResult" class="hidden p-4 rounded-lg text-center border-l-4 transform transition-all duration-300"></div>
+                            <div id="scanResultPlaceholder" class="text-center text-gray-400 py-8">
+                                <i class="fas fa-qrcode text-3xl mb-2"></i>
+                                <p class="text-sm">Aguardando scan...</p>
+                            </div>
+                            
+                            <!-- Botão próximo -->
+                            <div id="nextScanContainer" class="hidden mt-4 text-center">
+                                <button id="nextScanBtn" class="w-full bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 transition-colors shadow-lg">
+                                    <i class="fas fa-arrow-right mr-2"></i>
+                                    Próximo Scan
+                                </button>
+                            </div>
                         </div>
-                        <div class="w-full bg-gray-200 rounded-full h-3 mb-2">
-                            <div id="scannerProgressBar" class="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
-                        </div>
-                        <div class="flex justify-between text-sm text-gray-600">
-                            <span><span id="scannerScannedCount">0</span> digitalizados</span>
-                            <span><span id="scannerTotalGuestCount">0</span> total</span>
+
+                        <!-- Progresso Rápido -->
+                        <div class="bg-white rounded-xl shadow-sm p-6">
+                            <h3 class="font-semibold text-gray-800 mb-4 flex items-center">
+                                <i class="fas fa-chart-line mr-2 text-green-600"></i>
+                                Progresso
+                            </h3>
+                            <div class="text-center mb-4">
+                                <div class="text-3xl font-bold text-blue-600" id="scannerProgressText">0%</div>
+                                <div class="text-sm text-gray-600">Concluído</div>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+                                <div id="scannerProgressBar" class="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 text-center">
+                                <div class="bg-green-50 p-3 rounded-lg">
+                                    <div class="text-xl font-bold text-green-600" id="scannerScannedCount">0</div>
+                                    <div class="text-xs text-green-700">Escaneados</div>
+                                </div>
+                                <div class="bg-blue-50 p-3 rounded-lg">
+                                    <div class="text-xl font-bold text-blue-600" id="scannerTotalGuestCount">0</div>
+                                    <div class="text-xs text-blue-700">Total</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Dashboard Tab -->
-            <div id="dashboardTabContent" class="tab-content hidden">
-                <!-- Estatísticas Principais -->
-                <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
-                    <h2 class="text-xl font-semibold text-gray-800 mb-6">Estatísticas do Evento</h2>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                        <div class="bg-green-50 p-4 rounded-lg text-center">
-                            <div class="text-3xl font-bold text-green-600" id="confirmedCount">0</div>
-                            <div class="text-sm text-green-700 mt-1">Confirmados</div>
+            <!-- Options Tab -->
+            <div id="optionsTabContent" class="tab-content hidden">
+                <div class="space-y-6">
+                    <!-- Estatísticas do Evento -->
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <h2 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+                            <i class="fas fa-chart-bar mr-3 text-blue-600"></i>
+                            Estatísticas do Evento
+                        </h2>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                            <div class="bg-green-50 p-4 rounded-lg text-center border border-green-200">
+                                <div class="text-3xl font-bold text-green-600" id="confirmedCount">0</div>
+                                <div class="text-sm text-green-700 mt-1">Confirmados</div>
+                            </div>
+                            <div class="bg-yellow-50 p-4 rounded-lg text-center border border-yellow-200">
+                                <div class="text-3xl font-bold text-yellow-600" id="pendingCount">0</div>
+                                <div class="text-sm text-yellow-700 mt-1">Pendentes</div>
+                            </div>
+                            <div class="bg-blue-50 p-4 rounded-lg text-center border border-blue-200">
+                                <div class="text-3xl font-bold text-blue-600" id="scanUsed">0</div>
+                                <div class="text-sm text-blue-700 mt-1">Scans Usados</div>
+                            </div>
+                            <div class="bg-purple-50 p-4 rounded-lg text-center border border-purple-200">
+                                <div class="text-3xl font-bold text-purple-600" id="scanLimit">∞</div>
+                                <div class="text-sm text-purple-700 mt-1">Limite</div>
+                            </div>
                         </div>
-                        <div class="bg-yellow-50 p-4 rounded-lg text-center">
-                            <div class="text-3xl font-bold text-yellow-600" id="pendingCount">0</div>
-                            <div class="text-sm text-yellow-700 mt-1">Pendentes</div>
-                        </div>
-                        <div class="bg-blue-50 p-4 rounded-lg text-center">
-                            <div class="text-3xl font-bold text-blue-600" id="scanUsed">0</div>
-                            <div class="text-sm text-blue-700 mt-1">Scans Usados</div>
-                        </div>
-                        <div class="bg-purple-50 p-4 rounded-lg text-center">
-                            <div class="text-3xl font-bold text-purple-600" id="scanLimit">∞</div>
-                            <div class="text-sm text-purple-700 mt-1">Limite</div>
+                        
+                        <!-- Progresso -->
+                        <div class="p-6 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border border-blue-200">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="font-semibold text-gray-800 flex items-center">
+                                    <i class="fas fa-chart-line mr-2 text-blue-600"></i>
+                                    Progresso do Evento
+                                </h3>
+                                <span id="connectionStatus" class="flex items-center text-sm">
+                                    <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                                    Online
+                                </span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-4 mb-3">
+                                <div id="progressBar" class="bg-gradient-to-r from-blue-500 to-green-500 h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                            <div class="text-center">
+                                <span id="progressText" class="text-lg font-medium text-gray-700">0% dos convidados digitalizados</span>
+                            </div>
                         </div>
                     </div>
-                    
-                    <!-- Progresso -->
-                    <div class="p-4 bg-gray-50 rounded-lg">
-                        <div class="flex justify-between items-center mb-2">
-                            <h3 class="font-medium text-gray-800">Progresso do Evento</h3>
-                            <span id="connectionStatus" class="flex items-center text-sm">
-                                <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                                Online
-                            </span>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-3">
-                            <div id="progressBar" class="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
-                        </div>
-                        <div class="text-sm text-gray-600 mt-2">
-                            <span id="progressText">0% dos convidados digitalizados</span>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Ações Rápidas -->
-                <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
-                    <h2 class="text-xl font-semibold text-gray-800 mb-4">Ações Rápidas</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <button id="quickScanBtn" class="bg-blue-600 text-white py-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center text-lg font-medium">
-                            <i class="fas fa-qrcode mr-3"></i>
-                            Ir para Scanner
-                        </button>
-                        <button id="refreshDataBtn" class="bg-gray-600 text-white py-4 rounded-lg hover:bg-gray-700 transition-colors flex items-center justify-center text-lg font-medium">
-                            <i class="fas fa-refresh mr-3"></i>
-                            Atualizar Dados
-                        </button>
-                        <button id="syncBtn" class="bg-green-600 text-white py-4 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center text-lg font-medium">
-                            <i class="fas fa-sync-alt mr-3"></i>
-                            Sincronizar
-                        </button>
-                        <button id="exportBtn" class="bg-purple-600 text-white py-4 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center text-lg font-medium">
-                            <i class="fas fa-download mr-3"></i>
-                            Exportar Relatório
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Configurações -->
-                <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
-                    <h2 class="text-xl font-semibold text-gray-800 mb-4">Configurações</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Scanner -->
-                        <div>
-                            <h3 class="font-medium text-gray-800 mb-3">Scanner</h3>
-                            <div class="space-y-3">
-                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                    <div>
-                                        <div class="font-medium text-gray-800">Modo Rápido</div>
-                                        <div class="text-sm text-gray-600">Digitalização contínua</div>
-                                    </div>
-                                    <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" id="quickModeToggle" class="sr-only peer">
-                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                                    </label>
-                                </div>
-                                
-                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                    <div>
-                                        <div class="font-medium text-gray-800">Flash</div>
-                                        <div class="text-sm text-gray-600">Luz da câmara</div>
-                                    </div>
-                                    <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" id="flashToggle" class="sr-only peer">
-                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                                    </label>
+                    <!-- Lista de Convidados -->
+                    <div class="bg-white rounded-xl shadow-sm">
+                        <div class="p-6 border-b bg-gradient-to-r from-blue-50 to-purple-50">
+                            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                                <h2 class="text-xl font-semibold text-gray-800 flex items-center">
+                                    <i class="fas fa-users mr-3 text-blue-600"></i>
+                                    Lista de Convidados
+                                </h2>
+                                <div class="flex flex-col sm:flex-row gap-2">
+                                    <input type="text" id="searchInput" placeholder="Procurar convidado..."
+                                           class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <select id="filterSelect" class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        <option value="all">Todos</option>
+                                        <option value="scanned">Digitalizados</option>
+                                        <option value="pending">Pendentes</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- Feedback -->
-                        <div>
-                            <h3 class="font-medium text-gray-800 mb-3">Feedback</h3>
-                            <div class="space-y-3">
-                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                    <div>
-                                        <div class="font-medium text-gray-800">Som</div>
-                                        <div class="text-sm text-gray-600">Feedback sonoro</div>
-                                    </div>
-                                    <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" id="soundToggle" class="sr-only peer" checked>
-                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                                    </label>
-                                </div>
-                                
-                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                    <div>
-                                        <div class="font-medium text-gray-800">Vibração</div>
-                                        <div class="text-sm text-gray-600">Feedback táctil</div>
-                                    </div>
-                                    <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" id="vibrationToggle" class="sr-only peer" checked>
-                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                                    </label>
-                                </div>
+                        <div id="guestList" class="p-6">
+                            <div class="text-center text-gray-500 py-8">
+                                <i class="fas fa-users text-3xl mb-2"></i>
+                                <p>A carregar lista de convidados...</p>
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Tema -->
-                    <div class="mt-6 p-4 bg-gray-50 rounded-lg">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <div class="font-medium text-gray-800">Tema da Interface</div>
-                                <div class="text-sm text-gray-600">Escolha a aparência do aplicativo</div>
-                            </div>
-                            <select id="themeSelect" class="px-4 py-2 border border-gray-300 rounded-lg bg-white">
-                                <option value="light">Claro</option>
-                                <option value="dark">Escuro</option>
-                                <option value="darkGray">Cinza Escuro</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Lista de Convidados -->
-                <div class="bg-white rounded-xl shadow-sm">
-                    <div class="p-6 border-b">
-                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-                            <h2 class="text-xl font-semibold text-gray-800">Lista de Convidados</h2>
-                            <div class="flex flex-col sm:flex-row gap-2">
-                                <input type="text" id="searchInput" placeholder="Procurar convidado..."
-                                       class="px-4 py-2 border border-gray-300 rounded-lg text-sm">
-                                <select id="filterSelect" class="px-4 py-2 border border-gray-300 rounded-lg text-sm">
-                                    <option value="all">Todos</option>
-                                    <option value="scanned">Digitalizados</option>
-                                    <option value="pending">Pendentes</option>
-                                </select>
+                    <!-- Configurações do Scanner -->
+                    <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+                        <h2 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+                            <i class="fas fa-qrcode mr-3 text-blue-600"></i>
+                            Configurações do Scanner
+                        </h2>
+                        <div class="space-y-6">
+                            <!-- Modo Rápido -->
+                            <div class="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
+                                <div class="flex-1">
+                                    <h3 class="font-medium text-gray-800 flex items-center">
+                                        <i class="fas fa-bolt mr-2 text-blue-600"></i>
+                                        Modo Rápido
+                                    </h3>
+                                    <p class="text-sm text-gray-600 mt-1">Digitalização contínua sem pausas</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="quickModeToggle" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+
+                            <!-- Flash da Câmara -->
+                            <div class="flex items-center justify-between p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                                <div class="flex-1">
+                                    <h3 class="font-medium text-gray-800 flex items-center">
+                                        <i class="fas fa-flashlight mr-2 text-yellow-600"></i>
+                                        Flash da Câmara
+                                    </h3>
+                                    <p class="text-sm text-gray-600 mt-1">Ativar luz para ambientes escuros</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="flashModeToggle" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-yellow-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-600"></div>
+                                </label>
                             </div>
                         </div>
                     </div>
-                    
-                    <div id="guestList" class="p-6">
-                        <div class="text-center text-gray-500 py-8">
-                            <i class="fas fa-users text-3xl mb-2"></i>
-                            <p>A carregar lista de convidados...</p>
+
+                    <!-- Configurações de Feedback -->
+                    <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+                        <h2 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+                            <i class="fas fa-volume-up mr-3 text-green-600"></i>
+                            Configurações de Feedback
+                        </h2>
+                        <div class="space-y-6">
+                            <!-- Som -->
+                            <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
+                                <div class="flex-1">
+                                    <h3 class="font-medium text-gray-800 flex items-center">
+                                        <i class="fas fa-volume-up mr-2 text-green-600"></i>
+                                        Som
+                                    </h3>
+                                    <p class="text-sm text-gray-600 mt-1">Feedback sonoro nos scans</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="soundToggle" class="sr-only peer" checked>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                                </label>
+                            </div>
+
+                            <!-- Vibração -->
+                            <div class="flex items-center justify-between p-4 bg-purple-50 rounded-lg border border-purple-200">
+                                <div class="flex-1">
+                                    <h3 class="font-medium text-gray-800 flex items-center">
+                                        <i class="fas fa-mobile-alt mr-2 text-purple-600"></i>
+                                        Vibração
+                                    </h3>
+                                    <p class="text-sm text-gray-600 mt-1">Feedback tátil nos scans</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="vibrationToggle" class="sr-only peer" checked>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                                </label>
+                            </div>
                         </div>
                     </div>
+
+                    <!-- Aparência -->
+                    <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+                        <h2 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+                            <i class="fas fa-palette mr-3 text-indigo-600"></i>
+                            Aparência
+                        </h2>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-3">Tema da Interface</label>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <label class="relative cursor-pointer">
+                                        <input type="radio" name="theme" value="light" class="sr-only peer" checked>
+                                        <div class="p-4 border-2 border-gray-200 rounded-lg peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all">
+                                            <div class="flex items-center justify-center mb-2">
+                                                <i class="fas fa-sun text-2xl text-yellow-500"></i>
+                                            </div>
+                                            <div class="text-center">
+                                                <div class="font-medium text-gray-800">Claro</div>
+                                                <div class="text-sm text-gray-600">Tema padrão</div>
+                                            </div>
+                                        </div>
+                                    </label>
+                                    <label class="relative cursor-pointer">
+                                        <input type="radio" name="theme" value="dark" class="sr-only peer">
+                                        <div class="p-4 border-2 border-gray-200 rounded-lg peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all">
+                                            <div class="flex items-center justify-center mb-2">
+                                                <i class="fas fa-moon text-2xl text-blue-600"></i>
+                                            </div>
+                                            <div class="text-center">
+                                                <div class="font-medium text-gray-800">Escuro</div>
+                                                <div class="text-sm text-gray-600">Modo noturno</div>
+                                            </div>
+                                        </div>
+                                    </label>
+                                    <label class="relative cursor-pointer">
+                                        <input type="radio" name="theme" value="darkGray" class="sr-only peer">
+                                        <div class="p-4 border-2 border-gray-200 rounded-lg peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all">
+                                            <div class="flex items-center justify-center mb-2">
+                                                <i class="fas fa-adjust text-2xl text-gray-600"></i>
+                                            </div>
+                                            <div class="text-center">
+                                                <div class="font-medium text-gray-800">Cinza Escuro</div>
+                                                <div class="text-sm text-gray-600">Contraste médio</div>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                    <!-- Ações Rápidas -->
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <h2 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+                            <i class="fas fa-bolt mr-3 text-yellow-600"></i>
+                            Ações Rápidas
+                        </h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <button id="refreshDataBtn" class="bg-gray-600 text-white py-4 px-6 rounded-lg hover:bg-gray-700 transition-colors flex items-center justify-center text-lg font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                                <i class="fas fa-refresh mr-3"></i>
+                                Atualizar
+                            </button>
+                            <button id="syncBtn" class="bg-green-600 text-white py-4 px-6 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center text-lg font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                                <i class="fas fa-sync-alt mr-3"></i>
+                                Sincronizar
+                            </button>
+                            <button id="exportBtn" class="bg-purple-600 text-white py-4 px-6 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center text-lg font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                                <i class="fas fa-download mr-3"></i>
+                                Exportar
+                            </button>
+                            <button id="quickScanBtn" class="bg-blue-600 text-white py-4 px-6 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center text-lg font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                                <i class="fas fa-qrcode mr-3"></i>
+                                Voltar ao Scanner
+                            </button>
+                        </div>
+                    </div>
+
+
                 </div>
+            </div>
+
             </div>
         </div>
     </div>
@@ -442,9 +544,7 @@
         
         // Elementos das abas
         const scannerTab = document.getElementById('scannerTab');
-        const dashboardTab = document.getElementById('dashboardTab');
         const scannerTabContent = document.getElementById('scannerTabContent');
-        const dashboardTabContent = document.getElementById('dashboardTabContent');
         const quickScanBtn = document.getElementById('quickScanBtn');
         const refreshDataBtn = document.getElementById('refreshDataBtn');
         const progressBar = document.getElementById('progressBar');
@@ -456,20 +556,37 @@
         const scannerScannedCount = document.getElementById('scannerScannedCount');
         const scannerTotalGuestCount = document.getElementById('scannerTotalGuestCount');
         
-        // Configurações DOM
-        const quickModeToggle = document.getElementById('quickModeToggle');
-        const flashToggle = document.getElementById('flashToggle');
-        const soundToggle = document.getElementById('soundToggle');
-        const vibrationToggle = document.getElementById('vibrationToggle');
+        // Elementos das abas
+        const optionsTab = document.getElementById('optionsTab');
+        const optionsTabContent = document.getElementById('optionsTabContent');
 
-        // Verificar conexão com internet
-        function checkConnection() {
-            return navigator.onLine;
+        // Estado da conexão
+        let isOnline = true;
+        let wasOffline = false;
+
+        // Verificar conexão real com internet (não só status do navegador)
+        async function checkRealConnection() {
+            if (!navigator.onLine) {
+                return false;
+            }
+            
+            try {
+                // Tentar fazer uma requisição real para verificar conectividade
+                const response = await fetch('https://www.google.com/favicon.ico', {
+                    method: 'HEAD',
+                    mode: 'no-cors',
+                    cache: 'no-cache',
+                    timeout: 5000
+                });
+                return true;
+            } catch (error) {
+                return false;
+            }
         }
 
         // Verificar se token ainda é válido
         async function checkTokenValidity() {
-            if (!currentClient || !supabaseClient) return false;
+            if (!currentClient || !supabaseClient || !isOnline) return false;
             
             try {
                 const { data, error } = await supabaseClient
@@ -492,26 +609,100 @@
             }
         }
 
-        // Atualizar status de conexão
-        function updateConnectionStatus(isOnline) {
+        // Atualizar status de conexão e interface
+        function updateConnectionStatus(online) {
             const statusElement = connectionStatus;
-            if (isOnline) {
+            const statusBadge = document.getElementById('statusBadge');
+            
+            if (online) {
                 statusElement.innerHTML = '<div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>Online';
-                statusElement.className = 'flex items-center mt-1 text-green-700';
+                statusElement.className = 'flex items-center text-sm text-green-700';
+                statusBadge.innerHTML = 'Online';
+                statusBadge.className = 'ml-2 sm:ml-3 px-2 sm:px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs sm:text-sm font-medium';
+                
+                // Reativar botões que precisam de internet
+                enableOnlineFeatures();
+                
+                // Se estava offline e agora está online, sincronizar dados
+                if (wasOffline) {
+                    wasOffline = false;
+                    autoSyncAfterReconnection();
+                }
             } else {
-                statusElement.innerHTML = '<div class="w-2 h-2 bg-red-500 rounded-full mr-2"></div>Offline';
-                statusElement.className = 'flex items-center mt-1 text-red-700';
+                statusElement.innerHTML = '<div class="w-2 h-2 bg-red-500 rounded-full mr-2"></div>Sem Internet';
+                statusElement.className = 'flex items-center text-sm text-red-700';
+                statusBadge.innerHTML = 'Sem Internet';
+                statusBadge.className = 'ml-2 sm:ml-3 px-2 sm:px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs sm:text-sm font-medium';
+                
+                // Desativar funcionalidades que precisam de internet
+                disableOnlineFeatures();
+                wasOffline = true;
+                
+                // Parar scanner se estiver ativo
+                if (isScanning) {
+                    stopScanner();
+                }
+            }
+            
+            isOnline = online;
+        }
+
+        // Ativar funcionalidades online
+        function enableOnlineFeatures() {
+            // Reativar botões
+            const onlineButtons = [
+                document.getElementById('syncBtn'),
+                document.getElementById('refreshDataBtn'),
+                document.getElementById('toggleScanner')
+            ];
+            
+            onlineButtons.forEach(btn => {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            });
+        }
+
+        // Desativar funcionalidades que precisam de internet
+        function disableOnlineFeatures() {
+            // Desativar botões que precisam de internet
+            const onlineButtons = [
+                document.getElementById('syncBtn'),
+                document.getElementById('refreshDataBtn'),
+                document.getElementById('toggleScanner')
+            ];
+            
+            onlineButtons.forEach(btn => {
+                if (btn) {
+                    btn.disabled = true;
+                    btn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            });
+        }
+
+        // Sincronização automática após reconexão
+        async function autoSyncAfterReconnection() {
+            try {
+                console.log('Reconectado! Sincronizando dados...');
+                await loadSession();
+                console.log('Dados sincronizados automaticamente após reconexão');
+            } catch (error) {
+                console.error('Erro na sincronização automática:', error);
             }
         }
 
         // Login
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const token = tokenInput.value.trim();
+            
+            // Usar token real se estiver mascarado, senão usar o valor digitado
+            const token = (tokenInput.value === '********' && realToken) ? realToken : tokenInput.value.trim();
             
             if (!token) return;
             
-            if (!checkConnection()) {
+            const connectionStatus = await checkRealConnection();
+            if (!connectionStatus) {
                 loginError.textContent = 'Sem conexão com a internet';
                 loginError.classList.remove('hidden');
                 return;
@@ -586,24 +777,44 @@
 
         // Iniciar monitoramento
         function startMonitoring() {
-            // Verificar conexão a cada 5 segundos
-            connectionCheckInterval = setInterval(() => {
-                updateConnectionStatus(checkConnection());
-                if (!checkConnection()) {
-                    showNotification('Conexão perdida! Verifique sua internet.', 'error');
+            // Verificar conexão real a cada 3 segundos
+            connectionCheckInterval = setInterval(async () => {
+                const currentConnectionStatus = await checkRealConnection();
+                
+                // Só atualizar se o status mudou
+                if (currentConnectionStatus !== isOnline) {
+                    updateConnectionStatus(currentConnectionStatus);
                 }
-            }, 5000);
+            }, 3000);
             
-            // Verificar validade do token a cada 30 segundos
+            // Verificar validade do token a cada 30 segundos (só se online)
             tokenCheckInterval = setInterval(async () => {
-                const isValid = await checkTokenValidity();
-                if (!isValid) {
-                    showNotification('Token expirado! A redireccionar para o login...', 'error');
-                    setTimeout(() => {
-                        logout();
-                    }, 2000);
+                if (isOnline) {
+                    const isValid = await checkTokenValidity();
+                    if (!isValid) {
+                        showNotification('Token expirado! A redireccionar para o login...', 'error');
+                        setTimeout(() => {
+                            logout();
+                        }, 2000);
+                    }
                 }
             }, 30000);
+            
+            // Listeners para eventos de conexão do navegador
+            window.addEventListener('online', async () => {
+                // Verificar conexão real quando navegador diz que está online
+                const realConnection = await checkRealConnection();
+                if (realConnection && !isOnline) {
+                    updateConnectionStatus(true);
+                }
+            });
+            
+            window.addEventListener('offline', () => {
+                // Quando navegador detecta offline, atualizar imediatamente
+                if (isOnline) {
+                    updateConnectionStatus(false);
+                }
+            });
         }
 
         // Parar monitoramento
@@ -667,26 +878,25 @@
         // Controle das abas
         function switchTab(tabName) {
             // Remover classe active de todas as abas
-            document.querySelectorAll('.tab-button').forEach(btn => {
-                btn.classList.remove('active');
-                btn.classList.remove('bg-blue-50', 'text-blue-600', 'border-blue-500');
-                btn.classList.add('text-gray-500', 'border-transparent');
-            });
+            scannerTab.classList.remove('active', 'bg-blue-50', 'text-blue-600', 'border-blue-500');
+            scannerTab.classList.add('text-gray-500', 'border-transparent');
+            
+            optionsTab.classList.remove('active', 'bg-blue-50', 'text-blue-600', 'border-blue-500');
+            optionsTab.classList.add('text-gray-500', 'border-transparent');
             
             // Esconder todo o conteúdo das abas
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.add('hidden');
-            });
+            scannerTabContent.classList.add('hidden');
+            optionsTabContent.classList.add('hidden');
             
             // Ativar aba selecionada
             if (tabName === 'scanner') {
                 scannerTab.classList.add('active', 'bg-blue-50', 'text-blue-600', 'border-blue-500');
                 scannerTab.classList.remove('text-gray-500', 'border-transparent');
                 scannerTabContent.classList.remove('hidden');
-            } else if (tabName === 'dashboard') {
-                dashboardTab.classList.add('active', 'bg-blue-50', 'text-blue-600', 'border-blue-500');
-                dashboardTab.classList.remove('text-gray-500', 'border-transparent');
-                dashboardTabContent.classList.remove('hidden');
+            } else if (tabName === 'options') {
+                optionsTab.classList.add('active', 'bg-blue-50', 'text-blue-600', 'border-blue-500');
+                optionsTab.classList.remove('text-gray-500', 'border-transparent');
+                optionsTabContent.classList.remove('hidden');
             }
         }
 
@@ -737,7 +947,7 @@
             
             // Capacidade do evento (80%)
             if (totalCount > 0 && (scannedCount / totalCount) >= 0.8) {
-                showNotification('⚠️ 80% da capacidade atingida!', 'warning');
+                showNotification(⚠️ 80% da capacidade atingida!', 'warning');
             }
         }
 
@@ -836,7 +1046,7 @@
                     { facingMode: "environment" },
                     {
                         fps: 10,
-                        qrbox: { width: 450, height: 450 }
+                        qrbox: { width: 350, height: 350 }
                     },
                     onScanSuccess,
                     onScanFailure
@@ -861,14 +1071,14 @@
                         <div class="text-center text-gray-400 px-6">
                             <i class="fas fa-qrcode text-6xl sm:text-7xl mb-6 text-gray-500"></i>
                             <p class="text-lg sm:text-xl font-medium">Scanner parado</p>
-                            <p class="text-sm sm:text-base mt-2 text-gray-500">Clique em "Iniciar Digitalizador" para recomeçar</p>
+                            <p class="text-sm sm:text-base mt-2 text-gray-500">Clique em "Iniciar Scanner" para recomeçar</p>
                         </div>
                     `;
                 });
             }
             
             isScanning = false;
-            toggleScanner.innerHTML = '<i class="fas fa-play mr-2"></i>Iniciar Scanner';
+            toggleScanner.innerHTML = '<i class="fas fa-qrcode mr-2"></i><i class="fas fa-play mr-2"></i>Iniciar Scanner';
             toggleScanner.classList.remove('bg-red-600', 'hover:bg-red-700');
             toggleScanner.classList.add('bg-blue-600', 'hover:bg-blue-700');
         }
@@ -886,7 +1096,7 @@
                 }
                 
                 // Verificar conexão
-                if (!checkConnection()) {
+                if (!isOnline) {
                     showScanResult('Sem conexão com internet', 'error');
                     showNextScanButton();
                     return;
@@ -1051,34 +1261,39 @@
             };
             
             const style = styles[type];
-            scanResult.className = `p-6 rounded-2xl text-center shadow-xl border-l-4 transform transition-all duration-300 ${style.bg} ${style.border} ${style.text} ${style.shadow}`;
+            const scanResultPlaceholder = document.getElementById('scanResultPlaceholder');
+            
+            // Esconder placeholder
+            scanResultPlaceholder.classList.add('hidden');
+            
+            scanResult.className = `p-4 rounded-lg text-center border-l-4 transform transition-all duration-300 ${style.bg} ${style.border} ${style.text} ${style.shadow}`;
             
             if (guestName) {
                 scanResult.innerHTML = `
-                    <div class="flex items-center justify-center mb-4">
-                        <i class="${style.icon} text-4xl"></i>
+                    <div class="flex items-center justify-center mb-3">
+                        <i class="${style.icon} text-3xl"></i>
                     </div>
-                    <div class="text-2xl font-bold mb-2">${status}</div>
-                    <div class="text-lg font-medium opacity-80">${guestName}</div>
+                    <div class="text-xl font-bold mb-1">${status}</div>
+                    <div class="text-sm font-medium opacity-80">${guestName}</div>
                 `;
             } else {
                 scanResult.innerHTML = `
-                    <div class="flex items-center justify-center mb-4">
-                        <i class="${style.icon} text-4xl"></i>
+                    <div class="flex items-center justify-center mb-3">
+                        <i class="${style.icon} text-3xl"></i>
                     </div>
-                    <div class="text-2xl font-bold">${status}</div>
+                    <div class="text-xl font-bold">${status}</div>
                 `;
             }
             
-            scanResult.classList.remove('hidden', 'scale-95');
-            scanResult.classList.add('scale-100');
+            scanResult.classList.remove('hidden');
             
-            setTimeout(() => {
-                scanResult.classList.add('scale-95');
+            // Auto-hide após 5 segundos se estiver no modo rápido
+            if (settings.quickMode) {
                 setTimeout(() => {
                     scanResult.classList.add('hidden');
-                }, 300);
-            }, 3000);
+                    scanResultPlaceholder.classList.remove('hidden');
+                }, 5000);
+            }
         }
 
         // Busca e filtros
@@ -1087,7 +1302,7 @@
 
         // Sincronizar dados
         syncBtn.addEventListener('click', async () => {
-            if (!checkConnection()) {
+            if (!isOnline) {
                 showNotification('Sem conexão para sincronizar', 'error');
                 return;
             }
@@ -1131,65 +1346,99 @@
             scanPaused = false;
             nextScanContainer.classList.add('hidden');
             scanResult.classList.add('hidden');
+            document.getElementById('scanResultPlaceholder').classList.remove('hidden');
         });
 
-        // Configurações
-        quickModeToggle.addEventListener('change', (e) => {
+        // Event listeners para configurações
+        document.getElementById('quickModeToggle').addEventListener('change', (e) => {
             settings.quickMode = e.target.checked;
-            if (settings.quickMode) {
-                scanPaused = false;
-                nextScanContainer.classList.add('hidden');
-                showNotification('Modo rápido ativado', 'info');
-            } else {
-                showNotification('Modo rápido desativado', 'info');
-            }
+            localStorage.setItem('scannerSettings', JSON.stringify(settings));
+            showNotification(settings.quickMode ? 'Modo rápido ativado' : 'Modo rápido desativado', 'info');
         });
 
-        flashToggle.addEventListener('change', (e) => {
+        document.getElementById('flashModeToggle').addEventListener('change', (e) => {
             settings.flashMode = e.target.checked;
-            // Implementar controle de flash se suportado
+            localStorage.setItem('scannerSettings', JSON.stringify(settings));
             showNotification(settings.flashMode ? 'Flash ativado' : 'Flash desativado', 'info');
         });
 
-        soundToggle.addEventListener('change', (e) => {
+        document.getElementById('soundToggle').addEventListener('change', (e) => {
             settings.soundEnabled = e.target.checked;
+            localStorage.setItem('scannerSettings', JSON.stringify(settings));
             showNotification(settings.soundEnabled ? 'Som ativado' : 'Som desativado', 'info');
         });
 
-        vibrationToggle.addEventListener('change', (e) => {
+        document.getElementById('vibrationToggle').addEventListener('change', (e) => {
             settings.vibrationEnabled = e.target.checked;
-            showNotification(settings.vibrationEnabled ? 'Vibração activada' : 'Vibração desactivada', 'info');
+            localStorage.setItem('scannerSettings', JSON.stringify(settings));
+            showNotification(settings.vibrationEnabled ? 'Vibração ativada' : 'Vibração desativada', 'info');
         });
 
-        // Controlo do tema
-        const themeSelect = document.getElementById('themeSelect');
-        
+        // Event listeners para temas
+        document.querySelectorAll('input[name="theme"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    settings.theme = e.target.value;
+                    localStorage.setItem('scannerSettings', JSON.stringify(settings));
+                    applyTheme(settings.theme);
+                    showNotification('Tema alterado com sucesso', 'success');
+                }
+            });
+        });
+
+
+
+        // Função para aplicar tema
         function applyTheme(theme) {
-            // Remover todas as classes de tema
             document.body.classList.remove('dark', 'dark-gray');
-            
-            // Aplicar tema selecionado
             if (theme === 'dark') {
                 document.body.classList.add('dark');
             } else if (theme === 'darkGray') {
                 document.body.classList.add('dark-gray');
             }
-            
-            settings.theme = theme;
-            localStorage.setItem('theme', theme);
-            
-            const themeNames = {
-                light: 'Tema claro',
-                dark: 'Tema escuro',
-                darkGray: 'Tema cinza escuro'
+        }
+
+        // Função para resetar configurações
+        function resetSettings() {
+            settings = {
+                quickMode: false,
+                flashMode: false,
+                soundEnabled: true,
+                vibrationEnabled: true,
+                theme: 'light'
             };
             
-            showNotification(`${themeNames[theme]} activado`, 'info');
+            // Atualizar interface
+            document.getElementById('quickModeToggle').checked = settings.quickMode;
+            document.getElementById('flashModeToggle').checked = settings.flashMode;
+            document.getElementById('soundToggle').checked = settings.soundEnabled;
+            document.getElementById('vibrationToggle').checked = settings.vibrationEnabled;
+            document.querySelector(`input[name="theme"][value="${settings.theme}"]`).checked = true;
+            
+            // Aplicar tema
+            applyTheme(settings.theme);
+            
+            // Salvar
+            localStorage.setItem('scannerSettings', JSON.stringify(settings));
         }
-        
-        themeSelect.addEventListener('change', (e) => {
-            applyTheme(e.target.value);
-        });
+
+        // Função para carregar configurações salvas
+        function loadSettings() {
+            const savedSettings = localStorage.getItem('scannerSettings');
+            if (savedSettings) {
+                settings = { ...settings, ...JSON.parse(savedSettings) };
+                
+                // Atualizar interface
+                document.getElementById('quickModeToggle').checked = settings.quickMode;
+                document.getElementById('flashModeToggle').checked = settings.flashMode;
+                document.getElementById('soundToggle').checked = settings.soundEnabled;
+                document.getElementById('vibrationToggle').checked = settings.vibrationEnabled;
+                document.querySelector(`input[name="theme"][value="${settings.theme}"]`).checked = true;
+                
+                // Aplicar tema
+                applyTheme(settings.theme);
+            }
+        }
 
         // Logout
         function logout() {
@@ -1199,23 +1448,59 @@
             guests = [];
             scannedGuests.clear();
             scanPaused = false;
-            // NÃO limpar o token da caixa de texto para facilitar próximo login
-            // tokenInput.value = '';
+            
+            // Manter token mascarado após logout
+            const savedToken = localStorage.getItem('eventToken');
+            if (savedToken) {
+                realToken = savedToken;
+                tokenInput.value = '********';
+                tokenInput.style.color = '#6b7280';
+                tokenInput.style.fontFamily = 'monospace';
+                
+                // Adicionar texto de ajuda se não existir
+                let helpText = document.getElementById('tokenHelp');
+                if (!helpText) {
+                    helpText = document.createElement('p');
+                    helpText.id = 'tokenHelp';
+                    helpText.className = 'text-xs text-gray-500 mt-1';
+                    helpText.innerHTML = '<i class="fas fa-info-circle mr-1"></i>Token guardado - clique em Entrar';
+                    tokenInput.parentNode.appendChild(helpText);
+                }
+            }
+            
             loginScreen.classList.remove('hidden');
             mainApp.classList.add('hidden');
         }
 
         logoutBtn.addEventListener('click', logout);
 
+        // Função para alternar seções colapsáveis
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            const icon = document.getElementById(sectionId + 'Icon');
+            
+            if (section.classList.contains('hidden')) {
+                section.classList.remove('hidden');
+                icon.classList.add('rotate-180');
+            } else {
+                section.classList.add('hidden');
+                icon.classList.remove('rotate-180');
+            }
+        }
+
         // Event listeners das abas
         scannerTab.addEventListener('click', () => switchTab('scanner'));
-        dashboardTab.addEventListener('click', () => switchTab('dashboard'));
+        optionsTab.addEventListener('click', () => switchTab('options'));
         
         // Botão de ação rápida para ir ao scanner
         quickScanBtn.addEventListener('click', () => switchTab('scanner'));
         
         // Botão de atualizar dados
         refreshDataBtn.addEventListener('click', async () => {
+            if (!isOnline) {
+                return; // Não fazer nada se offline, botão já está desabilitado
+            }
+            
             refreshDataBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Atualizando...';
             try {
                 await loadSession();
@@ -1223,27 +1508,64 @@
             } catch (error) {
                 showNotification('Erro ao atualizar dados', 'error');
             } finally {
-                refreshDataBtn.innerHTML = '<i class="fas fa-refresh mr-2"></i>Atualizar Dados';
+                refreshDataBtn.innerHTML = '<i class="fas fa-refresh mr-2"></i>Atualizar';
             }
         });
 
+        // Variável para armazenar o token real
+        let realToken = null;
+
         // Inicialização
         document.addEventListener('DOMContentLoaded', () => {
+            // Atualizar ano automaticamente
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+            
             // Carregar token salvo automaticamente
             const savedToken = localStorage.getItem('eventToken');
             if (savedToken) {
-                tokenInput.value = savedToken;
+                realToken = savedToken;
+                tokenInput.value = '********';
+                tokenInput.style.color = '#6b7280';
+                tokenInput.style.fontFamily = 'monospace';
+                
+                // Adicionar texto de ajuda
+                const helpText = document.createElement('p');
+                helpText.id = 'tokenHelp';
+                helpText.className = 'text-xs text-gray-500 mt-1';
+                helpText.innerHTML = '<i class="fas fa-info-circle mr-1"></i>Token guardado - clique em Entrar';
+                tokenInput.parentNode.appendChild(helpText);
             }
             
-            // Carregar preferência do tema
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            settings.theme = savedTheme;
-            themeSelect.value = savedTheme;
-            applyTheme(savedTheme);
+            // Controlar comportamento do campo de token
+            tokenInput.addEventListener('focus', () => {
+                if (tokenInput.value === '********' && realToken) {
+                    tokenInput.value = '';
+                    tokenInput.style.color = '#374151';
+                    tokenInput.style.fontFamily = 'Inter, sans-serif';
+                    realToken = null; // Limpar token salvo se usuário começar a digitar
+                    
+                    // Remover texto de ajuda
+                    const helpText = document.getElementById('tokenHelp');
+                    if (helpText) helpText.remove();
+                }
+            });
+            
+            tokenInput.addEventListener('input', () => {
+                if (realToken && tokenInput.value !== '********') {
+                    realToken = null; // Limpar token salvo se usuário digitar algo
+                    
+                    // Remover texto de ajuda
+                    const helpText = document.getElementById('tokenHelp');
+                    if (helpText) helpText.remove();
+                }
+            });
+            
+            // Carregar configurações salvas
+            loadSettings();
             
             // Inicializar na aba do scanner
             switchTab('scanner');
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96acf3bd14ce77d7',t:'MTc1NDQ2NjcxOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96afa807f48c77e3',t:'MTc1NDQ5NTA3NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
