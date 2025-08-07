@@ -1242,6 +1242,24 @@
                 });
                 
                 if (!guest) {
+                    // Registrar tentativa de código inválido no Supabase
+                    try {
+                        const { error: logError } = await supabaseClient
+                            .from('logs')
+                            .insert({
+                                token: currentClient.token,
+                                data: new Date().toISOString(),
+                                status: 'codigo_invalido',
+                                dispositivo: decodedText.trim()
+                            });
+                        
+                        if (logError) {
+                            console.error('Erro ao registrar código inválido:', logError);
+                        }
+                    } catch (error) {
+                        console.error('Erro ao registrar log de código inválido:', error);
+                    }
+                    
                     showScanResult('CÓDIGO INVÁLIDO', '', 'error');
                     playFeedback('error');
                     showNextScanButton();
@@ -1250,6 +1268,24 @@
                 
                 // Verificar se já foi escaneado
                 if (scannedGuests.has(guest.id)) {
+                    // Registrar tentativa de re-scan no Supabase
+                    try {
+                        const { error: logError } = await supabaseClient
+                            .from('logs')
+                            .insert({
+                                token: currentClient.token,
+                                data: new Date().toISOString(),
+                                status: 'ja_escaneado',
+                                dispositivo: guest.codigo
+                            });
+                        
+                        if (logError) {
+                            console.error('Erro ao registrar tentativa duplicada:', logError);
+                        }
+                    } catch (error) {
+                        console.error('Erro ao registrar log de tentativa duplicada:', error);
+                    }
+                    
                     showScanResult('JÁ ESCANEADO', guest.nome, 'warning');
                     playFeedback('warning');
                     showNextScanButton();
@@ -1511,15 +1547,27 @@
                                 if (!scanAttempts[log.dispositivo]) {
                                     scanAttempts[log.dispositivo] = {
                                         total: 0,
+                                        successful: 0,
+                                        duplicated: 0,
+                                        invalid: 0,
                                         firstScan: null,
-                                        successful: false
+                                        lastAttempt: null,
+                                        hasSuccess: false
                                     };
                                 }
                                 scanAttempts[log.dispositivo].total++;
+                                scanAttempts[log.dispositivo].lastAttempt = new Date(log.data);
                                 
-                                if (log.status === 'escaneado' && !scanAttempts[log.dispositivo].firstScan) {
-                                    scanAttempts[log.dispositivo].firstScan = new Date(log.data);
-                                    scanAttempts[log.dispositivo].successful = true;
+                                if (log.status === 'escaneado') {
+                                    scanAttempts[log.dispositivo].successful++;
+                                    if (!scanAttempts[log.dispositivo].firstScan) {
+                                        scanAttempts[log.dispositivo].firstScan = new Date(log.data);
+                                        scanAttempts[log.dispositivo].hasSuccess = true;
+                                    }
+                                } else if (log.status === 'ja_escaneado') {
+                                    scanAttempts[log.dispositivo].duplicated++;
+                                } else if (log.status === 'codigo_invalido') {
+                                    scanAttempts[log.dispositivo].invalid++;
                                 }
                             }
                         });
@@ -1621,21 +1669,30 @@
             
             yPos += 10;
             
-            // Cabeçalho da tabela
+            // Cabeçalho da tabela com layout otimizado
             doc.setFillColor(...primaryColor);
-            doc.rect(15, yPos, 180, 8, 'F');
+            doc.rect(15, yPos, 180, 10, 'F');
             
             doc.setTextColor(255, 255, 255);
-            doc.setFontSize(9);
+            doc.setFontSize(8);
             doc.setFont('helvetica', 'bold');
-            doc.text('NOME', 18, yPos + 5);
-            doc.text('STATUS', 100, yPos + 5);
-            doc.text('TENTATIVAS', 130, yPos + 5);
-            doc.text('PRIMEIRO ACESSO', 160, yPos + 5);
             
-            yPos += 12;
+            // Definir posições das colunas otimizadas
+            const colPositions = {
+                nome: 18,      // 70 unidades de largura
+                status: 88,    // 25 unidades de largura  
+                tentativas: 113, // 15 unidades de largura
+                horario: 128   // 67 unidades de largura
+            };
             
-            // Dados dos convidados
+            doc.text('NOME DO CONVIDADO', colPositions.nome, yPos + 6);
+            doc.text('STATUS', colPositions.status, yPos + 6);
+            doc.text('TENT.', colPositions.tentativas, yPos + 6);
+            doc.text('PRIMEIRO ACESSO', colPositions.horario, yPos + 6);
+            
+            yPos += 14;
+            
+            // Dados dos convidados com layout otimizado
             doc.setTextColor(0, 0, 0);
             doc.setFont('helvetica', 'normal');
             
@@ -1643,48 +1700,78 @@
                 if (yPos > 270) {
                     doc.addPage();
                     yPos = 20;
+                    
+                    // Repetir cabeçalho na nova página
+                    doc.setFillColor(...primaryColor);
+                    doc.rect(15, yPos, 180, 10, 'F');
+                    
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFontSize(8);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('NOME DO CONVIDADO', colPositions.nome, yPos + 6);
+                    doc.text('STATUS', colPositions.status, yPos + 6);
+                    doc.text('TENT.', colPositions.tentativas, yPos + 6);
+                    doc.text('PRIMEIRO ACESSO', colPositions.horario, yPos + 6);
+                    
+                    yPos += 14;
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFont('helvetica', 'normal');
                 }
                 
                 const isScanned = scannedGuests.has(guest.id);
                 const attempts = scanAttempts[guest.codigo];
                 const attemptCount = attempts ? attempts.total : 0;
-                const firstScanTime = attempts && attempts.firstScan ? 
-                    attempts.firstScan.toLocaleString('pt-BR') : '-';
                 
                 // Cor de fundo alternada
                 if (index % 2 === 0) {
                     doc.setFillColor(249, 250, 251);
-                    doc.rect(15, yPos - 2, 180, 6, 'F');
+                    doc.rect(15, yPos - 2, 180, 8, 'F');
                 }
                 
-                // Nome do convidado
-                doc.setFontSize(8);
-                const maxNameLength = 35;
+                // Nome do convidado (máximo 30 caracteres)
+                doc.setFontSize(7);
+                doc.setTextColor(0, 0, 0);
+                const maxNameLength = 30;
                 const displayName = guest.nome.length > maxNameLength ? 
                     guest.nome.substring(0, maxNameLength) + '...' : guest.nome;
-                doc.text(displayName, 18, yPos + 2);
+                doc.text(displayName, colPositions.nome, yPos + 3);
                 
                 // Status
+                doc.setFontSize(7);
                 if (isScanned) {
                     doc.setTextColor(...successColor);
-                    doc.text('✓ PRESENTE', 100, yPos + 2);
+                    doc.text('PRESENTE', colPositions.status, yPos + 3);
                 } else {
                     doc.setTextColor(220, 38, 38);
-                    doc.text('✗ AUSENTE', 100, yPos + 2);
+                    doc.text('AUSENTE', colPositions.status, yPos + 3);
                 }
                 
                 // Tentativas
                 doc.setTextColor(0, 0, 0);
-                doc.text(attemptCount.toString(), 140, yPos + 2);
-                
-                // Primeiro acesso
                 doc.setFontSize(7);
-                const maxTimeLength = 15;
-                const displayTime = firstScanTime.length > maxTimeLength ? 
-                    firstScanTime.substring(0, maxTimeLength) + '...' : firstScanTime;
-                doc.text(displayTime, 160, yPos + 2);
+                doc.text(attemptCount.toString(), colPositions.tentativas, yPos + 3);
                 
-                yPos += 6;
+                // Primeiro acesso - formato otimizado
+                doc.setFontSize(6);
+                if (attempts && attempts.firstScan) {
+                    const date = attempts.firstScan;
+                    const dateStr = date.toLocaleDateString('pt-BR', { 
+                        day: '2-digit', 
+                        month: '2-digit' 
+                    });
+                    const timeStr = date.toLocaleTimeString('pt-BR', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    });
+                    const fullDateTime = `${dateStr} ${timeStr}`;
+                    doc.text(fullDateTime, colPositions.horario, yPos + 3);
+                } else {
+                    doc.setTextColor(150, 150, 150);
+                    doc.text('Não compareceu', colPositions.horario, yPos + 3);
+                    doc.setTextColor(0, 0, 0);
+                }
+                
+                yPos += 8;
             });
             
             // Análise de tentativas múltiplas
@@ -1692,9 +1779,13 @@
                 .filter(([code, data]) => data.total > 1)
                 .sort((a, b) => b[1].total - a[1].total);
             
-            if (multipleAttempts.length > 0) {
+            const invalidAttempts = Object.entries(scanAttempts)
+                .filter(([code, data]) => data.invalid > 0)
+                .sort((a, b) => b[1].invalid - a[1].invalid);
+            
+            if (multipleAttempts.length > 0 || invalidAttempts.length > 0) {
                 yPos += 15;
-                if (yPos > 250) {
+                if (yPos > 230) {
                     doc.addPage();
                     yPos = 20;
                 }
@@ -1702,22 +1793,87 @@
                 doc.setFontSize(16);
                 doc.setFont('helvetica', 'bold');
                 doc.setTextColor(0, 0, 0);
-                doc.text('ANÁLISE DE TENTATIVAS MÚLTIPLAS', 20, yPos);
+                doc.text('ANÁLISE DETALHADA DE TENTATIVAS', 20, yPos);
                 
-                yPos += 10;
-                doc.setFontSize(10);
-                doc.setFont('helvetica', 'normal');
-                doc.text(`${multipleAttempts.length} código(s) com múltiplas tentativas de acesso:`, 20, yPos);
-                
-                yPos += 8;
-                multipleAttempts.slice(0, 10).forEach(([code, data]) => {
-                    const guest = guests.find(g => g.codigo === code);
-                    const guestName = guest ? guest.nome : `Código: ${code}`;
+                // Tentativas múltiplas
+                if (multipleAttempts.length > 0) {
+                    yPos += 12;
+                    doc.setFontSize(12);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(...warningColor);
+                    doc.text('CÓDIGOS COM MÚLTIPLAS TENTATIVAS:', 20, yPos);
                     
+                    yPos += 8;
                     doc.setFontSize(9);
-                    doc.text(`• ${guestName}: ${data.total} tentativas`, 25, yPos);
-                    yPos += 5;
-                });
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(0, 0, 0);
+                    doc.text(`${multipleAttempts.length} código(s) tentaram acesso mais de uma vez:`, 20, yPos);
+                    
+                    yPos += 6;
+                    multipleAttempts.slice(0, 15).forEach(([code, data]) => {
+                        if (yPos > 270) {
+                            doc.addPage();
+                            yPos = 20;
+                        }
+                        
+                        const guest = guests.find(g => g.codigo === code);
+                        const guestName = guest ? guest.nome : `Código: ${code}`;
+                        const maxNameLength = 30;
+                        const displayName = guestName.length > maxNameLength ? 
+                            guestName.substring(0, maxNameLength) + '...' : guestName;
+                        
+                        doc.setFontSize(8);
+                        doc.text(`• ${displayName}:`, 25, yPos);
+                        doc.text(`${data.total} tentativas`, 120, yPos);
+                        
+                        if (data.duplicated > 0) {
+                            doc.setTextColor(...warningColor);
+                            doc.text(`(${data.duplicated} duplicadas)`, 155, yPos);
+                            doc.setTextColor(0, 0, 0);
+                        }
+                        
+                        yPos += 4;
+                    });
+                }
+                
+                // Códigos inválidos
+                if (invalidAttempts.length > 0) {
+                    yPos += 10;
+                    if (yPos > 250) {
+                        doc.addPage();
+                        yPos = 20;
+                    }
+                    
+                    doc.setFontSize(12);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(220, 38, 38);
+                    doc.text('TENTATIVAS COM CÓDIGOS INVÁLIDOS:', 20, yPos);
+                    
+                    yPos += 8;
+                    doc.setFontSize(9);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(0, 0, 0);
+                    doc.text(`${invalidAttempts.length} código(s) inválido(s) foram escaneados:`, 20, yPos);
+                    
+                    yPos += 6;
+                    invalidAttempts.slice(0, 10).forEach(([code, data]) => {
+                        if (yPos > 270) {
+                            doc.addPage();
+                            yPos = 20;
+                        }
+                        
+                        doc.setFontSize(8);
+                        doc.text(`• Código: ${code}`, 25, yPos);
+                        doc.text(`${data.invalid} tentativa(s)`, 120, yPos);
+                        
+                        if (data.lastAttempt) {
+                            doc.text(`Última: ${data.lastAttempt.toLocaleString('pt-BR')}`, 25, yPos + 3);
+                            yPos += 3;
+                        }
+                        
+                        yPos += 5;
+                    });
+                }
             }
             
             // Rodapé
@@ -2002,5 +2158,5 @@
             }
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96b3a94d01f977d7',t:'MTc1NDUzNzA3MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96b3bac6809b77da',t:'MTc1NDUzNzc4NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
