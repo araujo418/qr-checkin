@@ -7,6 +7,7 @@
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="https://cdn.tailwindcss.com?v=3.4.0"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -352,6 +353,21 @@
                                     <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
                                 </label>
                             </div>
+
+                            <!-- Notificações -->
+                            <div class="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
+                                <div class="flex-1">
+                                    <h3 class="font-medium text-gray-800 flex items-center">
+                                        <i class="fas fa-bell mr-2 text-blue-600"></i>
+                                        Notificações
+                                    </h3>
+                                    <p class="text-sm text-gray-600 mt-1">Alertas e marcos do evento</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="notificationsToggle" class="sr-only peer" checked>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
                         </div>
                     </div>
 
@@ -460,6 +476,7 @@
         let settings = {
             soundEnabled: true,
             vibrationEnabled: true,
+            notificationsEnabled: true,
             theme: 'light' // 'light', 'dark'
         };
 
@@ -972,6 +989,11 @@
 
         // Sistema de notificações
         function showNotification(message, type = 'info', duration = 4000) {
+            // Verificar se notificações estão ativadas
+            if (!settings.notificationsEnabled) {
+                return;
+            }
+            
             const notification = document.createElement('div');
             notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm transform transition-all duration-300 translate-x-full`;
             
@@ -1443,28 +1465,275 @@
             }
         });
 
-        // Exportar relatório
-        exportBtn.addEventListener('click', () => {
-            const data = {
-                evento: currentClient.nome,
-                total_convidados: guests.length,
-                total_escaneados: scannedGuests.size,
-                data_exportacao: new Date().toLocaleString('pt-BR'),
-                convidados: guests.map(guest => ({
-                    nome: guest.nome,
-                    email: guest.email,
-                    status: scannedGuests.has(guest.id) ? 'Escaneado' : 'Pendente'
-                }))
-            };
+        // Exportar relatório em PDF
+        exportBtn.addEventListener('click', async () => {
+            if (!isOnline) {
+                showNotification('Sem conexão para exportar relatório', 'error');
+                return;
+            }
             
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `relatorio_${currentClient.nome}_${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
+            exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-3"></i>Gerando PDF...';
+            
+            try {
+                await generatePDFReport();
+                showNotification('Relatório PDF gerado com sucesso!', 'success');
+            } catch (error) {
+                console.error('Erro ao gerar PDF:', error);
+                showNotification('Erro ao gerar relatório PDF', 'error');
+            } finally {
+                exportBtn.innerHTML = '<i class="fas fa-download mr-3"></i>Exportar';
+            }
         });
+
+        // Função para gerar relatório PDF profissional
+        async function generatePDFReport() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Carregar dados detalhados dos logs
+            let scanLogs = [];
+            let scanAttempts = {};
+            
+            if (supabaseClient && currentClient) {
+                try {
+                    const { data: logData } = await supabaseClient
+                        .from('logs')
+                        .select('*')
+                        .eq('token', currentClient.token)
+                        .order('data', { ascending: true });
+                    
+                    if (logData) {
+                        scanLogs = logData;
+                        
+                        // Contar tentativas por código
+                        logData.forEach(log => {
+                            if (log.dispositivo) {
+                                if (!scanAttempts[log.dispositivo]) {
+                                    scanAttempts[log.dispositivo] = {
+                                        total: 0,
+                                        firstScan: null,
+                                        successful: false
+                                    };
+                                }
+                                scanAttempts[log.dispositivo].total++;
+                                
+                                if (log.status === 'escaneado' && !scanAttempts[log.dispositivo].firstScan) {
+                                    scanAttempts[log.dispositivo].firstScan = new Date(log.data);
+                                    scanAttempts[log.dispositivo].successful = true;
+                                }
+                            }
+                        });
+                    }
+                } catch (error) {
+                    console.error('Erro ao carregar logs:', error);
+                }
+            }
+            
+            const now = new Date();
+            const scannedCount = scannedGuests.size;
+            const totalGuests = guests.length;
+            const notAttended = totalGuests - scannedCount;
+            const attendanceRate = totalGuests > 0 ? ((scannedCount / totalGuests) * 100).toFixed(1) : 0;
+            
+            // Configurações de estilo
+            const primaryColor = [37, 99, 235]; // Azul
+            const secondaryColor = [107, 114, 128]; // Cinza
+            const successColor = [34, 197, 94]; // Verde
+            const warningColor = [245, 158, 11]; // Amarelo
+            
+            // Cabeçalho
+            doc.setFillColor(...primaryColor);
+            doc.rect(0, 0, 210, 40, 'F');
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(24);
+            doc.setFont('helvetica', 'bold');
+            doc.text('RELATÓRIO DE CONTROLE DE ACESSO', 105, 20, { align: 'center' });
+            
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Gerado em ${now.toLocaleDateString('pt-BR')} às ${now.toLocaleTimeString('pt-BR')}`, 105, 30, { align: 'center' });
+            
+            // Informações do evento
+            let yPos = 55;
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('INFORMAÇÕES DO EVENTO', 20, yPos);
+            
+            yPos += 10;
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Nome do Evento: ${currentClient.nome || 'Não informado'}`, 20, yPos);
+            yPos += 6;
+            doc.text(`Token: ${currentClient.token}`, 20, yPos);
+            yPos += 6;
+            doc.text(`Data do Relatório: ${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR')}`, 20, yPos);
+            
+            // Estatísticas principais
+            yPos += 20;
+            doc.setFillColor(248, 250, 252);
+            doc.rect(15, yPos - 5, 180, 35, 'F');
+            
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('RESUMO ESTATÍSTICO', 20, yPos + 5);
+            
+            yPos += 15;
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'normal');
+            
+            // Primeira linha de estatísticas
+            doc.text(`Total de Convidados: ${totalGuests}`, 20, yPos);
+            doc.setTextColor(...successColor);
+            doc.text(`Compareceram: ${scannedCount}`, 75, yPos);
+            doc.setTextColor(220, 38, 38);
+            doc.text(`Não Compareceram: ${notAttended}`, 130, yPos);
+            
+            yPos += 8;
+            doc.setTextColor(0, 0, 0);
+            doc.text(`Taxa de Comparecimento: ${attendanceRate}%`, 20, yPos);
+            
+            // Gráfico de barras simples
+            yPos += 20;
+            const barWidth = 150;
+            const barHeight = 8;
+            const attendedWidth = (scannedCount / totalGuests) * barWidth;
+            
+            // Barra de fundo
+            doc.setFillColor(229, 231, 235);
+            doc.rect(20, yPos, barWidth, barHeight, 'F');
+            
+            // Barra de progresso
+            if (attendedWidth > 0) {
+                doc.setFillColor(...successColor);
+                doc.rect(20, yPos, attendedWidth, barHeight, 'F');
+            }
+            
+            doc.setFontSize(9);
+            doc.text(`${attendanceRate}%`, 175, yPos + 5);
+            
+            // Lista detalhada de convidados
+            yPos += 25;
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('LISTA DETALHADA DE CONVIDADOS', 20, yPos);
+            
+            yPos += 10;
+            
+            // Cabeçalho da tabela
+            doc.setFillColor(...primaryColor);
+            doc.rect(15, yPos, 180, 8, 'F');
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'bold');
+            doc.text('NOME', 18, yPos + 5);
+            doc.text('STATUS', 100, yPos + 5);
+            doc.text('TENTATIVAS', 130, yPos + 5);
+            doc.text('PRIMEIRO ACESSO', 160, yPos + 5);
+            
+            yPos += 12;
+            
+            // Dados dos convidados
+            doc.setTextColor(0, 0, 0);
+            doc.setFont('helvetica', 'normal');
+            
+            guests.forEach((guest, index) => {
+                if (yPos > 270) {
+                    doc.addPage();
+                    yPos = 20;
+                }
+                
+                const isScanned = scannedGuests.has(guest.id);
+                const attempts = scanAttempts[guest.codigo];
+                const attemptCount = attempts ? attempts.total : 0;
+                const firstScanTime = attempts && attempts.firstScan ? 
+                    attempts.firstScan.toLocaleString('pt-BR') : '-';
+                
+                // Cor de fundo alternada
+                if (index % 2 === 0) {
+                    doc.setFillColor(249, 250, 251);
+                    doc.rect(15, yPos - 2, 180, 6, 'F');
+                }
+                
+                // Nome do convidado
+                doc.setFontSize(8);
+                const maxNameLength = 35;
+                const displayName = guest.nome.length > maxNameLength ? 
+                    guest.nome.substring(0, maxNameLength) + '...' : guest.nome;
+                doc.text(displayName, 18, yPos + 2);
+                
+                // Status
+                if (isScanned) {
+                    doc.setTextColor(...successColor);
+                    doc.text('✓ PRESENTE', 100, yPos + 2);
+                } else {
+                    doc.setTextColor(220, 38, 38);
+                    doc.text('✗ AUSENTE', 100, yPos + 2);
+                }
+                
+                // Tentativas
+                doc.setTextColor(0, 0, 0);
+                doc.text(attemptCount.toString(), 140, yPos + 2);
+                
+                // Primeiro acesso
+                doc.setFontSize(7);
+                const maxTimeLength = 15;
+                const displayTime = firstScanTime.length > maxTimeLength ? 
+                    firstScanTime.substring(0, maxTimeLength) + '...' : firstScanTime;
+                doc.text(displayTime, 160, yPos + 2);
+                
+                yPos += 6;
+            });
+            
+            // Análise de tentativas múltiplas
+            const multipleAttempts = Object.entries(scanAttempts)
+                .filter(([code, data]) => data.total > 1)
+                .sort((a, b) => b[1].total - a[1].total);
+            
+            if (multipleAttempts.length > 0) {
+                yPos += 15;
+                if (yPos > 250) {
+                    doc.addPage();
+                    yPos = 20;
+                }
+                
+                doc.setFontSize(16);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(0, 0, 0);
+                doc.text('ANÁLISE DE TENTATIVAS MÚLTIPLAS', 20, yPos);
+                
+                yPos += 10;
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                doc.text(`${multipleAttempts.length} código(s) com múltiplas tentativas de acesso:`, 20, yPos);
+                
+                yPos += 8;
+                multipleAttempts.slice(0, 10).forEach(([code, data]) => {
+                    const guest = guests.find(g => g.codigo === code);
+                    const guestName = guest ? guest.nome : `Código: ${code}`;
+                    
+                    doc.setFontSize(9);
+                    doc.text(`• ${guestName}: ${data.total} tentativas`, 25, yPos);
+                    yPos += 5;
+                });
+            }
+            
+            // Rodapé
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setTextColor(...secondaryColor);
+                doc.text(`Página ${i} de ${pageCount}`, 105, 290, { align: 'center' });
+                doc.text('Relatório gerado automaticamente pelo Sistema de Controle de Acesso', 105, 295, { align: 'center' });
+            }
+            
+            // Salvar PDF
+            const fileName = `relatorio_${currentClient.nome.replace(/[^a-zA-Z0-9]/g, '_')}_${now.toISOString().split('T')[0]}.pdf`;
+            doc.save(fileName);
+        }
 
         // Botão próximo scan
         nextScanBtn.addEventListener('click', () => {
@@ -1485,6 +1754,16 @@
             settings.vibrationEnabled = e.target.checked;
             localStorage.setItem('scannerSettings', JSON.stringify(settings));
             showNotification(settings.vibrationEnabled ? 'Vibração ativada' : 'Vibração desativada', 'info');
+        });
+
+        document.getElementById('notificationsToggle').addEventListener('change', (e) => {
+            settings.notificationsEnabled = e.target.checked;
+            localStorage.setItem('scannerSettings', JSON.stringify(settings));
+            
+            // Mostrar notificação apenas se as notificações estão sendo ativadas
+            if (settings.notificationsEnabled) {
+                showNotification('Notificações ativadas', 'info');
+            }
         });
 
         // Event listeners para temas
@@ -1514,16 +1793,19 @@
             settings = {
                 soundEnabled: true,
                 vibrationEnabled: true,
+                notificationsEnabled: true,
                 theme: 'light'
             };
             
             // Atualizar interface (verificar se elementos existem)
             const soundToggle = document.getElementById('soundToggle');
             const vibrationToggle = document.getElementById('vibrationToggle');
+            const notificationsToggle = document.getElementById('notificationsToggle');
             const themeRadio = document.querySelector(`input[name="theme"][value="${settings.theme}"]`);
             
             if (soundToggle) soundToggle.checked = settings.soundEnabled;
             if (vibrationToggle) vibrationToggle.checked = settings.vibrationEnabled;
+            if (notificationsToggle) notificationsToggle.checked = settings.notificationsEnabled;
             if (themeRadio) themeRadio.checked = true;
             
             // Aplicar tema
@@ -1542,10 +1824,12 @@
                 // Atualizar interface (verificar se elementos existem)
                 const soundToggle = document.getElementById('soundToggle');
                 const vibrationToggle = document.getElementById('vibrationToggle');
+                const notificationsToggle = document.getElementById('notificationsToggle');
                 const themeRadio = document.querySelector(`input[name="theme"][value="${settings.theme}"]`);
                 
                 if (soundToggle) soundToggle.checked = settings.soundEnabled;
                 if (vibrationToggle) vibrationToggle.checked = settings.vibrationEnabled;
+                if (notificationsToggle) notificationsToggle.checked = settings.notificationsEnabled;
                 if (themeRadio) themeRadio.checked = true;
                 
                 // Aplicar tema
@@ -1718,5 +2002,5 @@
             }
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96b07ee3259577d7',t:'MTc1NDUwMzg3NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96b3a94d01f977d7',t:'MTc1NDUzNzA3MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
