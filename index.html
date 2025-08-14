@@ -418,7 +418,7 @@
                             <i class="fas fa-bolt mr-3 text-yellow-600"></i>
                             Ações Rápidas
                         </h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             <button id="refreshDataBtn" class="bg-gray-600 text-white py-4 px-6 rounded-lg hover:bg-gray-700 transition-colors flex items-center justify-center text-lg font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1">
                                 <i class="fas fa-refresh mr-3"></i>
                                 Atualizar
@@ -431,6 +431,14 @@
                                 <i class="fas fa-download mr-3"></i>
                                 Exportar
                             </button>
+                            <button id="undoScansBtn" class="bg-red-600 text-white py-4 px-6 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center text-lg font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                                <i class="fas fa-undo mr-3"></i>
+                                Desfazer
+                            </button>
+                        </div>
+                        <div id="undoUsageInfo" class="mt-4 text-center text-sm text-gray-600">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Restam <span id="undoUsagesLeft">3</span> utilizações do botão desfazer
                         </div>
                     </div>
 
@@ -471,6 +479,7 @@
         let connectionCheckInterval = null;
         let tokenCheckInterval = null;
         let autoSyncInterval = null;
+        let undoUsagesRemaining = 3;
         
         // Configurações
         let settings = {
@@ -824,6 +833,32 @@
                     throw new Error('Cliente não inicializado');
                 }
                 
+                // Carregar usos restantes do desfazer do Supabase (fonte única da verdade)
+                const { data: clientData, error: clientError } = await supabaseClient
+                    .from('clientes')
+                    .select('undo_usages_remaining')
+                    .eq('token', currentClient.token)
+                    .single();
+                
+                if (clientError) {
+                    console.error('Erro ao carregar dados do cliente:', clientError);
+                    // Se não conseguir carregar do Supabase, usar valor padrão
+                    undoUsagesRemaining = 3;
+                } else {
+                    // Se o campo não existir na base de dados, inicializar com 3
+                    undoUsagesRemaining = clientData.undo_usages_remaining !== null ? 
+                        clientData.undo_usages_remaining : 3;
+                    
+                    // Se for a primeira vez, atualizar o campo na base de dados
+                    if (clientData.undo_usages_remaining === null) {
+                        await supabaseClient
+                            .from('clientes')
+                            .update({ undo_usages_remaining: 3 })
+                            .eq('token', currentClient.token);
+                        undoUsagesRemaining = 3;
+                    }
+                }
+                
                 // Carregar convidados usando token_cliente
                 const { data: guestData, error: guestError } = await supabaseClient
                     .from('convidados')
@@ -859,6 +894,7 @@
                 // Aguardar um pouco para garantir que DOM está pronto
                 setTimeout(() => {
                     updateUI();
+                    updateUndoButton();
                     checkMilestones();
                 }, 50);
                 
@@ -1521,6 +1557,153 @@
             }
         });
 
+        // Desfazer todos os escaneados
+        document.getElementById('undoScansBtn').addEventListener('click', async () => {
+            if (!isOnline) {
+                showNotification('Sem conexão para desfazer escaneados', 'error');
+                return;
+            }
+            
+            if (undoUsagesRemaining <= 0) {
+                showNotification('Limite de utilizações do botão desfazer atingido', 'error');
+                return;
+            }
+            
+            if (scannedGuests.size === 0) {
+                showNotification('Não há escaneados para desfazer', 'warning');
+                return;
+            }
+            
+            // Mostrar confirmação
+            const confirmed = confirm(`⚠️ ATENÇÃO!\n\nTem a certeza que deseja desfazer TODOS os ${scannedGuests.size} escaneados?\n\nEsta ação:\n• Remove todos os registos de entrada\n• Não pode ser desfeita\n• Só pode usar esta função ${undoUsagesRemaining} vez(es)\n\nDeseja continuar?`);
+            
+            if (!confirmed) {
+                return;
+            }
+            
+            const undoBtn = document.getElementById('undoScansBtn');
+            undoBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-3"></i>Desfazendo...';
+            undoBtn.disabled = true;
+            
+            try {
+                // Verificar se Supabase está disponível
+                if (!supabaseClient || !currentClient) {
+                    throw new Error('Sistema não inicializado');
+                }
+                
+                // Remover todos os logs de escaneados
+                const { error: deleteLogsError } = await supabaseClient
+                    .from('logs')
+                    .delete()
+                    .eq('token', currentClient.token)
+                    .eq('status', 'escaneado');
+                
+                if (deleteLogsError) {
+                    console.error('Erro ao remover logs:', deleteLogsError);
+                    throw new Error('Erro ao remover registos de entrada');
+                }
+                
+                // Atualizar status de todos os convidados para pendente
+                const scannedGuestIds = Array.from(scannedGuests);
+                if (scannedGuestIds.length > 0) {
+                    const { error: updateGuestsError } = await supabaseClient
+                        .from('convidados')
+                        .update({ status: 'pendente' })
+                        .in('id', scannedGuestIds);
+                    
+                    if (updateGuestsError) {
+                        console.error('Erro ao atualizar convidados:', updateGuestsError);
+                        // Não falhar por este erro, continuar
+                    }
+                }
+                
+                // Resetar contador de scans usados
+                const { error: resetCounterError } = await supabaseClient
+                    .from('clientes')
+                    .update({ scans_usados: 0 })
+                    .eq('token', currentClient.token);
+                
+                if (resetCounterError) {
+                    console.error('Erro ao resetar contador:', resetCounterError);
+                    // Não falhar por este erro, continuar
+                }
+                
+                // Atualizar contador de usos restantes no Supabase
+                undoUsagesRemaining--;
+                const { error: updateUndoError } = await supabaseClient
+                    .from('clientes')
+                    .update({ undo_usages_remaining: undoUsagesRemaining })
+                    .eq('token', currentClient.token);
+                
+                if (updateUndoError) {
+                    console.error('Erro ao atualizar contador de desfazer:', updateUndoError);
+                    // Reverter mudança local se falhou no Supabase
+                    undoUsagesRemaining++;
+                    throw new Error('Erro ao atualizar limite de utilizações');
+                }
+                
+                // Atualizar estado local
+                const totalUndone = scannedGuests.size;
+                scannedGuests.clear();
+                currentClient.scans_usados = 0;
+                
+                // Atualizar interface
+                updateUI();
+                updateUndoButton();
+                
+                showNotification(`✅ ${totalUndone} escaneados foram desfeitos com sucesso!`, 'success');
+                
+                // Registar ação de desfazer no log com informações de segurança
+                try {
+                    await supabaseClient
+                        .from('logs')
+                        .insert({
+                            token: currentClient.token,
+                            data: new Date().toISOString(),
+                            status: 'acao_desfazer',
+                            dispositivo: `${totalUndone}_escaneados_desfeitos_usos_restantes_${undoUsagesRemaining}`
+                        });
+                } catch (logError) {
+                    console.error('Erro ao registar ação de desfazer:', logError);
+                }
+                
+            } catch (error) {
+                console.error('Erro ao desfazer escaneados:', error);
+                showNotification('Erro ao desfazer escaneados: ' + error.message, 'error');
+            } finally {
+                undoBtn.innerHTML = '<i class="fas fa-undo mr-3"></i>Desfazer';
+                undoBtn.disabled = false;
+            }
+        });
+
+        // Atualizar estado do botão desfazer
+        function updateUndoButton() {
+            const undoBtn = document.getElementById('undoScansBtn');
+            const undoInfo = document.getElementById('undoUsageInfo');
+            const undoUsagesLeftEl = document.getElementById('undoUsagesLeft');
+            
+            if (undoUsagesLeftEl) {
+                undoUsagesLeftEl.textContent = undoUsagesRemaining;
+            }
+            
+            if (undoUsagesRemaining <= 0) {
+                if (undoBtn) {
+                    undoBtn.style.display = 'none';
+                }
+                if (undoInfo) {
+                    undoInfo.innerHTML = '<i class="fas fa-ban mr-1 text-red-500"></i><span class="text-red-600">Limite de utilizações do botão desfazer atingido</span>';
+                }
+            } else {
+                if (undoBtn) {
+                    undoBtn.style.display = 'flex';
+                }
+                if (undoInfo) {
+                    const color = undoUsagesRemaining === 1 ? 'text-red-600' : 'text-gray-600';
+                    undoInfo.innerHTML = `<i class="fas fa-info-circle mr-1"></i><span class="${color}">Restam <span id="undoUsagesLeft">${undoUsagesRemaining}</span> utilizações do botão desfazer</span>`;
+                }
+            }
+        }
+
         // Função para gerar relatório PDF profissional
         async function generatePDFReport() {
             const { jsPDF } = window.jspdf;
@@ -2001,6 +2184,7 @@
             guests = [];
             scannedGuests.clear();
             scanPaused = false;
+            undoUsagesRemaining = 3; // Reset local, mas será carregado do Supabase no próximo login
             
             // Manter token mascarado após logout
             const savedToken = localStorage.getItem('eventToken');
@@ -2158,5 +2342,5 @@
             }
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96b3bac6809b77da',t:'MTc1NDUzNzc4NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96efc4e6905f77d7',t:'MTc1NTE2NzM0Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
