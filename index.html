@@ -31,9 +31,9 @@
         }
         .tab-button { transition: all 0.3s ease; }
         .tab-button.active { 
-            background-color: #eff6ff; 
-            color: #2563eb; 
-            border-bottom-color: #2563eb; 
+            background-color: rgba(90, 161, 137, 0.1); 
+            color: #5aa189; 
+            border-bottom-color: #5aa189; 
         }
         .tab-content { display: block; }
         .tab-content.hidden { display: none; }
@@ -168,10 +168,10 @@
 </head>
 <body class="bg-gray-50 min-h-screen">
     <!-- Login Screen -->
-    <div id="loginScreen" class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col items-center justify-center p-4">
+    <div id="loginScreen" class="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 flex flex-col items-center justify-center p-4">
         <div class="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/20 p-8 w-full max-w-md">
             <div class="text-center mb-8">
-                <div class="bg-gradient-to-r from-blue-500 to-purple-600 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <div class="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg" style="background: linear-gradient(135deg, #5aa189, #4a9d7a);">
                     <i class="fas fa-qrcode text-white text-3xl"></i>
                 </div>
                 <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
@@ -184,12 +184,14 @@
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-3">Token do Evento</label>
                     <input type="text" id="tokenInput" 
-                           class="w-full px-4 py-4 text-lg border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-gray-50/50"
+                           class="w-full px-4 py-4 text-lg border-2 border-gray-200 rounded-xl transition-all duration-200 bg-gray-50/50" 
+                           style="focus:ring-color: rgba(90, 161, 137, 0.2); focus:border-color: #5aa189;"
                            placeholder="Introduza o seu token" required>
                 </div>
                 
                 <button type="submit" id="loginBtn"
-                        class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                        class="w-full text-white py-4 rounded-xl font-semibold text-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                        style="background: linear-gradient(135deg, #5aa189, #4a9d7a); hover:background: linear-gradient(135deg, #4a9d7a, #3e8a6b);">
                     <i class="fas fa-sign-in-alt mr-3"></i>
                     Entrar no Sistema
                 </button>
@@ -235,7 +237,7 @@
         <div class="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
             <div class="bg-white border-b">
                 <div class="flex space-x-0">
-                    <button id="scannerTab" class="tab-button active flex-1 px-4 py-3 text-sm sm:text-base font-medium border-b-2 border-blue-500 text-blue-600 bg-blue-50 rounded-t-lg">
+                    <button id="scannerTab" class="tab-button active flex-1 px-4 py-3 text-sm sm:text-base font-medium border-b-2 rounded-t-lg" style="border-color: #5aa189; color: #5aa189; background-color: rgba(90, 161, 137, 0.1);">
                         <i class="fas fa-qrcode mr-1 sm:mr-2"></i>
                         Scanner
                     </button>
@@ -271,7 +273,7 @@
                         <!-- Resultado do Scan -->
                         <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
                             <h3 class="font-semibold text-gray-800 mb-4 flex items-center">
-                                <i class="fas fa-clipboard-check mr-2 text-blue-600"></i>
+                                <i class="fas fa-clipboard-check mr-2" style="color: #5aa189;"></i>
                                 Resultado
                             </h3>
                             <div id="scanResult" class="hidden p-4 rounded-lg text-center border-l-4 transform transition-all duration-300"></div>
@@ -292,12 +294,12 @@
                                 <div class="text-sm text-gray-600">Concluído</div>
                             </div>
                             <div class="w-full bg-gray-200 rounded-full h-3 mb-4">
-                                <div id="scannerProgressBar" class="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+                                <div id="scannerProgressBar" class="h-3 rounded-full transition-all duration-500" style="width: 0%; background: linear-gradient(90deg, #5aa189, #4a9d7a);"></div>
                             </div>
                             <div class="grid grid-cols-2 gap-4 text-center">
-                                <div class="bg-green-50 p-3 rounded-lg">
-                                    <div class="text-xl font-bold text-green-600" id="scannerScannedCount">0</div>
-                                    <div class="text-xs text-green-700">Escaneados</div>
+                                <div class="p-3 rounded-lg" style="background-color: rgba(90, 161, 137, 0.1);">
+                                    <div class="text-xl font-bold" style="color: #5aa189;" id="scannerScannedCount">0</div>
+                                    <div class="text-xs" style="color: #4a9d7a;">Escaneados</div>
                                 </div>
                                 <div class="bg-blue-50 p-3 rounded-lg">
                                     <div class="text-xl font-bold text-blue-600" id="scannerTotalGuestCount">0</div>
@@ -317,17 +319,17 @@
                     <!-- Informações do Token -->
                     <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
                         <h2 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
-                            <i class="fas fa-key mr-3 text-blue-600"></i>
+                            <i class="fas fa-key mr-3" style="color: #5aa189;"></i>
                             Informações do Token
                         </h2>
                         
                         <!-- Relógio Cronometrado Principal -->
-                        <div class="bg-gradient-to-br from-blue-900 to-purple-900 p-6 rounded-xl mb-6 text-white text-center">
+                        <div class="p-6 rounded-xl mb-6 text-white text-center" style="background: linear-gradient(135deg, #5aa189, #4a9d7a);">
                             <div class="flex items-center justify-center mb-3">
                                 <i class="fas fa-clock text-3xl mr-3"></i>
                                 <h3 class="text-xl font-bold">Tempo Restante</h3>
                             </div>
-                            <div id="countdownClock" class="text-4xl font-mono font-bold mb-2">
+                            <div id="countdownClock" class="text-2xl sm:text-4xl font-mono font-bold mb-2">
                                 <span id="countdownDays">00</span>d 
                                 <span id="countdownHours">00</span>h 
                                 <span id="countdownMinutes">00</span>m 
@@ -391,23 +393,17 @@
                             </div>
                         </div>
                         
-                        <!-- Progresso -->
-                        <div class="p-6 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border border-blue-200">
-                            <div class="flex justify-between items-center mb-4">
+                        <!-- Status de Conexão -->
+                        <div class="p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border border-blue-200">
+                            <div class="flex justify-between items-center">
                                 <h3 class="font-semibold text-gray-800 flex items-center">
-                                    <i class="fas fa-chart-line mr-2 text-blue-600"></i>
-                                    Progresso do Evento
+                                    <i class="fas fa-wifi mr-2 text-blue-600"></i>
+                                    Status da Conexão
                                 </h3>
                                 <span id="connectionStatus" class="flex items-center text-sm">
                                     <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
                                     Online
                                 </span>
-                            </div>
-                            <div class="w-full bg-gray-200 rounded-full h-4 mb-3">
-                                <div id="progressBar" class="bg-gradient-to-r from-blue-500 to-green-500 h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
-                            </div>
-                            <div class="text-center">
-                                <span id="progressText" class="text-lg font-medium text-gray-700">0% dos convidados digitalizados</span>
                             </div>
                         </div>
                     </div>
@@ -548,9 +544,9 @@
                 </div>
             </div>
             
-            <!-- Mobile Bottom Actions (One-Hand Mode) -->
+            <!-- Mobile Bottom Actions (One-Hand Mode) - Only for Scanner Tab -->
             <div id="mobileBottomActions" class="mobile-bottom-actions hidden">
-                <button id="nextScanBtn" class="bg-green-600 text-white hover:bg-green-700 transition-colors shadow-lg">
+                <button id="nextScanBtn" class="text-white transition-colors shadow-lg" style="background-color: #5aa189; hover:background-color: #4a9d7a;">
                     <i class="fas fa-arrow-right mr-3"></i>
                     Próximo Scan
                 </button>
@@ -1315,12 +1311,21 @@
                 return;
             }
             
-            // Remover classe active de todas as abas
-            scannerTab.classList.remove('active', 'bg-blue-50', 'text-blue-600', 'border-blue-500');
-            scannerTab.classList.add('text-gray-500', 'border-transparent');
+            // Esconder botão próximo ao trocar de aba
+            hideNextScanButton();
             
-            optionsTab.classList.remove('active', 'bg-blue-50', 'text-blue-600', 'border-blue-500');
+            // Remover classe active de todas as abas
+            scannerTab.classList.remove('active');
+            scannerTab.classList.add('text-gray-500', 'border-transparent');
+            scannerTab.style.backgroundColor = '';
+            scannerTab.style.color = '';
+            scannerTab.style.borderColor = '';
+            
+            optionsTab.classList.remove('active');
             optionsTab.classList.add('text-gray-500', 'border-transparent');
+            optionsTab.style.backgroundColor = '';
+            optionsTab.style.color = '';
+            optionsTab.style.borderColor = '';
             
             // Esconder todo o conteúdo das abas
             scannerTabContent.classList.add('hidden');
@@ -1328,12 +1333,18 @@
             
             // Ativar aba selecionada
             if (tabName === 'scanner') {
-                scannerTab.classList.add('active', 'bg-blue-50', 'text-blue-600', 'border-blue-500');
+                scannerTab.classList.add('active');
                 scannerTab.classList.remove('text-gray-500', 'border-transparent');
+                scannerTab.style.backgroundColor = 'rgba(90, 161, 137, 0.1)';
+                scannerTab.style.color = '#5aa189';
+                scannerTab.style.borderColor = '#5aa189';
                 scannerTabContent.classList.remove('hidden');
             } else if (tabName === 'options') {
-                optionsTab.classList.add('active', 'bg-blue-50', 'text-blue-600', 'border-blue-500');
+                optionsTab.classList.add('active');
                 optionsTab.classList.remove('text-gray-500', 'border-transparent');
+                optionsTab.style.backgroundColor = 'rgba(90, 161, 137, 0.1)';
+                optionsTab.style.color = '#5aa189';
+                optionsTab.style.borderColor = '#5aa189';
                 optionsTabContent.classList.remove('hidden');
             }
         }
@@ -2018,10 +2029,12 @@
             }
         }
 
-        // Mostrar botão próximo (mobile-friendly)
+        // Mostrar botão próximo (mobile-friendly) - apenas na aba scanner
         function showNextScanButton() {
             const mobileActions = document.getElementById('mobileBottomActions');
-            if (mobileActions) {
+            const scannerTabActive = scannerTab && scannerTab.classList.contains('active');
+            
+            if (mobileActions && scannerTabActive) {
                 mobileActions.classList.remove('hidden');
             }
         }
@@ -2118,16 +2131,12 @@
             const isPlural = guestName ? detectPlural(guestName) : false;
             
             if (type === 'success' && guestName) {
-                if (isPlural) {
-                    humanizedMessage = `✅ Entrada confirmada para ${guestName}`;
-                } else {
-                    humanizedMessage = `✅ Entrada confirmada para ${guestName}`;
-                }
+                humanizedMessage = `<div class="text-lg font-bold mb-2">ENTRADA CONFIRMADA PARA</div><div class="text-base">${guestName}</div>`;
             } else if (type === 'warning' && guestName) {
                 if (isPlural) {
-                    humanizedMessage = `⚠️ ${guestName} já entraram anteriormente`;
+                    humanizedMessage = `<div class="text-lg font-bold mb-2">JÁ ENTRARAM ANTERIORMENTE</div><div class="text-base">${guestName}</div>`;
                 } else {
-                    humanizedMessage = `⚠️ ${guestName} já entrou anteriormente`;
+                    humanizedMessage = `<div class="text-lg font-bold mb-2">JÁ ENTROU ANTERIORMENTE</div><div class="text-base">${guestName}</div>`;
                 }
             } else if (type === 'error') {
                 if (status === 'CÓDIGO INVÁLIDO') {
@@ -3096,5 +3105,5 @@
             }
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96fb101cd2ba77d9',t:'MTc1NTI4NTc3MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96fb2c31063277e0',t:'MTc1NTI4NjkyMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
