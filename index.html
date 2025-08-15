@@ -235,6 +235,66 @@
             <!-- Options Tab -->
             <div id="optionsTabContent" class="tab-content hidden">
                 <div class="space-y-6">
+                    <!-- Informações do Token -->
+                    <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+                        <h2 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+                            <i class="fas fa-key mr-3 text-blue-600"></i>
+                            Informações do Token
+                        </h2>
+                        
+                        <!-- Relógio Cronometrado Principal -->
+                        <div class="bg-gradient-to-br from-blue-900 to-purple-900 p-6 rounded-xl mb-6 text-white text-center">
+                            <div class="flex items-center justify-center mb-3">
+                                <i class="fas fa-clock text-3xl mr-3"></i>
+                                <h3 class="text-xl font-bold">Tempo Restante</h3>
+                            </div>
+                            <div id="countdownClock" class="text-4xl font-mono font-bold mb-2">
+                                <span id="countdownDays">00</span>d 
+                                <span id="countdownHours">00</span>h 
+                                <span id="countdownMinutes">00</span>m 
+                                <span id="countdownSeconds">00</span>s
+                            </div>
+                            <div id="countdownStatus" class="text-sm opacity-80">Calculando tempo restante...</div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-calendar-alt text-blue-600 mr-2"></i>
+                                    <h3 class="font-medium text-gray-800">Data de Validade</h3>
+                                </div>
+                                <div id="tokenExpiryDate" class="text-lg font-bold text-blue-600">A carregar...</div>
+                                <div id="tokenExpiryCountdown" class="text-sm text-gray-600 mt-1">Calculando...</div>
+                            </div>
+                            <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-shield-alt text-green-600 mr-2"></i>
+                                    <h3 class="font-medium text-gray-800">Status do Token</h3>
+                                </div>
+                                <div id="tokenStatus" class="text-lg font-bold text-green-600">Ativo</div>
+                                <div class="text-sm text-gray-600 mt-1">Token válido e funcional</div>
+                            </div>
+                        </div>
+                        <div id="expiryWarning" class="hidden mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                            <div class="flex items-center">
+                                <i class="fas fa-exclamation-triangle text-yellow-600 mr-2"></i>
+                                <div>
+                                    <h4 class="font-medium text-yellow-800">Atenção: Token a expirar em breve!</h4>
+                                    <p class="text-sm text-yellow-700 mt-1">Recomendamos que faça o download do relatório final antes da expiração.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="expiredWarning" class="hidden mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                            <div class="flex items-center">
+                                <i class="fas fa-times-circle text-red-600 mr-2"></i>
+                                <div>
+                                    <h4 class="font-medium text-red-800">Token Expirado!</h4>
+                                    <p class="text-sm text-red-700 mt-1">Este token já não é válido. Contacte o suporte se necessário.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Estatísticas do Evento -->
                     <div class="bg-white rounded-xl shadow-sm p-6">
                         <h2 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
@@ -371,44 +431,7 @@
                         </div>
                     </div>
 
-                    <!-- Aparência -->
-                    <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
-                        <h2 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
-                            <i class="fas fa-palette mr-3 text-indigo-600"></i>
-                            Aparência
-                        </h2>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-3">Tema da Interface</label>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <label class="relative cursor-pointer">
-                                        <input type="radio" name="theme" value="light" class="sr-only peer" checked>
-                                        <div class="p-4 border-2 border-gray-200 rounded-lg peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all">
-                                            <div class="flex items-center justify-center mb-2">
-                                                <i class="fas fa-sun text-2xl text-yellow-500"></i>
-                                            </div>
-                                            <div class="text-center">
-                                                <div class="font-medium text-gray-800">Claro</div>
-                                                <div class="text-sm text-gray-600">Tema padrão</div>
-                                            </div>
-                                        </div>
-                                    </label>
-                                    <label class="relative cursor-pointer">
-                                        <input type="radio" name="theme" value="dark" class="sr-only peer">
-                                        <div class="p-4 border-2 border-gray-200 rounded-lg peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all">
-                                            <div class="flex items-center justify-center mb-2">
-                                                <i class="fas fa-moon text-2xl text-blue-600"></i>
-                                            </div>
-                                            <div class="text-center">
-                                                <div class="font-medium text-gray-800">Escuro</div>
-                                                <div class="text-sm text-gray-600">Modo noturno</div>
-                                            </div>
-                                        </div>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+
 
 
 
@@ -544,8 +567,7 @@
         let settings = {
             soundEnabled: true,
             vibrationEnabled: true,
-            notificationsEnabled: true,
-            theme: 'light' // 'light', 'dark'
+            notificationsEnabled: true
         };
 
         // Elementos DOM
@@ -758,10 +780,10 @@
                     throw new Error('Sistema não inicializado. Recarregue a página.');
                 }
                 
-                // Validar token no Supabase
+                // Validar token no Supabase (apenas validação básica)
                 const { data: client, error } = await supabaseClient
                     .from('clientes')
-                    .select('*')
+                    .select('id, nome, token, validade, limite_scans, scans_usados')
                     .eq('token', token)
                     .single();
                 
@@ -794,12 +816,15 @@
                         localStorage.setItem('eventToken', token);
                         
                         scannedGuests = new Set();
+                        
+                        // Mostrar app imediatamente
                         showMainApp();
                         startMonitoring();
                         
-                        // Aguardar um pouco para garantir que os elementos DOM estão prontos
+                        // Carregar dados em background
                         setTimeout(() => {
                             updateUI();
+                            updateTokenInfo();
                             renderGuestList();
                         }, 100);
                         return;
@@ -812,9 +837,12 @@
                 // Guardar token para próximas sessões
                 localStorage.setItem('eventToken', token);
                 
-                await loadSession();
+                // Mostrar app imediatamente com dados básicos
                 showMainApp();
                 startMonitoring();
+                
+                // Carregar dados completos em background
+                loadSessionInBackground();
                 
             } catch (error) {
                 loginError.textContent = error.message;
@@ -845,9 +873,21 @@
                         setTimeout(() => {
                             logout();
                         }, 2000);
+                    } else {
+                        // Atualizar informações do token periodicamente
+                        updateTokenInfo();
                     }
                 }
             }, 30000);
+            
+            // Atualizar cronómetro a cada segundo
+            setInterval(() => {
+                if (currentClient && currentClient.validade) {
+                    updateCountdownClock(new Date(currentClient.validade * 1000));
+                } else if (currentClient) {
+                    updateCountdownClock(null);
+                }
+            }, 1000);
             
             // Sincronização automática a cada 10 segundos
             autoSyncInterval = setInterval(async () => {
@@ -880,7 +920,7 @@
             if (autoSyncInterval) clearInterval(autoSyncInterval);
         }
 
-        // Carregar sessão
+        // Carregar sessão completa (versão original)
         async function loadSession() {
             try {
                 if (!supabaseClient) {
@@ -975,6 +1015,7 @@
                 // Aguardar um pouco para garantir que DOM está pronto
                 setTimeout(() => {
                     updateUI();
+                    updateTokenInfo();
                     updateUndoButton();
                     checkMilestones();
                 }, 50);
@@ -982,6 +1023,135 @@
             } catch (error) {
                 console.error('Erro ao carregar sessão:', error);
                 showNotification('Erro ao carregar dados', 'error');
+            }
+        }
+
+        // Carregar sessão em background (versão otimizada para login rápido)
+        async function loadSessionInBackground() {
+            try {
+                // Mostrar indicador de carregamento sutil
+                const statusBadge = document.getElementById('statusBadge');
+                if (statusBadge) {
+                    statusBadge.innerHTML = 'Carregando...';
+                    statusBadge.className = 'ml-2 sm:ml-3 px-2 sm:px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs sm:text-sm font-medium';
+                }
+                
+                // Carregar dados básicos primeiro (convidados)
+                const { data: guestData, error: guestError } = await supabaseClient
+                    .from('convidados')
+                    .select('id, nome, codigo, token_cliente, status')
+                    .eq('token_cliente', currentClient.token);
+                
+                if (!guestError && guestData) {
+                    guests = guestData;
+                    
+                    // Atualizar interface com dados básicos
+                    updateUI();
+                    
+                    // Atualizar status
+                    if (statusBadge) {
+                        statusBadge.innerHTML = 'Sincronizando...';
+                        statusBadge.className = 'ml-2 sm:ml-3 px-2 sm:px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs sm:text-sm font-medium';
+                    }
+                }
+                
+                // Carregar scans em paralelo
+                const [realtimeScanResult, legacyScanResult, clientDataResult] = await Promise.allSettled([
+                    supabaseClient
+                        .from('scans_realtime')
+                        .select('codigo_convidado, data_scan')
+                        .eq('token_cliente', currentClient.token),
+                    supabaseClient
+                        .from('logs')
+                        .select('dispositivo, data')
+                        .eq('token', currentClient.token)
+                        .eq('status', 'escaneado'),
+                    supabaseClient
+                        .from('clientes')
+                        .select('undo_usages_remaining')
+                        .eq('token', currentClient.token)
+                        .single()
+                ]);
+                
+                // Processar scans
+                let scanData = [];
+                if (realtimeScanResult.status === 'fulfilled' && realtimeScanResult.value.data) {
+                    scanData = realtimeScanResult.value.data;
+                } else if (legacyScanResult.status === 'fulfilled' && legacyScanResult.value.data) {
+                    scanData = legacyScanResult.value.data.map(log => ({
+                        codigo_convidado: log.dispositivo,
+                        data_scan: log.data
+                    }));
+                }
+                
+                // Atualizar scannedGuests
+                scannedGuests = new Set();
+                if (scanData && Array.isArray(scanData)) {
+                    scanData.forEach(scan => {
+                        if (scan && scan.codigo_convidado) {
+                            const guest = guests.find(g => g && g.codigo === scan.codigo_convidado);
+                            if (guest && guest.id) {
+                                scannedGuests.add(guest.id);
+                            }
+                        }
+                    });
+                }
+                
+                // Processar dados do cliente
+                if (clientDataResult.status === 'fulfilled' && clientDataResult.value.data) {
+                    const clientData = clientDataResult.value.data;
+                    undoUsagesRemaining = clientData.undo_usages_remaining !== null ? 
+                        clientData.undo_usages_remaining : 3;
+                    
+                    if (clientData.undo_usages_remaining === null) {
+                        // Atualizar em background sem bloquear
+                        supabaseClient
+                            .from('clientes')
+                            .update({ undo_usages_remaining: 3 })
+                            .eq('token', currentClient.token)
+                            .then(() => {
+                                undoUsagesRemaining = 3;
+                                updateUndoButton();
+                            });
+                    }
+                } else {
+                    undoUsagesRemaining = 3;
+                }
+                
+                // Atualizar interface final
+                updateUI();
+                updateTokenInfo();
+                updateUndoButton();
+                
+                // Sincronização com histórico em background (não bloquear)
+                syncGuestsToHistory().catch(error => {
+                    console.error('Erro na sincronização de histórico (background):', error);
+                });
+                
+                // Atualizar status final
+                if (statusBadge) {
+                    statusBadge.innerHTML = 'Online';
+                    statusBadge.className = 'ml-2 sm:ml-3 px-2 sm:px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs sm:text-sm font-medium';
+                }
+                
+            } catch (error) {
+                console.error('Erro ao carregar sessão em background:', error);
+                
+                // Em caso de erro, tentar carregar dados básicos
+                guests = [];
+                scannedGuests = new Set();
+                undoUsagesRemaining = 3;
+                
+                updateUI();
+                
+                // Atualizar status de erro
+                const statusBadge = document.getElementById('statusBadge');
+                if (statusBadge) {
+                    statusBadge.innerHTML = 'Erro';
+                    statusBadge.className = 'ml-2 sm:ml-3 px-2 sm:px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs sm:text-sm font-medium';
+                }
+                
+                showNotification('Alguns dados podem não estar atualizados', 'warning');
             }
         }
 
@@ -1066,6 +1236,175 @@
                 optionsTab.classList.add('active', 'bg-blue-50', 'text-blue-600', 'border-blue-500');
                 optionsTab.classList.remove('text-gray-500', 'border-transparent');
                 optionsTabContent.classList.remove('hidden');
+            }
+        }
+
+        // Atualizar informações do token
+        function updateTokenInfo() {
+            try {
+                if (!currentClient || !currentClient.validade) {
+                    document.getElementById('tokenExpiryDate').textContent = 'Não definida';
+                    document.getElementById('tokenExpiryCountdown').textContent = 'Token sem data de expiração';
+                    document.getElementById('tokenStatus').textContent = 'Ativo';
+                    
+                    // Atualizar cronómetro para token sem validade
+                    updateCountdownClock(null);
+                    return;
+                }
+                
+                const now = new Date();
+                const expiryDate = new Date(currentClient.validade * 1000); // Converter timestamp para data
+                const timeDiff = expiryDate.getTime() - now.getTime();
+                const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+                
+                // Atualizar cronómetro principal
+                updateCountdownClock(expiryDate);
+                
+                // Atualizar data de validade
+                document.getElementById('tokenExpiryDate').textContent = expiryDate.toLocaleDateString('pt-PT', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                // Atualizar countdown
+                if (daysDiff > 0) {
+                    document.getElementById('tokenExpiryCountdown').textContent = `Expira em ${daysDiff} dia${daysDiff > 1 ? 's' : ''}`;
+                } else if (daysDiff === 0) {
+                    document.getElementById('tokenExpiryCountdown').textContent = 'Expira hoje!';
+                } else {
+                    document.getElementById('tokenExpiryCountdown').textContent = `Expirou há ${Math.abs(daysDiff)} dia${Math.abs(daysDiff) > 1 ? 's' : ''}`;
+                }
+                
+                // Atualizar status e avisos
+                const tokenStatusEl = document.getElementById('tokenStatus');
+                const expiryWarningEl = document.getElementById('expiryWarning');
+                const expiredWarningEl = document.getElementById('expiredWarning');
+                
+                if (daysDiff <= 0) {
+                    // Token expirado
+                    tokenStatusEl.textContent = 'Expirado';
+                    tokenStatusEl.className = 'text-lg font-bold text-red-600';
+                    expiryWarningEl.classList.add('hidden');
+                    expiredWarningEl.classList.remove('hidden');
+                } else if (daysDiff <= 4) {
+                    // Token a expirar em breve (1-4 dias)
+                    tokenStatusEl.textContent = 'A Expirar';
+                    tokenStatusEl.className = 'text-lg font-bold text-yellow-600';
+                    expiryWarningEl.classList.remove('hidden');
+                    expiredWarningEl.classList.add('hidden');
+                    
+                    // Mostrar notificação de lembrete para download do relatório
+                    if (daysDiff <= 4 && daysDiff >= 1) {
+                        showExpiryReminder(daysDiff);
+                    }
+                } else {
+                    // Token ativo
+                    tokenStatusEl.textContent = 'Ativo';
+                    tokenStatusEl.className = 'text-lg font-bold text-green-600';
+                    expiryWarningEl.classList.add('hidden');
+                    expiredWarningEl.classList.add('hidden');
+                }
+                
+            } catch (error) {
+                console.error('Erro ao atualizar informações do token:', error);
+            }
+        }
+        
+        // Atualizar cronómetro principal
+        function updateCountdownClock(expiryDate) {
+            const daysEl = document.getElementById('countdownDays');
+            const hoursEl = document.getElementById('countdownHours');
+            const minutesEl = document.getElementById('countdownMinutes');
+            const secondsEl = document.getElementById('countdownSeconds');
+            const statusEl = document.getElementById('countdownStatus');
+            const clockEl = document.getElementById('countdownClock');
+            
+            if (!expiryDate) {
+                // Token sem validade
+                daysEl.textContent = '∞';
+                hoursEl.textContent = '∞';
+                minutesEl.textContent = '∞';
+                secondsEl.textContent = '∞';
+                statusEl.textContent = 'Token sem data de expiração';
+                clockEl.parentElement.className = 'bg-gradient-to-br from-green-600 to-blue-600 p-6 rounded-xl mb-6 text-white text-center';
+                return;
+            }
+            
+            const now = new Date();
+            const timeDiff = expiryDate.getTime() - now.getTime();
+            
+            if (timeDiff <= 0) {
+                // Token expirado
+                daysEl.textContent = '00';
+                hoursEl.textContent = '00';
+                minutesEl.textContent = '00';
+                secondsEl.textContent = '00';
+                statusEl.textContent = 'TOKEN EXPIRADO!';
+                clockEl.parentElement.className = 'bg-gradient-to-br from-red-600 to-red-800 p-6 rounded-xl mb-6 text-white text-center animate-pulse';
+                return;
+            }
+            
+            // Calcular tempo restante
+            const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+            
+            // Atualizar display
+            daysEl.textContent = days.toString().padStart(2, '0');
+            hoursEl.textContent = hours.toString().padStart(2, '0');
+            minutesEl.textContent = minutes.toString().padStart(2, '0');
+            secondsEl.textContent = seconds.toString().padStart(2, '0');
+            
+            // Atualizar status e cores baseado no tempo restante
+            if (days <= 0) {
+                statusEl.textContent = 'ÚLTIMO DIA! Faça o download do relatório agora!';
+                clockEl.parentElement.className = 'bg-gradient-to-br from-red-500 to-red-700 p-6 rounded-xl mb-6 text-white text-center animate-pulse';
+            } else if (days <= 1) {
+                statusEl.textContent = 'Menos de 2 dias restantes - Ação urgente necessária!';
+                clockEl.parentElement.className = 'bg-gradient-to-br from-orange-500 to-red-500 p-6 rounded-xl mb-6 text-white text-center';
+            } else if (days <= 3) {
+                statusEl.textContent = 'Poucos dias restantes - Prepare o download do relatório';
+                clockEl.parentElement.className = 'bg-gradient-to-br from-yellow-500 to-orange-500 p-6 rounded-xl mb-6 text-white text-center';
+            } else if (days <= 7) {
+                statusEl.textContent = 'Uma semana ou menos - Monitore o prazo';
+                clockEl.parentElement.className = 'bg-gradient-to-br from-blue-500 to-purple-500 p-6 rounded-xl mb-6 text-white text-center';
+            } else {
+                statusEl.textContent = 'Token ativo - Tempo suficiente disponível';
+                clockEl.parentElement.className = 'bg-gradient-to-br from-green-500 to-blue-500 p-6 rounded-xl mb-6 text-white text-center';
+            }
+        }
+        
+        // Mostrar lembrete de expiração
+        function showExpiryReminder(daysLeft) {
+            // Verificar se já mostrou o lembrete hoje
+            const today = new Date().toDateString();
+            const lastReminderDate = localStorage.getItem(`lastExpiryReminder_${currentClient.token}`);
+            
+            if (lastReminderDate === today) {
+                return; // Já mostrou hoje
+            }
+            
+            // Marcar que mostrou hoje
+            localStorage.setItem(`lastExpiryReminder_${currentClient.token}`, today);
+            
+            // Mostrar notificação personalizada baseada nos dias restantes
+            let message = '';
+            if (daysLeft === 1) {
+                message = '⚠️ ÚLTIMO DIA! O seu token expira amanhã. Faça o download do relatório final agora!';
+            } else if (daysLeft === 2) {
+                message = '⚠️ ATENÇÃO! O seu token expira em 2 dias. Recomendamos fazer o download do relatório final.';
+            } else if (daysLeft === 3) {
+                message = '📋 LEMBRETE: O seu token expira em 3 dias. Considere fazer o download do relatório final.';
+            } else if (daysLeft === 4) {
+                message = '📅 AVISO: O seu token expira em 4 dias. Prepare-se para fazer o download do relatório final.';
+            }
+            
+            if (message) {
+                showNotification(message, 'warning', 8000); // Mostrar por 8 segundos
             }
         }
 
@@ -1389,12 +1728,34 @@
                 }
                 
                 // Procurar convidado pelo código (busca exata e segura)
+                // IGNORAR DATA DE VALIDADE DOS QR CODES - apenas verificar o código base
+                let cleanCode = decodedText.trim();
+                
+                // Se o QR code contém data/timestamp, extrair apenas o código base
+                // Formatos comuns: "CODIGO_20241201", "CODIGO|2024-12-01", "CODIGO:timestamp"
+                if (cleanCode.includes('_')) {
+                    cleanCode = cleanCode.split('_')[0];
+                } else if (cleanCode.includes('|')) {
+                    cleanCode = cleanCode.split('|')[0];
+                } else if (cleanCode.includes(':')) {
+                    cleanCode = cleanCode.split(':')[0];
+                }
+                
                 const guest = guests.find(g => {
                     // Verificar se o convidado e código são válidos
                     if (!g || !g.codigo || !g.id || !g.nome) return false;
                     
-                    // Verificar se o código escaneado corresponde exatamente ao código do convidado
-                    return g.codigo.trim().toLowerCase() === decodedText.trim().toLowerCase();
+                    // Verificar se o código escaneado corresponde ao código do convidado (ignorando data)
+                    let guestCode = g.codigo.trim();
+                    if (guestCode.includes('_')) {
+                        guestCode = guestCode.split('_')[0];
+                    } else if (guestCode.includes('|')) {
+                        guestCode = guestCode.split('|')[0];
+                    } else if (guestCode.includes(':')) {
+                        guestCode = guestCode.split(':')[0];
+                    }
+                    
+                    return guestCode.toLowerCase() === cleanCode.toLowerCase();
                 });
                 
                 if (!guest) {
@@ -2340,50 +2701,24 @@
             }
         });
 
-        // Event listeners para temas
-        document.querySelectorAll('input[name="theme"]').forEach(radio => {
-            radio.addEventListener('change', (e) => {
-                if (e.target.checked) {
-                    settings.theme = e.target.value;
-                    localStorage.setItem('scannerSettings', JSON.stringify(settings));
-                    applyTheme(settings.theme);
-                    showNotification('Tema alterado com sucesso', 'success');
-                }
-            });
-        });
 
-
-
-        // Função para aplicar tema
-        function applyTheme(theme) {
-            document.body.classList.remove('dark');
-            if (theme === 'dark') {
-                document.body.classList.add('dark');
-            }
-        }
 
         // Função para resetar configurações
         function resetSettings() {
             settings = {
                 soundEnabled: true,
                 vibrationEnabled: true,
-                notificationsEnabled: true,
-                theme: 'light'
+                notificationsEnabled: true
             };
             
             // Atualizar interface (verificar se elementos existem)
             const soundToggle = document.getElementById('soundToggle');
             const vibrationToggle = document.getElementById('vibrationToggle');
             const notificationsToggle = document.getElementById('notificationsToggle');
-            const themeRadio = document.querySelector(`input[name="theme"][value="${settings.theme}"]`);
             
             if (soundToggle) soundToggle.checked = settings.soundEnabled;
             if (vibrationToggle) vibrationToggle.checked = settings.vibrationEnabled;
             if (notificationsToggle) notificationsToggle.checked = settings.notificationsEnabled;
-            if (themeRadio) themeRadio.checked = true;
-            
-            // Aplicar tema
-            applyTheme(settings.theme);
             
             // Salvar
             localStorage.setItem('scannerSettings', JSON.stringify(settings));
@@ -2399,15 +2734,10 @@
                 const soundToggle = document.getElementById('soundToggle');
                 const vibrationToggle = document.getElementById('vibrationToggle');
                 const notificationsToggle = document.getElementById('notificationsToggle');
-                const themeRadio = document.querySelector(`input[name="theme"][value="${settings.theme}"]`);
                 
                 if (soundToggle) soundToggle.checked = settings.soundEnabled;
                 if (vibrationToggle) vibrationToggle.checked = settings.vibrationEnabled;
                 if (notificationsToggle) notificationsToggle.checked = settings.notificationsEnabled;
-                if (themeRadio) themeRadio.checked = true;
-                
-                // Aplicar tema
-                applyTheme(settings.theme);
             }
         }
 
@@ -2577,5 +2907,5 @@
             }
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96f90849031877e0',t:'MTc1NTI2NDQ3Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96f965ed63e677da',t:'MTc1NTI2ODMxMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
