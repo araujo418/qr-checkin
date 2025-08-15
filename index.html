@@ -260,7 +260,7 @@
                         <!-- Scanner Principal -->
                         <div class="lg:col-span-2">
                             <div class="bg-white rounded-xl shadow-sm p-6">
-                                <div id="scannerContainer" class="scanner-container scanner-no-zoom bg-gray-900 rounded-2xl h-[350px] flex items-center justify-center mx-auto border-4 border-gray-300 shadow-2xl">
+                                <div id="scannerContainer" class="scanner-container scanner-no-zoom bg-gray-900 rounded-2xl h-[400px] flex items-center justify-center mx-auto border-4 border-gray-300 shadow-2xl">
                                     <div class="text-center text-gray-400 px-6">
                                         <i class="fas fa-qrcode text-5xl mb-4 text-gray-500"></i>
                                         <p class="text-lg font-medium">A inicializar scanner...</p>
@@ -593,6 +593,20 @@
         let tokenCheckInterval = null;
         let autoSyncInterval = null;
         let undoUsagesRemaining = 3;
+
+        // Função para detectar se o nome é plural (múltiplas pessoas)
+        function detectPlural(name) {
+            if (!name || typeof name !== 'string') return false;
+            
+            const lowerName = name.toLowerCase();
+            const pluralIndicators = [
+                ' e ', ' and ', ' & ', ' + ', ' / ', ' - ',
+                'família', 'family', 'casal', 'couple',
+                'sr. e sra.', 'mr. and mrs.', 'dr. e dra.'
+            ];
+            
+            return pluralIndicators.some(indicator => lowerName.includes(indicator));
+        }
 
         // Função para obter informações do dispositivo
         function getDeviceInfo() {
@@ -1785,6 +1799,9 @@
                 // Pausar scanner após primeiro scan
                 scanPaused = true;
                 
+                // Pequena pausa para evitar múltiplos scans do mesmo QR
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
                 // Verificar se dados básicos existem
                 if (!decodedText || typeof decodedText !== 'string') {
                     showScanResult('CÓDIGO INVÁLIDO', '', 'error');
@@ -2099,15 +2116,31 @@
             
             scanResult.className = `p-4 rounded-lg text-center border-l-4 transform transition-all duration-300 ${style.bg} ${style.border} ${style.text} ${style.shadow} ${style.animation}`;
             
-            // Humanized messages
+            // Humanized messages com detecção de plural
             let humanizedMessage = '';
+            const isPlural = guestName ? detectPlural(guestName) : false;
+            
             if (type === 'success' && guestName) {
-                humanizedMessage = `✅ Entrada confirmada para ${guestName}`;
+                if (isPlural) {
+                    humanizedMessage = `✅ Entrada confirmada para ${guestName}`;
+                } else {
+                    humanizedMessage = `✅ Entrada confirmada para ${guestName}`;
+                }
             } else if (type === 'warning' && guestName) {
-                humanizedMessage = `⚠️ ${guestName} já entrou anteriormente`;
+                if (isPlural) {
+                    humanizedMessage = `⚠️ ${guestName} já entraram anteriormente`;
+                } else {
+                    humanizedMessage = `⚠️ ${guestName} já entrou anteriormente`;
+                }
             } else if (type === 'error') {
                 if (status === 'CÓDIGO INVÁLIDO') {
                     humanizedMessage = '❌ QR inválido — verifique novamente';
+                } else if (status === 'JÁ ESCANEADO') {
+                    if (isPlural) {
+                        humanizedMessage = `⚠️ ${guestName} já entraram anteriormente`;
+                    } else {
+                        humanizedMessage = `⚠️ ${guestName} já entrou anteriormente`;
+                    }
                 } else if (status === 'LIMITE ATINGIDO') {
                     humanizedMessage = '🚫 Limite de entradas atingido';
                 } else if (status === 'SEM INTERNET') {
@@ -2122,8 +2155,7 @@
                     <div class="flex items-center justify-center mb-3">
                         <i class="${style.icon} text-3xl"></i>
                     </div>
-                    <div class="text-lg font-bold mb-2">${humanizedMessage}</div>
-                    ${guestName && type !== 'success' ? `<div class="text-sm opacity-70">${guestName}</div>` : ''}
+                    <div class="text-lg font-bold">${humanizedMessage}</div>
                 `;
             } else {
                 // Fallback para casos não cobertos
@@ -3067,5 +3099,5 @@
             }
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96f9c8a723cc77d9',t:'MTc1NTI3MjM1Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96f9dc11314d77da',t:'MTc1NTI3MzE1Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
