@@ -2,7 +2,10 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>Leitor QR Code - Controle de Convidados</title>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
@@ -34,6 +37,82 @@
         }
         .tab-content { display: block; }
         .tab-content.hidden { display: none; }
+        
+        /* Mobile One-Hand Optimizations */
+        .mobile-bottom-actions {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 16px;
+            box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+            z-index: 50;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .mobile-bottom-actions button {
+            width: 100%;
+            padding: 16px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            touch-action: manipulation;
+        }
+        
+        .scanner-no-zoom {
+            touch-action: pan-x pan-y;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .prevent-zoom {
+            touch-action: manipulation;
+        }
+        
+        /* Lock screen orientation on mobile */
+        @media screen and (max-width: 768px) {
+            .scanner-container {
+                transform-origin: center;
+            }
+            
+            .mobile-scanner-wrapper {
+                padding-bottom: 100px; /* Space for bottom actions */
+            }
+        }
+        
+        /* Enhanced feedback animations */
+        .feedback-success {
+            animation: successPulse 0.6s ease-out;
+        }
+        
+        .feedback-error {
+            animation: errorShake 0.6s ease-out;
+        }
+        
+        .feedback-warning {
+            animation: warningBounce 0.6s ease-out;
+        }
+        
+        @keyframes successPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes errorShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        @keyframes warningBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
         
         /* Dark Theme */
         .dark {
@@ -143,6 +222,15 @@
                             <i class="fas fa-sign-out-alt text-sm sm:text-base"></i>
                         </button>
                     </div>
+                    </div>
+                </div>
+                
+                <!-- Mobile Bottom Actions (One-Hand Mode) -->
+                <div id="mobileBottomActions" class="mobile-bottom-actions hidden">
+                    <button id="nextScanBtn" class="bg-green-600 text-white hover:bg-green-700 transition-colors shadow-lg">
+                        <i class="fas fa-arrow-right mr-3"></i>
+                        Próximo Scan
+                    </button>
                 </div>
             </div>
         </header>
@@ -167,19 +255,20 @@
         <div class="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4">
             <!-- Scanner Tab -->
             <div id="scannerTabContent" class="tab-content">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Scanner Principal -->
-                    <div class="lg:col-span-2">
-                        <div class="bg-white rounded-xl shadow-sm p-6">
-                            <div id="scannerContainer" class="scanner-container bg-gray-900 rounded-2xl h-[350px] flex items-center justify-center mx-auto border-4 border-gray-300 shadow-2xl">
-                                <div class="text-center text-gray-400 px-6">
-                                    <i class="fas fa-qrcode text-5xl mb-4 text-gray-500"></i>
-                                    <p class="text-lg font-medium">A inicializar scanner...</p>
-                                    <p class="text-sm mt-2 text-gray-500">Posicione o QR na área de scan</p>
+                <div class="mobile-scanner-wrapper">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Scanner Principal -->
+                        <div class="lg:col-span-2">
+                            <div class="bg-white rounded-xl shadow-sm p-6">
+                                <div id="scannerContainer" class="scanner-container scanner-no-zoom bg-gray-900 rounded-2xl h-[350px] flex items-center justify-center mx-auto border-4 border-gray-300 shadow-2xl">
+                                    <div class="text-center text-gray-400 px-6">
+                                        <i class="fas fa-qrcode text-5xl mb-4 text-gray-500"></i>
+                                        <p class="text-lg font-medium">A inicializar scanner...</p>
+                                        <p class="text-sm mt-2 text-gray-500">Posicione o QR na área de scan</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
                     <!-- Painel Lateral -->
                     <div class="lg:col-span-1">
@@ -193,14 +282,6 @@
                             <div id="scanResultPlaceholder" class="text-center text-gray-400 py-8">
                                 <i class="fas fa-qrcode text-3xl mb-2"></i>
                                 <p class="text-sm">Aguardando scan...</p>
-                            </div>
-                            
-                            <!-- Botão próximo -->
-                            <div id="nextScanContainer" class="hidden mt-4 text-center">
-                                <button id="nextScanBtn" class="w-full bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 transition-colors shadow-lg">
-                                    <i class="fas fa-arrow-right mr-2"></i>
-                                    Próximo Scan
-                                </button>
                             </div>
                         </div>
 
@@ -229,6 +310,15 @@
                             </div>
                         </div>
                     </div>
+                    </div>
+                </div>
+                
+                <!-- Mobile Bottom Actions (One-Hand Mode) -->
+                <div id="mobileBottomActions" class="mobile-bottom-actions hidden">
+                    <button id="nextScanBtn" class="bg-green-600 text-white hover:bg-green-700 transition-colors shadow-lg">
+                        <i class="fas fa-arrow-right mr-3"></i>
+                        Próximo Scan
+                    </button>
                 </div>
             </div>
 
@@ -1914,9 +2004,20 @@
             }
         }
 
-        // Mostrar botão próximo
+        // Mostrar botão próximo (mobile-friendly)
         function showNextScanButton() {
-            nextScanContainer.classList.remove('hidden');
+            const mobileActions = document.getElementById('mobileBottomActions');
+            if (mobileActions) {
+                mobileActions.classList.remove('hidden');
+            }
+        }
+        
+        // Esconder botão próximo
+        function hideNextScanButton() {
+            const mobileActions = document.getElementById('mobileBottomActions');
+            if (mobileActions) {
+                mobileActions.classList.add('hidden');
+            }
         }
 
         // Feedback sonoro e vibração
@@ -1969,21 +2070,24 @@
                     border: 'border-l-green-500',
                     text: 'text-green-800',
                     icon: 'fas fa-check-circle text-green-500',
-                    shadow: 'shadow-green-200'
+                    shadow: 'shadow-green-200',
+                    animation: 'feedback-success'
                 },
                 error: {
                     bg: 'bg-gradient-to-r from-red-50 to-rose-50',
                     border: 'border-l-red-500',
                     text: 'text-red-800',
                     icon: 'fas fa-times-circle text-red-500',
-                    shadow: 'shadow-red-200'
+                    shadow: 'shadow-red-200',
+                    animation: 'feedback-error'
                 },
                 warning: {
                     bg: 'bg-gradient-to-r from-yellow-50 to-amber-50',
                     border: 'border-l-yellow-500',
                     text: 'text-yellow-800',
                     icon: 'fas fa-exclamation-triangle text-yellow-500',
-                    shadow: 'shadow-yellow-200'
+                    shadow: 'shadow-yellow-200',
+                    animation: 'feedback-warning'
                 }
             };
             
@@ -1993,22 +2097,42 @@
             // Esconder placeholder
             scanResultPlaceholder.classList.add('hidden');
             
-            scanResult.className = `p-4 rounded-lg text-center border-l-4 transform transition-all duration-300 ${style.bg} ${style.border} ${style.text} ${style.shadow}`;
+            scanResult.className = `p-4 rounded-lg text-center border-l-4 transform transition-all duration-300 ${style.bg} ${style.border} ${style.text} ${style.shadow} ${style.animation}`;
             
-            if (guestName) {
+            // Humanized messages
+            let humanizedMessage = '';
+            if (type === 'success' && guestName) {
+                humanizedMessage = `✅ Entrada confirmada para ${guestName}`;
+            } else if (type === 'warning' && guestName) {
+                humanizedMessage = `⚠️ ${guestName} já entrou anteriormente`;
+            } else if (type === 'error') {
+                if (status === 'CÓDIGO INVÁLIDO') {
+                    humanizedMessage = '❌ QR inválido — verifique novamente';
+                } else if (status === 'LIMITE ATINGIDO') {
+                    humanizedMessage = '🚫 Limite de entradas atingido';
+                } else if (status === 'SEM INTERNET') {
+                    humanizedMessage = '📶 Sem conexão — tente novamente';
+                } else {
+                    humanizedMessage = '❌ Erro no sistema — contacte suporte';
+                }
+            }
+            
+            if (humanizedMessage) {
                 scanResult.innerHTML = `
                     <div class="flex items-center justify-center mb-3">
                         <i class="${style.icon} text-3xl"></i>
                     </div>
-                    <div class="text-xl font-bold mb-1">${status}</div>
-                    <div class="text-sm font-medium opacity-80">${guestName}</div>
+                    <div class="text-lg font-bold mb-2">${humanizedMessage}</div>
+                    ${guestName && type !== 'success' ? `<div class="text-sm opacity-70">${guestName}</div>` : ''}
                 `;
             } else {
+                // Fallback para casos não cobertos
                 scanResult.innerHTML = `
                     <div class="flex items-center justify-center mb-3">
                         <i class="${style.icon} text-3xl"></i>
                     </div>
                     <div class="text-xl font-bold">${status}</div>
+                    ${guestName ? `<div class="text-sm font-medium opacity-80">${guestName}</div>` : ''}
                 `;
             }
             
@@ -2673,7 +2797,7 @@
         // Botão próximo scan
         nextScanBtn.addEventListener('click', () => {
             scanPaused = false;
-            nextScanContainer.classList.add('hidden');
+            hideNextScanButton();
             scanResult.classList.add('hidden');
             document.getElementById('scanResultPlaceholder').classList.remove('hidden');
         });
@@ -2795,9 +2919,45 @@
         // Variável para armazenar o token real
         let realToken = null;
 
+        // Prevent zoom and orientation changes on mobile
+        function preventMobileInterference() {
+            // Prevent double-tap zoom
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', function (event) {
+                const now = (new Date()).getTime();
+                if (now - lastTouchEnd <= 300) {
+                    event.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, false);
+            
+            // Lock orientation to portrait on mobile (if supported)
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('portrait').catch(() => {
+                    // Orientation lock not supported or failed, continue normally
+                });
+            }
+            
+            // Prevent context menu on long press
+            document.addEventListener('contextmenu', function(e) {
+                if (e.target.closest('.scanner-container')) {
+                    e.preventDefault();
+                }
+            });
+            
+            // Prevent text selection in scanner area
+            document.addEventListener('selectstart', function(e) {
+                if (e.target.closest('.scanner-container')) {
+                    e.preventDefault();
+                }
+            });
+        }
+
         // Inicialização
         document.addEventListener('DOMContentLoaded', () => {
             try {
+                // Initialize mobile optimizations
+                preventMobileInterference();
                 // Inicializar elementos das abas com verificação de segurança
                 scannerTab = document.getElementById('scannerTab');
                 scannerTabContent = document.getElementById('scannerTabContent');
@@ -2907,5 +3067,5 @@
             }
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96f965ed63e677da',t:'MTc1NTI2ODMxMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96f9c8a723cc77d9',t:'MTc1NTI3MjM1Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
