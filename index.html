@@ -174,7 +174,7 @@
                 <div class="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg" style="background: linear-gradient(135deg, #5aa189, #4a9d7a);">
                     <i class="fas fa-qrcode text-white text-3xl"></i>
                 </div>
-                <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <h1 class="text-3xl font-bold" style="color: #5aa189;">
                     QR Scanner
                 </h1>
                 <p class="text-gray-600 mt-2 text-lg">Controlo de Acesso</p>
@@ -1311,9 +1311,6 @@
                 return;
             }
             
-            // Esconder botão próximo ao trocar de aba
-            hideNextScanButton();
-            
             // Remover classe active de todas as abas
             scannerTab.classList.remove('active');
             scannerTab.classList.add('text-gray-500', 'border-transparent');
@@ -1339,6 +1336,9 @@
                 scannerTab.style.color = '#5aa189';
                 scannerTab.style.borderColor = '#5aa189';
                 scannerTabContent.classList.remove('hidden');
+                
+                // Mostrar botão próximo sempre que voltar à aba scanner
+                showNextScanButton();
             } else if (tabName === 'options') {
                 optionsTab.classList.add('active');
                 optionsTab.classList.remove('text-gray-500', 'border-transparent');
@@ -1346,6 +1346,9 @@
                 optionsTab.style.color = '#5aa189';
                 optionsTab.style.borderColor = '#5aa189';
                 optionsTabContent.classList.remove('hidden');
+                
+                // Esconder botão próximo na aba opções
+                hideNextScanButton();
             }
         }
 
@@ -3105,5 +3108,5 @@
             }
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96fb2c31063277e0',t:'MTc1NTI4NjkyMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96fb58efb26577e3',t:'MTc1NTI4ODc1Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
