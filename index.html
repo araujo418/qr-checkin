@@ -2,12 +2,10 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="format-detection" content="telephone=no">
-    <meta name="msapplication-tap-highlight" content="no">
     <title>Leitor QR Code - Controle de Convidados</title>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
@@ -19,15 +17,6 @@
         body { 
             font-family: 'Inter', sans-serif; 
             transition: background-color 0.3s ease, color 0.3s ease;
-            touch-action: manipulation;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            -khtml-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-            overflow-x: hidden;
         }
         .scanner-container { position: relative; border-radius: 12px; overflow: hidden; }
         .guest-card { transition: all 0.3s ease; }
@@ -175,33 +164,6 @@
         .dark-gray .hover\:bg-gray-200:hover { background-color: #6b7280; }
         .dark-gray .hover\:text-gray-700:hover { color: #d1d5db; }
         .dark-gray .hover\:border-gray-300:hover { border-color: #9ca3af; }
-        
-        /* Anti-Zoom Global Styles */
-        * {
-            touch-action: manipulation !important;
-            -webkit-touch-callout: none !important;
-            -webkit-user-select: none !important;
-            -khtml-user-select: none !important;
-            -moz-user-select: none !important;
-            -ms-user-select: none !important;
-            user-select: none !important;
-            -webkit-tap-highlight-color: transparent !important;
-        }
-        
-        input, textarea, select {
-            -webkit-user-select: text !important;
-            -khtml-user-select: text !important;
-            -moz-user-select: text !important;
-            -ms-user-select: text !important;
-            user-select: text !important;
-        }
-        
-        html {
-            -ms-touch-action: manipulation !important;
-            touch-action: manipulation !important;
-            -webkit-text-size-adjust: 100% !important;
-            -ms-text-size-adjust: 100% !important;
-        }
         
         /* Tour Styles */
         .tour-overlay {
@@ -3470,21 +3432,8 @@
         // Variável para armazenar o token real
         let realToken = null;
 
-        // Prevent zoom and mobile interference completely
+        // Prevent zoom and orientation changes on mobile
         function preventMobileInterference() {
-            // Prevent all zoom gestures
-            document.addEventListener('gesturestart', function (e) {
-                e.preventDefault();
-            });
-            
-            document.addEventListener('gesturechange', function (e) {
-                e.preventDefault();
-            });
-            
-            document.addEventListener('gestureend', function (e) {
-                e.preventDefault();
-            });
-            
             // Prevent double-tap zoom
             let lastTouchEnd = 0;
             document.addEventListener('touchend', function (event) {
@@ -3493,28 +3442,7 @@
                     event.preventDefault();
                 }
                 lastTouchEnd = now;
-            }, { passive: false });
-            
-            // Prevent pinch zoom
-            document.addEventListener('touchmove', function (event) {
-                if (event.scale !== 1) {
-                    event.preventDefault();
-                }
-            }, { passive: false });
-            
-            // Prevent wheel zoom (desktop)
-            document.addEventListener('wheel', function(e) {
-                if (e.ctrlKey) {
-                    e.preventDefault();
-                }
-            }, { passive: false });
-            
-            // Prevent keyboard zoom
-            document.addEventListener('keydown', function(e) {
-                if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '-' || e.key === '0')) {
-                    e.preventDefault();
-                }
-            });
+            }, false);
             
             // Lock orientation to portrait on mobile (if supported)
             if (screen.orientation && screen.orientation.lock) {
@@ -3525,25 +3453,17 @@
             
             // Prevent context menu on long press
             document.addEventListener('contextmenu', function(e) {
-                e.preventDefault();
-            });
-            
-            // Prevent text selection globally
-            document.addEventListener('selectstart', function(e) {
-                e.preventDefault();
-            });
-            
-            // Prevent drag and drop
-            document.addEventListener('dragstart', function(e) {
-                e.preventDefault();
-            });
-            
-            // Additional iOS Safari zoom prevention
-            document.addEventListener('touchstart', function(e) {
-                if (e.touches.length > 1) {
+                if (e.target.closest('.scanner-container')) {
                     e.preventDefault();
                 }
-            }, { passive: false });
+            });
+            
+            // Prevent text selection in scanner area
+            document.addEventListener('selectstart', function(e) {
+                if (e.target.closest('.scanner-container')) {
+                    e.preventDefault();
+                }
+            });
         }
 
         // Inicialização
@@ -3687,5 +3607,5 @@
             }
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9718ad78d06a77d7',t:'MTc1NTU5NjMwMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9718a5f291eb77d7',t:'MTc1NTU5NTk5NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
