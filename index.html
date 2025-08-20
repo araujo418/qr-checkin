@@ -164,58 +164,6 @@
         .dark-gray .hover\:bg-gray-200:hover { background-color: #6b7280; }
         .dark-gray .hover\:text-gray-700:hover { color: #d1d5db; }
         .dark-gray .hover\:border-gray-300:hover { border-color: #9ca3af; }
-        
-        /* Tour Styles */
-        .tour-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .tour-modal {
-            background: white;
-            border-radius: 16px;
-            padding: 24px;
-            max-width: 90vw;
-            width: 400px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            animation: tourSlideIn 0.3s ease-out;
-        }
-        
-        .tour-highlight {
-            position: relative;
-            z-index: 10000;
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5), 0 0 0 8px rgba(59, 130, 246, 0.2);
-            border-radius: 8px;
-            animation: tourPulse 2s infinite;
-        }
-        
-        @keyframes tourSlideIn {
-            from {
-                opacity: 0;
-                transform: scale(0.9) translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1) translateY(0);
-            }
-        }
-        
-        @keyframes tourPulse {
-            0%, 100% {
-                box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5), 0 0 0 8px rgba(59, 130, 246, 0.2);
-            }
-            50% {
-                box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.7), 0 0 0 12px rgba(59, 130, 246, 0.3);
-            }
-        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -504,67 +452,6 @@
 
 
 
-                    <!-- Configurações da Câmera -->
-                    <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
-                        <h2 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
-                            <i class="fas fa-camera mr-3 text-blue-600"></i>
-                            Configurações da Câmera
-                        </h2>
-                        <div class="space-y-4">
-                            <!-- Status da Câmera -->
-                            <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex-1">
-                                        <h3 class="font-medium text-gray-800 flex items-center">
-                                            <i class="fas fa-video mr-2 text-blue-600"></i>
-                                            Status da Câmera
-                                        </h3>
-                                        <p id="cameraStatusText" class="text-sm text-gray-600 mt-1">Verificando permissões...</p>
-                                    </div>
-                                    <div id="cameraStatusIcon" class="text-2xl">
-                                        <i class="fas fa-spinner fa-spin text-blue-500"></i>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Botão para Solicitar Permissões -->
-                            <div id="cameraPermissionSection" class="hidden">
-                                <button id="requestCameraBtn" class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center font-medium">
-                                    <i class="fas fa-camera mr-3"></i>
-                                    Solicitar Permissão da Câmera
-                                </button>
-                                <p class="text-xs text-gray-500 mt-2 text-center">
-                                    <i class="fas fa-info-circle mr-1"></i>
-                                    Necessário para usar o scanner QR
-                                </p>
-                            </div>
-                            
-                            <!-- Instruções para Reativar Manualmente -->
-                            <div id="cameraInstructionsSection" class="hidden">
-                                <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                                    <h4 class="font-medium text-yellow-800 mb-2">
-                                        <i class="fas fa-exclamation-triangle mr-2"></i>
-                                        Como Reativar a Câmera
-                                    </h4>
-                                    <div class="text-sm text-yellow-700 space-y-2">
-                                        <p><strong>Chrome/Edge:</strong></p>
-                                        <p>1. Clique no ícone 🔒 ou 📷 na barra de endereços</p>
-                                        <p>2. Selecione "Permitir" para câmera</p>
-                                        <p>3. Recarregue a página</p>
-                                        
-                                        <p class="mt-3"><strong>Safari:</strong></p>
-                                        <p>1. Vá em Safari → Configurações para Este Website</p>
-                                        <p>2. Altere Câmera para "Permitir"</p>
-                                        
-                                        <p class="mt-3"><strong>Firefox:</strong></p>
-                                        <p>1. Clique no ícone de escudo na barra de endereços</p>
-                                        <p>2. Desative o bloqueio de câmera</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Configurações de Feedback -->
                     <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
                         <h2 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
@@ -667,38 +554,6 @@
         </div>
     </div>
 
-    <!-- Tour Modal -->
-    <div id="tourOverlay" class="tour-overlay hidden">
-        <div class="tour-modal">
-            <div class="text-center mb-6">
-                <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style="background: linear-gradient(135deg, #5aa189, #4a9d7a);">
-                    <i id="tourIcon" class="fas fa-play text-white text-2xl"></i>
-                </div>
-                <h2 id="tourTitle" class="text-2xl font-bold text-gray-800 mb-2">Bem-vindo!</h2>
-                <p id="tourDescription" class="text-gray-600">Vamos fazer um tour rápido pelo sistema</p>
-            </div>
-            
-            <div class="flex justify-between items-center">
-                <div class="flex space-x-2">
-                    <div id="tourDot1" class="w-3 h-3 rounded-full bg-blue-500"></div>
-                    <div id="tourDot2" class="w-3 h-3 rounded-full bg-gray-300"></div>
-                    <div id="tourDot3" class="w-3 h-3 rounded-full bg-gray-300"></div>
-                    <div id="tourDot4" class="w-3 h-3 rounded-full bg-gray-300"></div>
-                    <div id="tourDot5" class="w-3 h-3 rounded-full bg-gray-300"></div>
-                </div>
-                
-                <div class="flex space-x-3">
-                    <button id="tourSkipBtn" class="px-4 py-2 text-gray-500 hover:text-gray-700 font-medium">
-                        Pular Tour
-                    </button>
-                    <button id="tourNextBtn" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
-                        Começar
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script>
         // Configuração do Supabase
         const SUPABASE_URL = 'https://rnvunprjvppbjavkaoek.supabase.co';
@@ -729,171 +584,6 @@
         let tokenCheckInterval = null;
         let autoSyncInterval = null;
         let undoUsagesRemaining = 3;
-        
-        // Tour system
-        let tourActive = false;
-        let currentTourStep = 0;
-        let cameraPermissionStatus = 'unknown'; // 'granted', 'denied', 'prompt', 'unknown'
-
-        // Verificar status da câmera
-        async function checkCameraPermission() {
-            try {
-                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                    updateCameraStatus('unsupported', 'Câmera não suportada neste navegador');
-                    return 'unsupported';
-                }
-                
-                // Verificar permissões se disponível
-                if (navigator.permissions) {
-                    try {
-                        const permission = await navigator.permissions.query({ name: 'camera' });
-                        cameraPermissionStatus = permission.state;
-                        
-                        if (permission.state === 'granted') {
-                            updateCameraStatus('granted', 'Câmera autorizada e pronta para uso');
-                        } else if (permission.state === 'denied') {
-                            updateCameraStatus('denied', 'Acesso à câmera foi negado');
-                        } else {
-                            updateCameraStatus('prompt', 'Permissão da câmera necessária');
-                        }
-                        
-                        return permission.state;
-                    } catch (error) {
-                        // Fallback se permissions API não funcionar
-                        console.log('Permissions API não disponível, tentando acesso direto');
-                    }
-                }
-                
-                // Tentar acesso direto para verificar
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ 
-                        video: { facingMode: "environment" } 
-                    });
-                    
-                    // Parar stream imediatamente
-                    stream.getTracks().forEach(track => track.stop());
-                    
-                    cameraPermissionStatus = 'granted';
-                    updateCameraStatus('granted', 'Câmera autorizada e pronta para uso');
-                    return 'granted';
-                    
-                } catch (error) {
-                    if (error.name === 'NotAllowedError') {
-                        cameraPermissionStatus = 'denied';
-                        updateCameraStatus('denied', 'Acesso à câmera foi negado');
-                        return 'denied';
-                    } else if (error.name === 'NotFoundError') {
-                        cameraPermissionStatus = 'unavailable';
-                        updateCameraStatus('unavailable', 'Nenhuma câmera encontrada');
-                        return 'unavailable';
-                    } else {
-                        cameraPermissionStatus = 'error';
-                        updateCameraStatus('error', 'Erro ao acessar câmera: ' + error.message);
-                        return 'error';
-                    }
-                }
-                
-            } catch (error) {
-                console.error('Erro ao verificar permissões da câmera:', error);
-                cameraPermissionStatus = 'error';
-                updateCameraStatus('error', 'Erro ao verificar câmera');
-                return 'error';
-            }
-        }
-        
-        // Atualizar status da câmera na interface
-        function updateCameraStatus(status, message) {
-            const statusText = document.getElementById('cameraStatusText');
-            const statusIcon = document.getElementById('cameraStatusIcon');
-            const permissionSection = document.getElementById('cameraPermissionSection');
-            const instructionsSection = document.getElementById('cameraInstructionsSection');
-            
-            if (!statusText || !statusIcon) return;
-            
-            statusText.textContent = message;
-            
-            // Esconder todas as seções primeiro
-            if (permissionSection) permissionSection.classList.add('hidden');
-            if (instructionsSection) instructionsSection.classList.add('hidden');
-            
-            switch (status) {
-                case 'granted':
-                    statusIcon.innerHTML = '<i class="fas fa-check-circle text-green-500"></i>';
-                    break;
-                    
-                case 'denied':
-                    statusIcon.innerHTML = '<i class="fas fa-times-circle text-red-500"></i>';
-                    if (instructionsSection) instructionsSection.classList.remove('hidden');
-                    break;
-                    
-                case 'prompt':
-                    statusIcon.innerHTML = '<i class="fas fa-question-circle text-yellow-500"></i>';
-                    if (permissionSection) permissionSection.classList.remove('hidden');
-                    break;
-                    
-                case 'unavailable':
-                    statusIcon.innerHTML = '<i class="fas fa-camera-slash text-gray-500"></i>';
-                    break;
-                    
-                case 'unsupported':
-                    statusIcon.innerHTML = '<i class="fas fa-exclamation-triangle text-red-500"></i>';
-                    break;
-                    
-                case 'error':
-                default:
-                    statusIcon.innerHTML = '<i class="fas fa-exclamation-circle text-red-500"></i>';
-                    if (permissionSection) permissionSection.classList.remove('hidden');
-                    break;
-            }
-        }
-        
-        // Solicitar permissão da câmera
-        async function requestCameraPermission() {
-            const requestBtn = document.getElementById('requestCameraBtn');
-            if (requestBtn) {
-                requestBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-3"></i>Solicitando permissão...';
-                requestBtn.disabled = true;
-            }
-            
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "environment" } 
-                });
-                
-                // Parar stream imediatamente
-                stream.getTracks().forEach(track => track.stop());
-                
-                cameraPermissionStatus = 'granted';
-                updateCameraStatus('granted', 'Câmera autorizada com sucesso!');
-                
-                showNotification('Câmera autorizada! Pode usar o scanner agora.', 'success');
-                
-                // Reiniciar scanner se estiver na aba scanner
-                if (scannerTab && scannerTab.classList.contains('active') && isOnline) {
-                    setTimeout(() => {
-                        startScanner();
-                    }, 1000);
-                }
-                
-            } catch (error) {
-                console.error('Erro ao solicitar permissão:', error);
-                
-                if (error.name === 'NotAllowedError') {
-                    cameraPermissionStatus = 'denied';
-                    updateCameraStatus('denied', 'Permissão negada pelo utilizador');
-                    showNotification('Permissão da câmera foi negada. Veja as instruções abaixo.', 'error');
-                } else {
-                    cameraPermissionStatus = 'error';
-                    updateCameraStatus('error', 'Erro ao solicitar permissão: ' + error.message);
-                    showNotification('Erro ao solicitar permissão da câmera', 'error');
-                }
-            } finally {
-                if (requestBtn) {
-                    requestBtn.innerHTML = '<i class="fas fa-camera mr-3"></i>Solicitar Permissão da Câmera';
-                    requestBtn.disabled = false;
-                }
-            }
-        }
 
         // Função para detectar se o nome é plural (múltiplas pessoas)
         function detectPlural(name) {
@@ -1599,180 +1289,18 @@
             }
         }
 
-        // Sistema de Tour
-        const tourSteps = [
-            {
-                title: 'Bem-vindo ao QR Scanner!',
-                description: 'Vamos fazer um tour rápido para conhecer as funcionalidades',
-                icon: 'fas fa-play',
-                highlight: null,
-                action: null
-            },
-            {
-                title: 'Scanner QR',
-                description: 'Esta é a área principal onde os QR codes são escaneados. A câmera ativa automaticamente quando entra nesta aba.',
-                icon: 'fas fa-qrcode',
-                highlight: '#scannerContainer',
-                action: () => switchTab('scanner')
-            },
-            {
-                title: 'Resultado do Scan',
-                description: 'Aqui aparece o resultado de cada scan: se o convidado foi aceite, já estava escaneado ou se o código é inválido.',
-                icon: 'fas fa-clipboard-check',
-                highlight: '#scanResult',
-                action: null
-            },
-            {
-                title: 'Progresso em Tempo Real',
-                description: 'Acompanhe o progresso do evento: quantos convidados já chegaram e quantos ainda faltam.',
-                icon: 'fas fa-chart-line',
-                highlight: '.bg-white.rounded-xl.shadow-sm.p-6:has(#scannerProgressText)',
-                action: null
-            },
-            {
-                title: 'Aba Opções',
-                description: 'Nas opções encontra estatísticas detalhadas, lista de convidados, configurações da câmera e muito mais!',
-                icon: 'fas fa-cog',
-                highlight: '#optionsTab',
-                action: () => switchTab('options')
-            }
-        ];
-        
-        function startTour() {
-            tourActive = true;
-            currentTourStep = 0;
-            showTourStep();
-        }
-        
-        function showTourStep() {
-            const step = tourSteps[currentTourStep];
-            const overlay = document.getElementById('tourOverlay');
-            const title = document.getElementById('tourTitle');
-            const description = document.getElementById('tourDescription');
-            const icon = document.getElementById('tourIcon');
-            const nextBtn = document.getElementById('tourNextBtn');
-            
-            if (!overlay || !title || !description || !icon || !nextBtn) return;
-            
-            // Remover highlight anterior
-            document.querySelectorAll('.tour-highlight').forEach(el => {
-                el.classList.remove('tour-highlight');
-            });
-            
-            // Executar ação se existir
-            if (step.action) {
-                step.action();
-            }
-            
-            // Aguardar um pouco para a ação ser executada
-            setTimeout(() => {
-                // Atualizar conteúdo
-                title.textContent = step.title;
-                description.textContent = step.description;
-                icon.className = `${step.icon} text-white text-2xl`;
-                
-                // Atualizar indicadores
-                for (let i = 1; i <= 5; i++) {
-                    const dot = document.getElementById(`tourDot${i}`);
-                    if (dot) {
-                        if (i <= currentTourStep + 1) {
-                            dot.className = 'w-3 h-3 rounded-full bg-blue-500';
-                        } else {
-                            dot.className = 'w-3 h-3 rounded-full bg-gray-300';
-                        }
-                    }
-                }
-                
-                // Atualizar botão
-                if (currentTourStep === 0) {
-                    nextBtn.textContent = 'Começar';
-                } else if (currentTourStep === tourSteps.length - 1) {
-                    nextBtn.textContent = 'Finalizar';
-                } else {
-                    nextBtn.textContent = 'Próximo';
-                }
-                
-                // Adicionar highlight se especificado
-                if (step.highlight) {
-                    setTimeout(() => {
-                        const element = document.querySelector(step.highlight);
-                        if (element) {
-                            element.classList.add('tour-highlight');
-                            
-                            // Scroll para o elemento se necessário
-                            element.scrollIntoView({ 
-                                behavior: 'smooth', 
-                                block: 'center' 
-                            });
-                        }
-                    }, 300);
-                }
-                
-                // Mostrar overlay
-                overlay.classList.remove('hidden');
-            }, step.action ? 500 : 0);
-        }
-        
-        function nextTourStep() {
-            if (currentTourStep < tourSteps.length - 1) {
-                currentTourStep++;
-                showTourStep();
-            } else {
-                endTour();
-            }
-        }
-        
-        function endTour() {
-            tourActive = false;
-            const overlay = document.getElementById('tourOverlay');
-            if (overlay) {
-                overlay.classList.add('hidden');
-            }
-            
-            // Remover highlights
-            document.querySelectorAll('.tour-highlight').forEach(el => {
-                el.classList.remove('tour-highlight');
-            });
-            
-            // Marcar que o tour foi concluído para este token
-            if (currentClient && currentClient.token) {
-                localStorage.setItem(`tourCompleted_${currentClient.token}`, 'true');
-            }
-            
-            // Voltar para a aba scanner
-            switchTab('scanner');
-            
-            showNotification('Tour concluído! Pode começar a usar o scanner.', 'success');
-        }
-        
-        function shouldShowTour() {
-            if (!currentClient || !currentClient.token) return false;
-            
-            // Verificar se já fez o tour para este token
-            const tourCompleted = localStorage.getItem(`tourCompleted_${currentClient.token}`);
-            return !tourCompleted;
-        }
-
         // Mostrar app principal
         function showMainApp() {
             loginScreen.classList.add('hidden');
             mainApp.classList.remove('hidden');
             eventTitle.textContent = currentClient.nome || 'Evento';
             
-            // Verificar se deve mostrar tour
-            if (shouldShowTour()) {
-                // Aguardar um pouco para a interface carregar
-                setTimeout(() => {
-                    startTour();
-                }, 1000);
-            } else {
-                // Iniciar scanner automaticamente se não for tour
-                setTimeout(() => {
-                    if (isOnline) {
-                        startScanner();
-                    }
-                }, 500);
-            }
+            // Iniciar scanner automaticamente
+            setTimeout(() => {
+                if (isOnline) {
+                    startScanner();
+                }
+            }, 500);
         }
 
         // Controle das abas
@@ -3564,33 +3092,6 @@
                 // Carregar configurações salvas
                 loadSettings();
                 
-                // Event listeners do tour
-                const tourNextBtn = document.getElementById('tourNextBtn');
-                const tourSkipBtn = document.getElementById('tourSkipBtn');
-                
-                if (tourNextBtn) {
-                    tourNextBtn.addEventListener('click', nextTourStep);
-                }
-                
-                if (tourSkipBtn) {
-                    tourSkipBtn.addEventListener('click', endTour);
-                }
-                
-                // Event listener para botão de solicitar câmera
-                const requestCameraBtn = document.getElementById('requestCameraBtn');
-                if (requestCameraBtn) {
-                    requestCameraBtn.addEventListener('click', requestCameraPermission);
-                }
-                
-                // Verificar status da câmera quando entrar nas opções
-                if (optionsTab) {
-                    optionsTab.addEventListener('click', () => {
-                        setTimeout(() => {
-                            checkCameraPermission();
-                        }, 100);
-                    });
-                }
-                
                 // Inicializar na aba do scanner
                 switchTab('scanner');
                 
@@ -3607,5 +3108,5 @@
             }
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9718a5f291eb77d7',t:'MTc1NTU5NTk5NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'971f9645617b77d9',t:'MTc1NTY2ODc1Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
